@@ -1333,6 +1333,477 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedReviews"
 
+  # ── Restaurant: Tables ──────────────────────────────────────────────────
+  /restaurant/tables:
+    get:
+      operationId: getRestaurantTables
+      summary: List restaurant tables
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: zone
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [free, occupied, to_pay, closed]
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of tables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RestaurantTable"
+    post:
+      operationId: createRestaurantTable
+      summary: Create a table
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTableRequest"
+      responses:
+        "201":
+          description: Created table
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantTable"
+
+  /restaurant/tables/bulk:
+    post:
+      operationId: bulkCreateTables
+      summary: Bulk create tables (e.g., create Table 1 through Table N)
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkCreateTablesRequest"
+      responses:
+        "201":
+          description: Created tables
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RestaurantTable"
+
+  /restaurant/tables/{tableId}:
+    patch:
+      operationId: updateRestaurantTable
+      summary: Update a table (config or status)
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTableRequest"
+      responses:
+        "200":
+          description: Updated table
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantTable"
+    delete:
+      operationId: deleteRestaurantTable
+      summary: Delete a table
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: tableId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  # ── Restaurant: Orders ──────────────────────────────────────────────────
+  /restaurant/orders:
+    get:
+      operationId: getRestaurantOrders
+      summary: List orders
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: tableId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, completed, paid, cancelled]
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedOrders"
+    post:
+      operationId: createRestaurantOrder
+      summary: Open a new order for a table
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Created order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantOrder"
+
+  /restaurant/orders/{orderId}:
+    get:
+      operationId: getRestaurantOrder
+      summary: Get order with items
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order with items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantOrderWithItems"
+    patch:
+      operationId: updateRestaurantOrder
+      summary: Update order (status, discount, notes, payment)
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderRequest"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantOrder"
+
+  /restaurant/orders/{orderId}/items:
+    post:
+      operationId: addOrderItem
+      summary: Add item(s) to an order
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddOrderItemsRequest"
+      responses:
+        "201":
+          description: Added items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantOrderWithItems"
+
+  /restaurant/orders/{orderId}/items/{itemId}:
+    patch:
+      operationId: updateOrderItem
+      summary: Update an order item
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderItemRequest"
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderItem"
+    delete:
+      operationId: deleteOrderItem
+      summary: Remove an item from an order
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  # ── Restaurant: Daily Menu ───────────────────────────────────────────────
+  /restaurant/daily-menu:
+    get:
+      operationId: getDailyMenu
+      summary: Get today's daily menu (or by date)
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            description: ISO date string YYYY-MM-DD, defaults to today
+      responses:
+        "200":
+          description: Daily menu with items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMenuWithItems"
+    post:
+      operationId: createOrUpdateDailyMenu
+      summary: Create or update today's daily menu
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDailyMenuRequest"
+      responses:
+        "200":
+          description: Daily menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMenuWithItems"
+
+  /restaurant/daily-menu/{menuId}/items:
+    post:
+      operationId: addDailyMenuItem
+      summary: Add item to daily menu
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: menuId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddDailyMenuItemRequest"
+      responses:
+        "201":
+          description: Created item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMenuItem"
+
+  /restaurant/daily-menu/{menuId}/items/{itemId}:
+    patch:
+      operationId: updateDailyMenuItem
+      summary: Update daily menu item
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: menuId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDailyMenuItemRequest"
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMenuItem"
+    delete:
+      operationId: deleteDailyMenuItem
+      summary: Remove item from daily menu
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: menuId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  /restaurant/daily-menu/{menuId}/publish:
+    post:
+      operationId: publishDailyMenu
+      summary: Publish or unpublish daily menu
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: menuId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isPublished:
+                  type: boolean
+              required:
+                - isPublished
+      responses:
+        "200":
+          description: Published menu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyMenuWithItems"
+
+  /restaurant/stats:
+    get:
+      operationId: getRestaurantStats
+      summary: Restaurant stats (orders today, revenue, busy tables)
+      tags: [Restaurant]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Restaurant stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestaurantStats"
+
 components:
   schemas:
     HealthStatus:
@@ -2574,3 +3045,466 @@ components:
         - totalReviews
         - approvedReviews
         - pendingReviews
+
+    # ── Restaurant Schemas ────────────────────────────────────────────────
+    RestaurantTable:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        name:
+          type: string
+        zone:
+          type: string
+          nullable: true
+        capacity:
+          type: integer
+        status:
+          type: string
+          enum: [free, occupied, to_pay, closed]
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+        activeOrderId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - name
+        - status
+        - sortOrder
+        - isActive
+        - createdAt
+        - updatedAt
+
+    CreateTableRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        zone:
+          type: string
+        capacity:
+          type: integer
+        sortOrder:
+          type: integer
+        notes:
+          type: string
+      required:
+        - name
+
+    UpdateTableRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        zone:
+          type: string
+        capacity:
+          type: integer
+        status:
+          type: string
+          enum: [free, occupied, to_pay, closed]
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+        notes:
+          type: string
+
+    BulkCreateTablesRequest:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Number of tables to create
+        prefix:
+          type: string
+          description: Name prefix, e.g. "Mesa" creates "Mesa 1", "Mesa 2"...
+        zone:
+          type: string
+        capacity:
+          type: integer
+      required:
+        - count
+        - prefix
+
+    RestaurantOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        tableId:
+          type: string
+        tableName:
+          type: string
+        tableZone:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [open, completed, paid, cancelled]
+        staffUserId:
+          type: string
+          nullable: true
+        staffName:
+          type: string
+          nullable: true
+        guestCount:
+          type: integer
+        notes:
+          type: string
+          nullable: true
+        subtotal:
+          type: number
+        discount:
+          type: number
+        discountPercent:
+          type: number
+        total:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, card, transfer, other]
+          nullable: true
+        openedAt:
+          type: string
+        closedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - tableId
+        - tableName
+        - status
+        - subtotal
+        - discount
+        - discountPercent
+        - total
+        - openedAt
+        - createdAt
+        - updatedAt
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+        orderId:
+          type: string
+        storeId:
+          type: string
+        productId:
+          type: string
+          nullable: true
+        productName:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: integer
+        subtotal:
+          type: number
+        notes:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, preparing, served, cancelled]
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - orderId
+        - storeId
+        - productName
+        - unitPrice
+        - quantity
+        - subtotal
+        - status
+        - sortOrder
+        - createdAt
+        - updatedAt
+
+    RestaurantOrderWithItems:
+      allOf:
+        - $ref: "#/components/schemas/RestaurantOrder"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/OrderItem"
+          required:
+            - items
+
+    CreateOrderRequest:
+      type: object
+      properties:
+        tableId:
+          type: string
+        guestCount:
+          type: integer
+        notes:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemInput"
+      required:
+        - tableId
+
+    UpdateOrderRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, completed, paid, cancelled]
+        notes:
+          type: string
+        discount:
+          type: number
+        discountPercent:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, card, transfer, other]
+        guestCount:
+          type: integer
+
+    AddOrderItemsRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItemInput"
+      required:
+        - items
+
+    OrderItemInput:
+      type: object
+      properties:
+        productId:
+          type: string
+        productName:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: integer
+        notes:
+          type: string
+      required:
+        - productName
+        - unitPrice
+        - quantity
+
+    UpdateOrderItemRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [pending, preparing, served, cancelled]
+
+    PaginatedOrders:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestaurantOrder"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    DailyMenuItem:
+      type: object
+      properties:
+        id:
+          type: string
+        menuId:
+          type: string
+        storeId:
+          type: string
+        productId:
+          type: string
+          nullable: true
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        specialPrice:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - menuId
+        - storeId
+        - name
+        - sortOrder
+        - isActive
+        - createdAt
+        - updatedAt
+
+    DailyMenu:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        date:
+          type: string
+        isPublished:
+          type: boolean
+        notes:
+          type: string
+          nullable: true
+        publishedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - date
+        - isPublished
+        - createdAt
+        - updatedAt
+
+    DailyMenuWithItems:
+      allOf:
+        - $ref: "#/components/schemas/DailyMenu"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/DailyMenuItem"
+          required:
+            - items
+
+    CreateDailyMenuRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          description: ISO date YYYY-MM-DD, defaults to today
+        notes:
+          type: string
+
+    AddDailyMenuItemRequest:
+      type: object
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        specialPrice:
+          type: number
+        notes:
+          type: string
+        sortOrder:
+          type: integer
+      required:
+        - name
+
+    UpdateDailyMenuItemRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        specialPrice:
+          type: number
+        notes:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+
+    RestaurantStats:
+      type: object
+      properties:
+        ordersToday:
+          type: integer
+        revenueToday:
+          type: number
+        tablesOccupied:
+          type: integer
+        tablesFree:
+          type: integer
+        tablesToPay:
+          type: integer
+        totalTables:
+          type: integer
+        openOrders:
+          type: integer
+        avgOrderValue:
+          type: number
+      required:
+        - ordersToday
+        - revenueToday
+        - tablesOccupied
+        - tablesFree
+        - tablesToPay
+        - totalTables
+        - openOrders
+        - avgOrderValue

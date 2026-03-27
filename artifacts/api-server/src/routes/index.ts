@@ -11,6 +11,10 @@ import productImagesRouter from "./product_images";
 import statsRouter from "./stats";
 import variantsRouter from "./variants";
 import { perProductRouter as reviewsPerProductRouter, allReviewsRouter } from "./reviews";
+import restaurantTablesRouter from "./restaurant/tables";
+import restaurantOrdersRouter from "./restaurant/orders";
+import restaurantDailyMenuRouter from "./restaurant/daily-menu";
+import restaurantStatsRouter from "./restaurant/stats";
 
 const router: IRouter = Router();
 
@@ -27,5 +31,9 @@ router.use("/products/:productId/reviews", reviewsPerProductRouter);
 router.use("/reviews", allReviewsRouter);
 router.use("/inventory", inventoryRouter);
 router.use("/stats", statsRouter);
+router.use("/restaurant/tables", restaurantTablesRouter);
+router.use("/restaurant/orders", restaurantOrdersRouter);
+router.use("/restaurant/daily-menu", restaurantDailyMenuRouter);
+router.use("/restaurant/stats", restaurantStatsRouter);
 
 export default router;

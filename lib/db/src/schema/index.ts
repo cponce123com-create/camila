@@ -10,3 +10,8 @@ export * from "./inventory";
 export * from "./store_banners";
 export * from "./store_settings";
 export * from "./product_images";
+export * from "./restaurant_tables";
+export * from "./restaurant_orders";
+export * from "./restaurant_order_items";
+export * from "./daily_menus";
+export * from "./daily_menu_items";

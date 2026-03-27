@@ -20,6 +20,13 @@ import AdminPage from "@/pages/admin";
 import AdminStoreDetailPage from "@/pages/admin/store-detail";
 import NotFound from "@/pages/not-found";
 
+// Restaurant pages
+import RestaurantPage from "@/pages/dashboard/restaurant";
+import RestaurantSetupPage from "@/pages/dashboard/restaurant/setup";
+import RestaurantOrdersPage from "@/pages/dashboard/restaurant/orders";
+import DailyMenuPage from "@/pages/dashboard/restaurant/daily-menu";
+import TableOrderPage from "@/pages/dashboard/restaurant/table-order";
+
 const queryClient = new QueryClient();
 
 function Router() {
@@ -39,6 +46,13 @@ function Router() {
       <Route path="/dashboard/customize" component={CustomizePage} />
       <Route path="/dashboard/reviews" component={ReviewsPage} />
       <Route path="/dashboard/settings" component={SettingsPage} />
+
+      {/* Restaurant module */}
+      <Route path="/dashboard/restaurant" component={RestaurantPage} />
+      <Route path="/dashboard/restaurant/setup" component={RestaurantSetupPage} />
+      <Route path="/dashboard/restaurant/orders" component={RestaurantOrdersPage} />
+      <Route path="/dashboard/restaurant/daily-menu" component={DailyMenuPage} />
+      <Route path="/dashboard/restaurant/tables/:tableId" component={TableOrderPage} />
 
       {/* Protected Superadmin */}
       <Route path="/admin" component={AdminPage} />

@@ -17,6 +17,8 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AddDailyMenuItemRequest,
+  AddOrderItemsRequest,
   AddProductImageRequest,
   AddUserRequest,
   AdjustInventoryRequest,
@@ -24,22 +26,31 @@ import type {
   AdminStats,
   AdminUpdateStoreRequest,
   AuthResponse,
+  BulkCreateTablesRequest,
   Category,
   CreateCategoryRequest,
+  CreateDailyMenuRequest,
+  CreateOrderRequest,
   CreateProductRequest,
   CreateReviewRequest,
   CreateStoreBannerRequest,
+  CreateTableRequest,
   CreateVariantRequest,
   CurrentUserResponse,
+  DailyMenuItem,
+  DailyMenuWithItems,
   ErrorResponse,
   ExportProductsParams,
   ForgotPasswordRequest,
   GetAllReviewsParams,
+  GetDailyMenuParams,
   GetInventoryMovementsParams,
   GetProductKardexParams,
   GetProductReviewsParams,
   GetProductVariantsParams,
   GetProductsParams,
+  GetRestaurantOrdersParams,
+  GetRestaurantTablesParams,
   GetStoreStatsParams,
   HealthStatus,
   ImportProductsRequest,
@@ -48,7 +59,9 @@ import type {
   License,
   LoginRequest,
   ModerateProductReviewBody,
+  OrderItem,
   PaginatedInventoryMovements,
+  PaginatedOrders,
   PaginatedProducts,
   PaginatedReviews,
   PaginatedStores,
@@ -58,18 +71,27 @@ import type {
   ProductKardex,
   ProductReview,
   ProductVariant,
+  PublishDailyMenuBody,
   RegisterStoreRequest,
   ReorderRequest,
   ResetPasswordRequest,
+  RestaurantOrder,
+  RestaurantOrderWithItems,
+  RestaurantStats,
+  RestaurantTable,
   Store,
   StoreBanner,
   StoreSettings,
   StoreStats,
   SuccessResponse,
+  UpdateDailyMenuItemRequest,
   UpdateLicenseRequest,
+  UpdateOrderItemRequest,
+  UpdateOrderRequest,
   UpdateProductImageRequest,
   UpdateStoreRequest,
   UpdateStoreSettingsRequest,
+  UpdateTableRequest,
   User,
 } from "./api.schemas";
 
@@ -4963,6 +4985,1698 @@ export function useGetAllReviews<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetAllReviewsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List restaurant tables
+ */
+export const getGetRestaurantTablesUrl = (
+  params?: GetRestaurantTablesParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/restaurant/tables?${stringifiedParams}`
+    : `/api/restaurant/tables`;
+};
+
+export const getRestaurantTables = async (
+  params?: GetRestaurantTablesParams,
+  options?: RequestInit,
+): Promise<RestaurantTable[]> => {
+  return customFetch<RestaurantTable[]>(getGetRestaurantTablesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRestaurantTablesQueryKey = (
+  params?: GetRestaurantTablesParams,
+) => {
+  return [`/api/restaurant/tables`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetRestaurantTablesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRestaurantTables>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRestaurantTablesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantTables>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRestaurantTablesQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRestaurantTables>>
+  > = ({ signal }) =>
+    getRestaurantTables(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantTables>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRestaurantTablesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRestaurantTables>>
+>;
+export type GetRestaurantTablesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List restaurant tables
+ */
+
+export function useGetRestaurantTables<
+  TData = Awaited<ReturnType<typeof getRestaurantTables>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRestaurantTablesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantTables>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRestaurantTablesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a table
+ */
+export const getCreateRestaurantTableUrl = () => {
+  return `/api/restaurant/tables`;
+};
+
+export const createRestaurantTable = async (
+  createTableRequest: CreateTableRequest,
+  options?: RequestInit,
+): Promise<RestaurantTable> => {
+  return customFetch<RestaurantTable>(getCreateRestaurantTableUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createTableRequest),
+  });
+};
+
+export const getCreateRestaurantTableMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRestaurantTable>>,
+    TError,
+    { data: BodyType<CreateTableRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createRestaurantTable>>,
+  TError,
+  { data: BodyType<CreateTableRequest> },
+  TContext
+> => {
+  const mutationKey = ["createRestaurantTable"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createRestaurantTable>>,
+    { data: BodyType<CreateTableRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createRestaurantTable(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateRestaurantTableMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createRestaurantTable>>
+>;
+export type CreateRestaurantTableMutationBody = BodyType<CreateTableRequest>;
+export type CreateRestaurantTableMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a table
+ */
+export const useCreateRestaurantTable = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRestaurantTable>>,
+    TError,
+    { data: BodyType<CreateTableRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createRestaurantTable>>,
+  TError,
+  { data: BodyType<CreateTableRequest> },
+  TContext
+> => {
+  return useMutation(getCreateRestaurantTableMutationOptions(options));
+};
+
+/**
+ * @summary Bulk create tables (e.g., create Table 1 through Table N)
+ */
+export const getBulkCreateTablesUrl = () => {
+  return `/api/restaurant/tables/bulk`;
+};
+
+export const bulkCreateTables = async (
+  bulkCreateTablesRequest: BulkCreateTablesRequest,
+  options?: RequestInit,
+): Promise<RestaurantTable[]> => {
+  return customFetch<RestaurantTable[]>(getBulkCreateTablesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(bulkCreateTablesRequest),
+  });
+};
+
+export const getBulkCreateTablesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkCreateTables>>,
+    TError,
+    { data: BodyType<BulkCreateTablesRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkCreateTables>>,
+  TError,
+  { data: BodyType<BulkCreateTablesRequest> },
+  TContext
+> => {
+  const mutationKey = ["bulkCreateTables"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkCreateTables>>,
+    { data: BodyType<BulkCreateTablesRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkCreateTables(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkCreateTablesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkCreateTables>>
+>;
+export type BulkCreateTablesMutationBody = BodyType<BulkCreateTablesRequest>;
+export type BulkCreateTablesMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Bulk create tables (e.g., create Table 1 through Table N)
+ */
+export const useBulkCreateTables = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkCreateTables>>,
+    TError,
+    { data: BodyType<BulkCreateTablesRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof bulkCreateTables>>,
+  TError,
+  { data: BodyType<BulkCreateTablesRequest> },
+  TContext
+> => {
+  return useMutation(getBulkCreateTablesMutationOptions(options));
+};
+
+/**
+ * @summary Update a table (config or status)
+ */
+export const getUpdateRestaurantTableUrl = (tableId: string) => {
+  return `/api/restaurant/tables/${tableId}`;
+};
+
+export const updateRestaurantTable = async (
+  tableId: string,
+  updateTableRequest: UpdateTableRequest,
+  options?: RequestInit,
+): Promise<RestaurantTable> => {
+  return customFetch<RestaurantTable>(getUpdateRestaurantTableUrl(tableId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateTableRequest),
+  });
+};
+
+export const getUpdateRestaurantTableMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRestaurantTable>>,
+    TError,
+    { tableId: string; data: BodyType<UpdateTableRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateRestaurantTable>>,
+  TError,
+  { tableId: string; data: BodyType<UpdateTableRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateRestaurantTable"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateRestaurantTable>>,
+    { tableId: string; data: BodyType<UpdateTableRequest> }
+  > = (props) => {
+    const { tableId, data } = props ?? {};
+
+    return updateRestaurantTable(tableId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateRestaurantTableMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateRestaurantTable>>
+>;
+export type UpdateRestaurantTableMutationBody = BodyType<UpdateTableRequest>;
+export type UpdateRestaurantTableMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a table (config or status)
+ */
+export const useUpdateRestaurantTable = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRestaurantTable>>,
+    TError,
+    { tableId: string; data: BodyType<UpdateTableRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateRestaurantTable>>,
+  TError,
+  { tableId: string; data: BodyType<UpdateTableRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateRestaurantTableMutationOptions(options));
+};
+
+/**
+ * @summary Delete a table
+ */
+export const getDeleteRestaurantTableUrl = (tableId: string) => {
+  return `/api/restaurant/tables/${tableId}`;
+};
+
+export const deleteRestaurantTable = async (
+  tableId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteRestaurantTableUrl(tableId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteRestaurantTableMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRestaurantTable>>,
+    TError,
+    { tableId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteRestaurantTable>>,
+  TError,
+  { tableId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteRestaurantTable"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteRestaurantTable>>,
+    { tableId: string }
+  > = (props) => {
+    const { tableId } = props ?? {};
+
+    return deleteRestaurantTable(tableId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteRestaurantTableMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteRestaurantTable>>
+>;
+
+export type DeleteRestaurantTableMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a table
+ */
+export const useDeleteRestaurantTable = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteRestaurantTable>>,
+    TError,
+    { tableId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteRestaurantTable>>,
+  TError,
+  { tableId: string },
+  TContext
+> => {
+  return useMutation(getDeleteRestaurantTableMutationOptions(options));
+};
+
+/**
+ * @summary List orders
+ */
+export const getGetRestaurantOrdersUrl = (
+  params?: GetRestaurantOrdersParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/restaurant/orders?${stringifiedParams}`
+    : `/api/restaurant/orders`;
+};
+
+export const getRestaurantOrders = async (
+  params?: GetRestaurantOrdersParams,
+  options?: RequestInit,
+): Promise<PaginatedOrders> => {
+  return customFetch<PaginatedOrders>(getGetRestaurantOrdersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRestaurantOrdersQueryKey = (
+  params?: GetRestaurantOrdersParams,
+) => {
+  return [`/api/restaurant/orders`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetRestaurantOrdersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRestaurantOrders>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRestaurantOrdersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantOrders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRestaurantOrdersQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRestaurantOrders>>
+  > = ({ signal }) =>
+    getRestaurantOrders(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantOrders>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRestaurantOrdersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRestaurantOrders>>
+>;
+export type GetRestaurantOrdersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List orders
+ */
+
+export function useGetRestaurantOrders<
+  TData = Awaited<ReturnType<typeof getRestaurantOrders>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRestaurantOrdersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantOrders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRestaurantOrdersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Open a new order for a table
+ */
+export const getCreateRestaurantOrderUrl = () => {
+  return `/api/restaurant/orders`;
+};
+
+export const createRestaurantOrder = async (
+  createOrderRequest: CreateOrderRequest,
+  options?: RequestInit,
+): Promise<RestaurantOrder> => {
+  return customFetch<RestaurantOrder>(getCreateRestaurantOrderUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createOrderRequest),
+  });
+};
+
+export const getCreateRestaurantOrderMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRestaurantOrder>>,
+    TError,
+    { data: BodyType<CreateOrderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createRestaurantOrder>>,
+  TError,
+  { data: BodyType<CreateOrderRequest> },
+  TContext
+> => {
+  const mutationKey = ["createRestaurantOrder"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createRestaurantOrder>>,
+    { data: BodyType<CreateOrderRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createRestaurantOrder(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateRestaurantOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createRestaurantOrder>>
+>;
+export type CreateRestaurantOrderMutationBody = BodyType<CreateOrderRequest>;
+export type CreateRestaurantOrderMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Open a new order for a table
+ */
+export const useCreateRestaurantOrder = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createRestaurantOrder>>,
+    TError,
+    { data: BodyType<CreateOrderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createRestaurantOrder>>,
+  TError,
+  { data: BodyType<CreateOrderRequest> },
+  TContext
+> => {
+  return useMutation(getCreateRestaurantOrderMutationOptions(options));
+};
+
+/**
+ * @summary Get order with items
+ */
+export const getGetRestaurantOrderUrl = (orderId: string) => {
+  return `/api/restaurant/orders/${orderId}`;
+};
+
+export const getRestaurantOrder = async (
+  orderId: string,
+  options?: RequestInit,
+): Promise<RestaurantOrderWithItems> => {
+  return customFetch<RestaurantOrderWithItems>(
+    getGetRestaurantOrderUrl(orderId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetRestaurantOrderQueryKey = (orderId: string) => {
+  return [`/api/restaurant/orders/${orderId}`] as const;
+};
+
+export const getGetRestaurantOrderQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRestaurantOrder>>,
+  TError = ErrorType<unknown>,
+>(
+  orderId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantOrder>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRestaurantOrderQueryKey(orderId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRestaurantOrder>>
+  > = ({ signal }) =>
+    getRestaurantOrder(orderId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!orderId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantOrder>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRestaurantOrderQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRestaurantOrder>>
+>;
+export type GetRestaurantOrderQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get order with items
+ */
+
+export function useGetRestaurantOrder<
+  TData = Awaited<ReturnType<typeof getRestaurantOrder>>,
+  TError = ErrorType<unknown>,
+>(
+  orderId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantOrder>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRestaurantOrderQueryOptions(orderId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update order (status, discount, notes, payment)
+ */
+export const getUpdateRestaurantOrderUrl = (orderId: string) => {
+  return `/api/restaurant/orders/${orderId}`;
+};
+
+export const updateRestaurantOrder = async (
+  orderId: string,
+  updateOrderRequest: UpdateOrderRequest,
+  options?: RequestInit,
+): Promise<RestaurantOrder> => {
+  return customFetch<RestaurantOrder>(getUpdateRestaurantOrderUrl(orderId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateOrderRequest),
+  });
+};
+
+export const getUpdateRestaurantOrderMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRestaurantOrder>>,
+    TError,
+    { orderId: string; data: BodyType<UpdateOrderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateRestaurantOrder>>,
+  TError,
+  { orderId: string; data: BodyType<UpdateOrderRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateRestaurantOrder"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateRestaurantOrder>>,
+    { orderId: string; data: BodyType<UpdateOrderRequest> }
+  > = (props) => {
+    const { orderId, data } = props ?? {};
+
+    return updateRestaurantOrder(orderId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateRestaurantOrderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateRestaurantOrder>>
+>;
+export type UpdateRestaurantOrderMutationBody = BodyType<UpdateOrderRequest>;
+export type UpdateRestaurantOrderMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update order (status, discount, notes, payment)
+ */
+export const useUpdateRestaurantOrder = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateRestaurantOrder>>,
+    TError,
+    { orderId: string; data: BodyType<UpdateOrderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateRestaurantOrder>>,
+  TError,
+  { orderId: string; data: BodyType<UpdateOrderRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateRestaurantOrderMutationOptions(options));
+};
+
+/**
+ * @summary Add item(s) to an order
+ */
+export const getAddOrderItemUrl = (orderId: string) => {
+  return `/api/restaurant/orders/${orderId}/items`;
+};
+
+export const addOrderItem = async (
+  orderId: string,
+  addOrderItemsRequest: AddOrderItemsRequest,
+  options?: RequestInit,
+): Promise<RestaurantOrderWithItems> => {
+  return customFetch<RestaurantOrderWithItems>(getAddOrderItemUrl(orderId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addOrderItemsRequest),
+  });
+};
+
+export const getAddOrderItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addOrderItem>>,
+    TError,
+    { orderId: string; data: BodyType<AddOrderItemsRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addOrderItem>>,
+  TError,
+  { orderId: string; data: BodyType<AddOrderItemsRequest> },
+  TContext
+> => {
+  const mutationKey = ["addOrderItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addOrderItem>>,
+    { orderId: string; data: BodyType<AddOrderItemsRequest> }
+  > = (props) => {
+    const { orderId, data } = props ?? {};
+
+    return addOrderItem(orderId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddOrderItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addOrderItem>>
+>;
+export type AddOrderItemMutationBody = BodyType<AddOrderItemsRequest>;
+export type AddOrderItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add item(s) to an order
+ */
+export const useAddOrderItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addOrderItem>>,
+    TError,
+    { orderId: string; data: BodyType<AddOrderItemsRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addOrderItem>>,
+  TError,
+  { orderId: string; data: BodyType<AddOrderItemsRequest> },
+  TContext
+> => {
+  return useMutation(getAddOrderItemMutationOptions(options));
+};
+
+/**
+ * @summary Update an order item
+ */
+export const getUpdateOrderItemUrl = (orderId: string, itemId: string) => {
+  return `/api/restaurant/orders/${orderId}/items/${itemId}`;
+};
+
+export const updateOrderItem = async (
+  orderId: string,
+  itemId: string,
+  updateOrderItemRequest: UpdateOrderItemRequest,
+  options?: RequestInit,
+): Promise<OrderItem> => {
+  return customFetch<OrderItem>(getUpdateOrderItemUrl(orderId, itemId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateOrderItemRequest),
+  });
+};
+
+export const getUpdateOrderItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateOrderItem>>,
+    TError,
+    { orderId: string; itemId: string; data: BodyType<UpdateOrderItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateOrderItem>>,
+  TError,
+  { orderId: string; itemId: string; data: BodyType<UpdateOrderItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateOrderItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateOrderItem>>,
+    { orderId: string; itemId: string; data: BodyType<UpdateOrderItemRequest> }
+  > = (props) => {
+    const { orderId, itemId, data } = props ?? {};
+
+    return updateOrderItem(orderId, itemId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateOrderItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateOrderItem>>
+>;
+export type UpdateOrderItemMutationBody = BodyType<UpdateOrderItemRequest>;
+export type UpdateOrderItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update an order item
+ */
+export const useUpdateOrderItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateOrderItem>>,
+    TError,
+    { orderId: string; itemId: string; data: BodyType<UpdateOrderItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateOrderItem>>,
+  TError,
+  { orderId: string; itemId: string; data: BodyType<UpdateOrderItemRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateOrderItemMutationOptions(options));
+};
+
+/**
+ * @summary Remove an item from an order
+ */
+export const getDeleteOrderItemUrl = (orderId: string, itemId: string) => {
+  return `/api/restaurant/orders/${orderId}/items/${itemId}`;
+};
+
+export const deleteOrderItem = async (
+  orderId: string,
+  itemId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteOrderItemUrl(orderId, itemId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteOrderItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteOrderItem>>,
+    TError,
+    { orderId: string; itemId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteOrderItem>>,
+  TError,
+  { orderId: string; itemId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteOrderItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteOrderItem>>,
+    { orderId: string; itemId: string }
+  > = (props) => {
+    const { orderId, itemId } = props ?? {};
+
+    return deleteOrderItem(orderId, itemId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteOrderItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteOrderItem>>
+>;
+
+export type DeleteOrderItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove an item from an order
+ */
+export const useDeleteOrderItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteOrderItem>>,
+    TError,
+    { orderId: string; itemId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteOrderItem>>,
+  TError,
+  { orderId: string; itemId: string },
+  TContext
+> => {
+  return useMutation(getDeleteOrderItemMutationOptions(options));
+};
+
+/**
+ * @summary Get today's daily menu (or by date)
+ */
+export const getGetDailyMenuUrl = (params?: GetDailyMenuParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/restaurant/daily-menu?${stringifiedParams}`
+    : `/api/restaurant/daily-menu`;
+};
+
+export const getDailyMenu = async (
+  params?: GetDailyMenuParams,
+  options?: RequestInit,
+): Promise<DailyMenuWithItems> => {
+  return customFetch<DailyMenuWithItems>(getGetDailyMenuUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDailyMenuQueryKey = (params?: GetDailyMenuParams) => {
+  return [`/api/restaurant/daily-menu`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetDailyMenuQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDailyMenu>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetDailyMenuParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDailyMenu>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDailyMenuQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDailyMenu>>> = ({
+    signal,
+  }) => getDailyMenu(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDailyMenu>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDailyMenuQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDailyMenu>>
+>;
+export type GetDailyMenuQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get today's daily menu (or by date)
+ */
+
+export function useGetDailyMenu<
+  TData = Awaited<ReturnType<typeof getDailyMenu>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetDailyMenuParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getDailyMenu>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDailyMenuQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update today's daily menu
+ */
+export const getCreateOrUpdateDailyMenuUrl = () => {
+  return `/api/restaurant/daily-menu`;
+};
+
+export const createOrUpdateDailyMenu = async (
+  createDailyMenuRequest: CreateDailyMenuRequest,
+  options?: RequestInit,
+): Promise<DailyMenuWithItems> => {
+  return customFetch<DailyMenuWithItems>(getCreateOrUpdateDailyMenuUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createDailyMenuRequest),
+  });
+};
+
+export const getCreateOrUpdateDailyMenuMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createOrUpdateDailyMenu>>,
+    TError,
+    { data: BodyType<CreateDailyMenuRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createOrUpdateDailyMenu>>,
+  TError,
+  { data: BodyType<CreateDailyMenuRequest> },
+  TContext
+> => {
+  const mutationKey = ["createOrUpdateDailyMenu"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createOrUpdateDailyMenu>>,
+    { data: BodyType<CreateDailyMenuRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createOrUpdateDailyMenu(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateOrUpdateDailyMenuMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createOrUpdateDailyMenu>>
+>;
+export type CreateOrUpdateDailyMenuMutationBody =
+  BodyType<CreateDailyMenuRequest>;
+export type CreateOrUpdateDailyMenuMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create or update today's daily menu
+ */
+export const useCreateOrUpdateDailyMenu = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createOrUpdateDailyMenu>>,
+    TError,
+    { data: BodyType<CreateDailyMenuRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createOrUpdateDailyMenu>>,
+  TError,
+  { data: BodyType<CreateDailyMenuRequest> },
+  TContext
+> => {
+  return useMutation(getCreateOrUpdateDailyMenuMutationOptions(options));
+};
+
+/**
+ * @summary Add item to daily menu
+ */
+export const getAddDailyMenuItemUrl = (menuId: string) => {
+  return `/api/restaurant/daily-menu/${menuId}/items`;
+};
+
+export const addDailyMenuItem = async (
+  menuId: string,
+  addDailyMenuItemRequest: AddDailyMenuItemRequest,
+  options?: RequestInit,
+): Promise<DailyMenuItem> => {
+  return customFetch<DailyMenuItem>(getAddDailyMenuItemUrl(menuId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addDailyMenuItemRequest),
+  });
+};
+
+export const getAddDailyMenuItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addDailyMenuItem>>,
+    TError,
+    { menuId: string; data: BodyType<AddDailyMenuItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addDailyMenuItem>>,
+  TError,
+  { menuId: string; data: BodyType<AddDailyMenuItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["addDailyMenuItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addDailyMenuItem>>,
+    { menuId: string; data: BodyType<AddDailyMenuItemRequest> }
+  > = (props) => {
+    const { menuId, data } = props ?? {};
+
+    return addDailyMenuItem(menuId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddDailyMenuItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addDailyMenuItem>>
+>;
+export type AddDailyMenuItemMutationBody = BodyType<AddDailyMenuItemRequest>;
+export type AddDailyMenuItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add item to daily menu
+ */
+export const useAddDailyMenuItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addDailyMenuItem>>,
+    TError,
+    { menuId: string; data: BodyType<AddDailyMenuItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addDailyMenuItem>>,
+  TError,
+  { menuId: string; data: BodyType<AddDailyMenuItemRequest> },
+  TContext
+> => {
+  return useMutation(getAddDailyMenuItemMutationOptions(options));
+};
+
+/**
+ * @summary Update daily menu item
+ */
+export const getUpdateDailyMenuItemUrl = (menuId: string, itemId: string) => {
+  return `/api/restaurant/daily-menu/${menuId}/items/${itemId}`;
+};
+
+export const updateDailyMenuItem = async (
+  menuId: string,
+  itemId: string,
+  updateDailyMenuItemRequest: UpdateDailyMenuItemRequest,
+  options?: RequestInit,
+): Promise<DailyMenuItem> => {
+  return customFetch<DailyMenuItem>(getUpdateDailyMenuItemUrl(menuId, itemId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateDailyMenuItemRequest),
+  });
+};
+
+export const getUpdateDailyMenuItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDailyMenuItem>>,
+    TError,
+    {
+      menuId: string;
+      itemId: string;
+      data: BodyType<UpdateDailyMenuItemRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDailyMenuItem>>,
+  TError,
+  {
+    menuId: string;
+    itemId: string;
+    data: BodyType<UpdateDailyMenuItemRequest>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateDailyMenuItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDailyMenuItem>>,
+    {
+      menuId: string;
+      itemId: string;
+      data: BodyType<UpdateDailyMenuItemRequest>;
+    }
+  > = (props) => {
+    const { menuId, itemId, data } = props ?? {};
+
+    return updateDailyMenuItem(menuId, itemId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDailyMenuItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDailyMenuItem>>
+>;
+export type UpdateDailyMenuItemMutationBody =
+  BodyType<UpdateDailyMenuItemRequest>;
+export type UpdateDailyMenuItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update daily menu item
+ */
+export const useUpdateDailyMenuItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDailyMenuItem>>,
+    TError,
+    {
+      menuId: string;
+      itemId: string;
+      data: BodyType<UpdateDailyMenuItemRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateDailyMenuItem>>,
+  TError,
+  {
+    menuId: string;
+    itemId: string;
+    data: BodyType<UpdateDailyMenuItemRequest>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateDailyMenuItemMutationOptions(options));
+};
+
+/**
+ * @summary Remove item from daily menu
+ */
+export const getDeleteDailyMenuItemUrl = (menuId: string, itemId: string) => {
+  return `/api/restaurant/daily-menu/${menuId}/items/${itemId}`;
+};
+
+export const deleteDailyMenuItem = async (
+  menuId: string,
+  itemId: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteDailyMenuItemUrl(menuId, itemId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteDailyMenuItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDailyMenuItem>>,
+    TError,
+    { menuId: string; itemId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteDailyMenuItem>>,
+  TError,
+  { menuId: string; itemId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteDailyMenuItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteDailyMenuItem>>,
+    { menuId: string; itemId: string }
+  > = (props) => {
+    const { menuId, itemId } = props ?? {};
+
+    return deleteDailyMenuItem(menuId, itemId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteDailyMenuItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteDailyMenuItem>>
+>;
+
+export type DeleteDailyMenuItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Remove item from daily menu
+ */
+export const useDeleteDailyMenuItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteDailyMenuItem>>,
+    TError,
+    { menuId: string; itemId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteDailyMenuItem>>,
+  TError,
+  { menuId: string; itemId: string },
+  TContext
+> => {
+  return useMutation(getDeleteDailyMenuItemMutationOptions(options));
+};
+
+/**
+ * @summary Publish or unpublish daily menu
+ */
+export const getPublishDailyMenuUrl = (menuId: string) => {
+  return `/api/restaurant/daily-menu/${menuId}/publish`;
+};
+
+export const publishDailyMenu = async (
+  menuId: string,
+  publishDailyMenuBody: PublishDailyMenuBody,
+  options?: RequestInit,
+): Promise<DailyMenuWithItems> => {
+  return customFetch<DailyMenuWithItems>(getPublishDailyMenuUrl(menuId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(publishDailyMenuBody),
+  });
+};
+
+export const getPublishDailyMenuMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof publishDailyMenu>>,
+    TError,
+    { menuId: string; data: BodyType<PublishDailyMenuBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof publishDailyMenu>>,
+  TError,
+  { menuId: string; data: BodyType<PublishDailyMenuBody> },
+  TContext
+> => {
+  const mutationKey = ["publishDailyMenu"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof publishDailyMenu>>,
+    { menuId: string; data: BodyType<PublishDailyMenuBody> }
+  > = (props) => {
+    const { menuId, data } = props ?? {};
+
+    return publishDailyMenu(menuId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PublishDailyMenuMutationResult = NonNullable<
+  Awaited<ReturnType<typeof publishDailyMenu>>
+>;
+export type PublishDailyMenuMutationBody = BodyType<PublishDailyMenuBody>;
+export type PublishDailyMenuMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Publish or unpublish daily menu
+ */
+export const usePublishDailyMenu = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof publishDailyMenu>>,
+    TError,
+    { menuId: string; data: BodyType<PublishDailyMenuBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof publishDailyMenu>>,
+  TError,
+  { menuId: string; data: BodyType<PublishDailyMenuBody> },
+  TContext
+> => {
+  return useMutation(getPublishDailyMenuMutationOptions(options));
+};
+
+/**
+ * @summary Restaurant stats (orders today, revenue, busy tables)
+ */
+export const getGetRestaurantStatsUrl = () => {
+  return `/api/restaurant/stats`;
+};
+
+export const getRestaurantStats = async (
+  options?: RequestInit,
+): Promise<RestaurantStats> => {
+  return customFetch<RestaurantStats>(getGetRestaurantStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRestaurantStatsQueryKey = () => {
+  return [`/api/restaurant/stats`] as const;
+};
+
+export const getGetRestaurantStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRestaurantStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRestaurantStatsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRestaurantStats>>
+  > = ({ signal }) => getRestaurantStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRestaurantStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRestaurantStats>>
+>;
+export type GetRestaurantStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Restaurant stats (orders today, revenue, busy tables)
+ */
+
+export function useGetRestaurantStats<
+  TData = Awaited<ReturnType<typeof getRestaurantStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRestaurantStatsQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

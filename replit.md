@@ -49,6 +49,7 @@ artifacts/
 │   │   │   ├── landing.tsx
 │   │   │   ├── auth/login.tsx, register.tsx
 │   │   │   ├── dashboard/ (index, products, categories, inventory, team, settings, customize, reviews)
+│   │   │   ├── dashboard/restaurant/ (index, setup, orders, daily-menu, table-order)
 │   │   │   └── admin/ (index, store-detail)
 │   │   ├── components/
 │   │   │   ├── layout/dashboard-layout.tsx
@@ -71,7 +72,12 @@ lib/
         ├── store_banners.ts    # Banners promocionales (max 5)
         ├── product_images.ts   # Imágenes múltiples por producto (max 10)
         ├── product_variants.ts # Variantes (talla/color/estilo/material/género/temporada) + stock por variante
-        └── product_reviews.ts  # Reseñas de clientes con aprobación/moderación
+        ├── product_reviews.ts  # Reseñas de clientes con aprobación/moderación
+        ├── restaurant_tables.ts    # Mesas del restaurante con zonas y estado
+        ├── restaurant_orders.ts    # Pedidos por mesa (open/completed/paid/cancelled)
+        ├── restaurant_order_items.ts # Items de pedido con estado y notas
+        ├── daily_menus.ts          # Menú del día con publicación
+        └── daily_menu_items.ts     # Platos del menú del día
 scripts/
 └── src/seed-superadmin.ts   # Script para crear superadmin
 ```
@@ -144,6 +150,27 @@ scripts/
 - `PATCH /api/products/:id/images/reorder` — Reordenar imágenes
 - `PATCH/DELETE /api/products/:id/images/:imageId` — Editar/eliminar imagen
 
+### Módulo Restaurante (Fase 5)
+- `GET /api/restaurant/tables` — Listar mesas con estado activo y orderId abierto
+- `POST /api/restaurant/tables` — Crear mesa individual
+- `POST /api/restaurant/tables/bulk` — Crear N mesas con prefijo/zona/capacidad
+- `PATCH /api/restaurant/tables/:tableId` — Editar mesa (status, name, zone, isActive)
+- `DELETE /api/restaurant/tables/:tableId` — Eliminar mesa
+- `GET /api/restaurant/orders` — Historial de pedidos (filtros: tableId, status, date, page)
+- `POST /api/restaurant/orders` — Abrir pedido → cambia mesa a "occupied"
+- `GET /api/restaurant/orders/:orderId` — Pedido con items
+- `PATCH /api/restaurant/orders/:orderId` — Actualizar pedido (status, descuento, pago)
+- `POST /api/restaurant/orders/:orderId/items` — Agregar items al pedido
+- `PATCH /api/restaurant/orders/:orderId/items/:itemId` — Actualizar item (qty, status, notes)
+- `DELETE /api/restaurant/orders/:orderId/items/:itemId` — Eliminar item
+- `GET /api/restaurant/daily-menu` — Menú del día por fecha
+- `POST /api/restaurant/daily-menu` — Crear/actualizar menú del día
+- `POST /api/restaurant/daily-menu/:menuId/items` — Agregar plato al menú
+- `PATCH /api/restaurant/daily-menu/:menuId/items/:itemId` — Editar plato
+- `DELETE /api/restaurant/daily-menu/:menuId/items/:itemId` — Eliminar plato
+- `POST /api/restaurant/daily-menu/:menuId/publish` — Publicar/despublicar menú
+- `GET /api/restaurant/stats` — Estadísticas del restaurante (ventas, mesas por estado)
+
 ## Superadmin
 
 - Email: `admin@camila.pe`
@@ -162,6 +189,11 @@ scripts/
 - `/dashboard/inventory` — Inventario
 - `/dashboard/team` — Equipo de trabajo
 - `/dashboard/settings` — Configuración de la tienda
+- `/dashboard/restaurant` — Mapa de mesas (hub principal del módulo restaurante)
+- `/dashboard/restaurant/setup` — Configurar mesas (CRUD + bulk create)
+- `/dashboard/restaurant/orders` — Historial de pedidos
+- `/dashboard/restaurant/daily-menu` — Editor del menú del día
+- `/dashboard/restaurant/tables/:tableId` — Vista de pedido por mesa (mobile-first)
 - `/admin` — Panel superadmin (solo superadmin)
 - `/admin/stores/:id` — Detalle de tienda (solo superadmin)
 
@@ -214,6 +246,28 @@ scripts/
 - [x] Productos mejorado: filtros avanzados, exportar/importar CSV, star icon, sale price display
 - [x] Categorías mejorado: árbol expandible con subcategorías, formulario con parentId
 - [x] Inventario mejorado: 3 tabs (Movimientos, Stock Bajo, Kárdex)
+
+## Fase 4 - Completada ✅
+
+- [x] product_variants: talla, color, colorHex, estilo, material, género, temporada, sku, stock por variante
+- [x] CRUD completo de variantes via tab "Variantes" en editor de productos
+- [x] product_reviews: reseñas con texto, rating, nombre cliente, aprobación/moderación
+- [x] GET/POST /api/products/:id/reviews + PATCH moderate + DELETE
+- [x] Página /dashboard/reviews — moderación global de reseñas
+
+## Fase 5 - Completada ✅
+
+- [x] DB: 5 tablas nuevas (restaurant_tables, restaurant_orders, restaurant_order_items, daily_menus, daily_menu_items) + soldOut en products
+- [x] API completa: 19 endpoints bajo /api/restaurant/*
+- [x] Mapa de mesas mobile-first con agrupación por zonas y colores por estado
+- [x] Configuración de mesas (CRUD individual + creación masiva por prefijo/zona)
+- [x] Pedidos por mesa: agregar items, control de estado por ítem (pending/preparing/served), notas
+- [x] Cierre de cuenta con descuento por monto o porcentaje, método de pago, liberación automática de mesa
+- [x] Estado automático de mesa (occupied al abrir, free al pagar/cancelar, to_pay al completar)
+- [x] Historial de pedidos con filtros por estado y paginación
+- [x] Menú del día: editor de platos con precio especial, import desde catálogo, publicación
+- [x] Estadísticas del restaurante: ventas del día, mesas por estado, pedidos abiertos
+- [x] "Restaurante" en la navegación del dashboard (sidebar)
 
 ## Próximas Fases
 

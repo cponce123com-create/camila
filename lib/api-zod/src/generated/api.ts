@@ -1703,3 +1703,498 @@ export const GetAllReviewsResponse = zod.object({
   limit: zod.number(),
   totalPages: zod.number(),
 });
+
+/**
+ * @summary List restaurant tables
+ */
+export const GetRestaurantTablesQueryParams = zod.object({
+  zone: zod.coerce.string().optional(),
+  status: zod.enum(["free", "occupied", "to_pay", "closed"]).optional(),
+  isActive: zod.coerce.boolean().optional(),
+});
+
+export const GetRestaurantTablesResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  zone: zod.string().nullish(),
+  capacity: zod.number().optional(),
+  status: zod.enum(["free", "occupied", "to_pay", "closed"]),
+  sortOrder: zod.number(),
+  isActive: zod.boolean(),
+  notes: zod.string().nullish(),
+  activeOrderId: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const GetRestaurantTablesResponse = zod.array(
+  GetRestaurantTablesResponseItem,
+);
+
+/**
+ * @summary Create a table
+ */
+export const CreateRestaurantTableBody = zod.object({
+  name: zod.string(),
+  zone: zod.string().optional(),
+  capacity: zod.number().optional(),
+  sortOrder: zod.number().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Bulk create tables (e.g., create Table 1 through Table N)
+ */
+export const BulkCreateTablesBody = zod.object({
+  count: zod.number().describe("Number of tables to create"),
+  prefix: zod
+    .string()
+    .describe('Name prefix, e.g. \"Mesa\" creates \"Mesa 1\", \"Mesa 2\"...'),
+  zone: zod.string().optional(),
+  capacity: zod.number().optional(),
+});
+
+/**
+ * @summary Update a table (config or status)
+ */
+export const UpdateRestaurantTableParams = zod.object({
+  tableId: zod.coerce.string(),
+});
+
+export const UpdateRestaurantTableBody = zod.object({
+  name: zod.string().optional(),
+  zone: zod.string().optional(),
+  capacity: zod.number().optional(),
+  status: zod.enum(["free", "occupied", "to_pay", "closed"]).optional(),
+  sortOrder: zod.number().optional(),
+  isActive: zod.boolean().optional(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateRestaurantTableResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  zone: zod.string().nullish(),
+  capacity: zod.number().optional(),
+  status: zod.enum(["free", "occupied", "to_pay", "closed"]),
+  sortOrder: zod.number(),
+  isActive: zod.boolean(),
+  notes: zod.string().nullish(),
+  activeOrderId: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete a table
+ */
+export const DeleteRestaurantTableParams = zod.object({
+  tableId: zod.coerce.string(),
+});
+
+/**
+ * @summary List orders
+ */
+export const getRestaurantOrdersQueryPageDefault = 1;
+export const getRestaurantOrdersQueryLimitDefault = 20;
+
+export const GetRestaurantOrdersQueryParams = zod.object({
+  tableId: zod.coerce.string().optional(),
+  status: zod.enum(["open", "completed", "paid", "cancelled"]).optional(),
+  dateFrom: zod.coerce.string().optional(),
+  dateTo: zod.coerce.string().optional(),
+  page: zod.coerce.number().default(getRestaurantOrdersQueryPageDefault),
+  limit: zod.coerce.number().default(getRestaurantOrdersQueryLimitDefault),
+});
+
+export const GetRestaurantOrdersResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      tableId: zod.string(),
+      tableName: zod.string(),
+      tableZone: zod.string().nullish(),
+      status: zod.enum(["open", "completed", "paid", "cancelled"]),
+      staffUserId: zod.string().nullish(),
+      staffName: zod.string().nullish(),
+      guestCount: zod.number().optional(),
+      notes: zod.string().nullish(),
+      subtotal: zod.number(),
+      discount: zod.number(),
+      discountPercent: zod.number(),
+      total: zod.number(),
+      paymentMethod: zod.enum(["cash", "card", "transfer", "other"]).nullish(),
+      openedAt: zod.string(),
+      closedAt: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Open a new order for a table
+ */
+export const CreateRestaurantOrderBody = zod.object({
+  tableId: zod.string(),
+  guestCount: zod.number().optional(),
+  notes: zod.string().optional(),
+  items: zod
+    .array(
+      zod.object({
+        productId: zod.string().optional(),
+        productName: zod.string(),
+        unitPrice: zod.number(),
+        quantity: zod.number(),
+        notes: zod.string().optional(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Get order with items
+ */
+export const GetRestaurantOrderParams = zod.object({
+  orderId: zod.coerce.string(),
+});
+
+export const GetRestaurantOrderResponse = zod
+  .object({
+    id: zod.string(),
+    storeId: zod.string(),
+    tableId: zod.string(),
+    tableName: zod.string(),
+    tableZone: zod.string().nullish(),
+    status: zod.enum(["open", "completed", "paid", "cancelled"]),
+    staffUserId: zod.string().nullish(),
+    staffName: zod.string().nullish(),
+    guestCount: zod.number().optional(),
+    notes: zod.string().nullish(),
+    subtotal: zod.number(),
+    discount: zod.number(),
+    discountPercent: zod.number(),
+    total: zod.number(),
+    paymentMethod: zod.enum(["cash", "card", "transfer", "other"]).nullish(),
+    openedAt: zod.string(),
+    closedAt: zod.string().nullish(),
+    createdAt: zod.string(),
+    updatedAt: zod.string(),
+  })
+  .and(
+    zod.object({
+      items: zod.array(
+        zod.object({
+          id: zod.string(),
+          orderId: zod.string(),
+          storeId: zod.string(),
+          productId: zod.string().nullish(),
+          productName: zod.string(),
+          unitPrice: zod.number(),
+          quantity: zod.number(),
+          subtotal: zod.number(),
+          notes: zod.string().nullish(),
+          status: zod.enum(["pending", "preparing", "served", "cancelled"]),
+          sortOrder: zod.number(),
+          createdAt: zod.string(),
+          updatedAt: zod.string(),
+        }),
+      ),
+    }),
+  );
+
+/**
+ * @summary Update order (status, discount, notes, payment)
+ */
+export const UpdateRestaurantOrderParams = zod.object({
+  orderId: zod.coerce.string(),
+});
+
+export const UpdateRestaurantOrderBody = zod.object({
+  status: zod.enum(["open", "completed", "paid", "cancelled"]).optional(),
+  notes: zod.string().optional(),
+  discount: zod.number().optional(),
+  discountPercent: zod.number().optional(),
+  paymentMethod: zod.enum(["cash", "card", "transfer", "other"]).optional(),
+  guestCount: zod.number().optional(),
+});
+
+export const UpdateRestaurantOrderResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  tableId: zod.string(),
+  tableName: zod.string(),
+  tableZone: zod.string().nullish(),
+  status: zod.enum(["open", "completed", "paid", "cancelled"]),
+  staffUserId: zod.string().nullish(),
+  staffName: zod.string().nullish(),
+  guestCount: zod.number().optional(),
+  notes: zod.string().nullish(),
+  subtotal: zod.number(),
+  discount: zod.number(),
+  discountPercent: zod.number(),
+  total: zod.number(),
+  paymentMethod: zod.enum(["cash", "card", "transfer", "other"]).nullish(),
+  openedAt: zod.string(),
+  closedAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Add item(s) to an order
+ */
+export const AddOrderItemParams = zod.object({
+  orderId: zod.coerce.string(),
+});
+
+export const AddOrderItemBody = zod.object({
+  items: zod.array(
+    zod.object({
+      productId: zod.string().optional(),
+      productName: zod.string(),
+      unitPrice: zod.number(),
+      quantity: zod.number(),
+      notes: zod.string().optional(),
+    }),
+  ),
+});
+
+/**
+ * @summary Update an order item
+ */
+export const UpdateOrderItemParams = zod.object({
+  orderId: zod.coerce.string(),
+  itemId: zod.coerce.string(),
+});
+
+export const UpdateOrderItemBody = zod.object({
+  quantity: zod.number().optional(),
+  notes: zod.string().optional(),
+  status: zod.enum(["pending", "preparing", "served", "cancelled"]).optional(),
+});
+
+export const UpdateOrderItemResponse = zod.object({
+  id: zod.string(),
+  orderId: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string().nullish(),
+  productName: zod.string(),
+  unitPrice: zod.number(),
+  quantity: zod.number(),
+  subtotal: zod.number(),
+  notes: zod.string().nullish(),
+  status: zod.enum(["pending", "preparing", "served", "cancelled"]),
+  sortOrder: zod.number(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Remove an item from an order
+ */
+export const DeleteOrderItemParams = zod.object({
+  orderId: zod.coerce.string(),
+  itemId: zod.coerce.string(),
+});
+
+/**
+ * @summary Get today's daily menu (or by date)
+ */
+export const GetDailyMenuQueryParams = zod.object({
+  date: zod.coerce.string().optional(),
+});
+
+export const GetDailyMenuResponse = zod
+  .object({
+    id: zod.string(),
+    storeId: zod.string(),
+    date: zod.string(),
+    isPublished: zod.boolean(),
+    notes: zod.string().nullish(),
+    publishedAt: zod.string().nullish(),
+    createdAt: zod.string(),
+    updatedAt: zod.string(),
+  })
+  .and(
+    zod.object({
+      items: zod.array(
+        zod.object({
+          id: zod.string(),
+          menuId: zod.string(),
+          storeId: zod.string(),
+          productId: zod.string().nullish(),
+          name: zod.string(),
+          description: zod.string().nullish(),
+          specialPrice: zod.number().nullish(),
+          notes: zod.string().nullish(),
+          sortOrder: zod.number(),
+          isActive: zod.boolean(),
+          createdAt: zod.string(),
+          updatedAt: zod.string(),
+        }),
+      ),
+    }),
+  );
+
+/**
+ * @summary Create or update today's daily menu
+ */
+export const CreateOrUpdateDailyMenuBody = zod.object({
+  date: zod
+    .string()
+    .optional()
+    .describe("ISO date YYYY-MM-DD, defaults to today"),
+  notes: zod.string().optional(),
+});
+
+export const CreateOrUpdateDailyMenuResponse = zod
+  .object({
+    id: zod.string(),
+    storeId: zod.string(),
+    date: zod.string(),
+    isPublished: zod.boolean(),
+    notes: zod.string().nullish(),
+    publishedAt: zod.string().nullish(),
+    createdAt: zod.string(),
+    updatedAt: zod.string(),
+  })
+  .and(
+    zod.object({
+      items: zod.array(
+        zod.object({
+          id: zod.string(),
+          menuId: zod.string(),
+          storeId: zod.string(),
+          productId: zod.string().nullish(),
+          name: zod.string(),
+          description: zod.string().nullish(),
+          specialPrice: zod.number().nullish(),
+          notes: zod.string().nullish(),
+          sortOrder: zod.number(),
+          isActive: zod.boolean(),
+          createdAt: zod.string(),
+          updatedAt: zod.string(),
+        }),
+      ),
+    }),
+  );
+
+/**
+ * @summary Add item to daily menu
+ */
+export const AddDailyMenuItemParams = zod.object({
+  menuId: zod.coerce.string(),
+});
+
+export const AddDailyMenuItemBody = zod.object({
+  productId: zod.string().optional(),
+  name: zod.string(),
+  description: zod.string().optional(),
+  specialPrice: zod.number().optional(),
+  notes: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+});
+
+/**
+ * @summary Update daily menu item
+ */
+export const UpdateDailyMenuItemParams = zod.object({
+  menuId: zod.coerce.string(),
+  itemId: zod.coerce.string(),
+});
+
+export const UpdateDailyMenuItemBody = zod.object({
+  name: zod.string().optional(),
+  description: zod.string().optional(),
+  specialPrice: zod.number().optional(),
+  notes: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+  isActive: zod.boolean().optional(),
+});
+
+export const UpdateDailyMenuItemResponse = zod.object({
+  id: zod.string(),
+  menuId: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string().nullish(),
+  name: zod.string(),
+  description: zod.string().nullish(),
+  specialPrice: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  sortOrder: zod.number(),
+  isActive: zod.boolean(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Remove item from daily menu
+ */
+export const DeleteDailyMenuItemParams = zod.object({
+  menuId: zod.coerce.string(),
+  itemId: zod.coerce.string(),
+});
+
+/**
+ * @summary Publish or unpublish daily menu
+ */
+export const PublishDailyMenuParams = zod.object({
+  menuId: zod.coerce.string(),
+});
+
+export const PublishDailyMenuBody = zod.object({
+  isPublished: zod.boolean(),
+});
+
+export const PublishDailyMenuResponse = zod
+  .object({
+    id: zod.string(),
+    storeId: zod.string(),
+    date: zod.string(),
+    isPublished: zod.boolean(),
+    notes: zod.string().nullish(),
+    publishedAt: zod.string().nullish(),
+    createdAt: zod.string(),
+    updatedAt: zod.string(),
+  })
+  .and(
+    zod.object({
+      items: zod.array(
+        zod.object({
+          id: zod.string(),
+          menuId: zod.string(),
+          storeId: zod.string(),
+          productId: zod.string().nullish(),
+          name: zod.string(),
+          description: zod.string().nullish(),
+          specialPrice: zod.number().nullish(),
+          notes: zod.string().nullish(),
+          sortOrder: zod.number(),
+          isActive: zod.boolean(),
+          createdAt: zod.string(),
+          updatedAt: zod.string(),
+        }),
+      ),
+    }),
+  );
+
+/**
+ * @summary Restaurant stats (orders today, revenue, busy tables)
+ */
+export const GetRestaurantStatsResponse = zod.object({
+  ordersToday: zod.number(),
+  revenueToday: zod.number(),
+  tablesOccupied: zod.number(),
+  tablesFree: zod.number(),
+  tablesToPay: zod.number(),
+  totalTables: zod.number(),
+  openOrders: zod.number(),
+  avgOrderValue: zod.number(),
+});

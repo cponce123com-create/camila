@@ -692,6 +692,278 @@ export interface ProductRatingSummary {
   distribution?: ProductRatingSummaryDistribution;
 }
 
+export type RestaurantTableStatus =
+  (typeof RestaurantTableStatus)[keyof typeof RestaurantTableStatus];
+
+export const RestaurantTableStatus = {
+  free: "free",
+  occupied: "occupied",
+  to_pay: "to_pay",
+  closed: "closed",
+} as const;
+
+export interface RestaurantTable {
+  id: string;
+  storeId: string;
+  name: string;
+  zone?: string | null;
+  capacity?: number;
+  status: RestaurantTableStatus;
+  sortOrder: number;
+  isActive: boolean;
+  notes?: string | null;
+  activeOrderId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTableRequest {
+  name: string;
+  zone?: string;
+  capacity?: number;
+  sortOrder?: number;
+  notes?: string;
+}
+
+export type UpdateTableRequestStatus =
+  (typeof UpdateTableRequestStatus)[keyof typeof UpdateTableRequestStatus];
+
+export const UpdateTableRequestStatus = {
+  free: "free",
+  occupied: "occupied",
+  to_pay: "to_pay",
+  closed: "closed",
+} as const;
+
+export interface UpdateTableRequest {
+  name?: string;
+  zone?: string;
+  capacity?: number;
+  status?: UpdateTableRequestStatus;
+  sortOrder?: number;
+  isActive?: boolean;
+  notes?: string;
+}
+
+export interface BulkCreateTablesRequest {
+  /** Number of tables to create */
+  count: number;
+  /** Name prefix, e.g. "Mesa" creates "Mesa 1", "Mesa 2"... */
+  prefix: string;
+  zone?: string;
+  capacity?: number;
+}
+
+export type RestaurantOrderStatus =
+  (typeof RestaurantOrderStatus)[keyof typeof RestaurantOrderStatus];
+
+export const RestaurantOrderStatus = {
+  open: "open",
+  completed: "completed",
+  paid: "paid",
+  cancelled: "cancelled",
+} as const;
+
+export type RestaurantOrderPaymentMethod =
+  | (typeof RestaurantOrderPaymentMethod)[keyof typeof RestaurantOrderPaymentMethod]
+  | null;
+
+export const RestaurantOrderPaymentMethod = {
+  cash: "cash",
+  card: "card",
+  transfer: "transfer",
+  other: "other",
+} as const;
+
+export interface RestaurantOrder {
+  id: string;
+  storeId: string;
+  tableId: string;
+  tableName: string;
+  tableZone?: string | null;
+  status: RestaurantOrderStatus;
+  staffUserId?: string | null;
+  staffName?: string | null;
+  guestCount?: number;
+  notes?: string | null;
+  subtotal: number;
+  discount: number;
+  discountPercent: number;
+  total: number;
+  paymentMethod?: RestaurantOrderPaymentMethod;
+  openedAt: string;
+  closedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type OrderItemStatus =
+  (typeof OrderItemStatus)[keyof typeof OrderItemStatus];
+
+export const OrderItemStatus = {
+  pending: "pending",
+  preparing: "preparing",
+  served: "served",
+  cancelled: "cancelled",
+} as const;
+
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  storeId: string;
+  productId?: string | null;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
+  notes?: string | null;
+  status: OrderItemStatus;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type RestaurantOrderWithItems = RestaurantOrder & {
+  items: OrderItem[];
+};
+
+export interface OrderItemInput {
+  productId?: string;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  notes?: string;
+}
+
+export interface CreateOrderRequest {
+  tableId: string;
+  guestCount?: number;
+  notes?: string;
+  items?: OrderItemInput[];
+}
+
+export type UpdateOrderRequestStatus =
+  (typeof UpdateOrderRequestStatus)[keyof typeof UpdateOrderRequestStatus];
+
+export const UpdateOrderRequestStatus = {
+  open: "open",
+  completed: "completed",
+  paid: "paid",
+  cancelled: "cancelled",
+} as const;
+
+export type UpdateOrderRequestPaymentMethod =
+  (typeof UpdateOrderRequestPaymentMethod)[keyof typeof UpdateOrderRequestPaymentMethod];
+
+export const UpdateOrderRequestPaymentMethod = {
+  cash: "cash",
+  card: "card",
+  transfer: "transfer",
+  other: "other",
+} as const;
+
+export interface UpdateOrderRequest {
+  status?: UpdateOrderRequestStatus;
+  notes?: string;
+  discount?: number;
+  discountPercent?: number;
+  paymentMethod?: UpdateOrderRequestPaymentMethod;
+  guestCount?: number;
+}
+
+export interface AddOrderItemsRequest {
+  items: OrderItemInput[];
+}
+
+export type UpdateOrderItemRequestStatus =
+  (typeof UpdateOrderItemRequestStatus)[keyof typeof UpdateOrderItemRequestStatus];
+
+export const UpdateOrderItemRequestStatus = {
+  pending: "pending",
+  preparing: "preparing",
+  served: "served",
+  cancelled: "cancelled",
+} as const;
+
+export interface UpdateOrderItemRequest {
+  quantity?: number;
+  notes?: string;
+  status?: UpdateOrderItemRequestStatus;
+}
+
+export interface PaginatedOrders {
+  data: RestaurantOrder[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface DailyMenuItem {
+  id: string;
+  menuId: string;
+  storeId: string;
+  productId?: string | null;
+  name: string;
+  description?: string | null;
+  specialPrice?: number | null;
+  notes?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DailyMenu {
+  id: string;
+  storeId: string;
+  date: string;
+  isPublished: boolean;
+  notes?: string | null;
+  publishedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DailyMenuWithItems = DailyMenu & {
+  items: DailyMenuItem[];
+};
+
+export interface CreateDailyMenuRequest {
+  /** ISO date YYYY-MM-DD, defaults to today */
+  date?: string;
+  notes?: string;
+}
+
+export interface AddDailyMenuItemRequest {
+  productId?: string;
+  name: string;
+  description?: string;
+  specialPrice?: number;
+  notes?: string;
+  sortOrder?: number;
+}
+
+export interface UpdateDailyMenuItemRequest {
+  name?: string;
+  description?: string;
+  specialPrice?: number;
+  notes?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export interface RestaurantStats {
+  ordersToday: number;
+  revenueToday: number;
+  tablesOccupied: number;
+  tablesFree: number;
+  tablesToPay: number;
+  totalTables: number;
+  openOrders: number;
+  avgOrderValue: number;
+}
+
 export type AdminGetAllStoresParams = {
   page?: number;
   limit?: number;
@@ -820,4 +1092,50 @@ export type GetAllReviewsParams = {
   isApproved?: boolean;
   page?: number;
   limit?: number;
+};
+
+export type GetRestaurantTablesParams = {
+  zone?: string;
+  status?: GetRestaurantTablesStatus;
+  isActive?: boolean;
+};
+
+export type GetRestaurantTablesStatus =
+  (typeof GetRestaurantTablesStatus)[keyof typeof GetRestaurantTablesStatus];
+
+export const GetRestaurantTablesStatus = {
+  free: "free",
+  occupied: "occupied",
+  to_pay: "to_pay",
+  closed: "closed",
+} as const;
+
+export type GetRestaurantOrdersParams = {
+  tableId?: string;
+  status?: GetRestaurantOrdersStatus;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type GetRestaurantOrdersStatus =
+  (typeof GetRestaurantOrdersStatus)[keyof typeof GetRestaurantOrdersStatus];
+
+export const GetRestaurantOrdersStatus = {
+  open: "open",
+  completed: "completed",
+  paid: "paid",
+  cancelled: "cancelled",
+} as const;
+
+export type GetDailyMenuParams = {
+  /**
+   * ISO date string YYYY-MM-DD, defaults to today
+   */
+  date?: string;
+};
+
+export type PublishDailyMenuBody = {
+  isPublished: boolean;
 };

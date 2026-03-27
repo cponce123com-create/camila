@@ -35,6 +35,7 @@ export const productsTable = pgTable("products", {
   unit: text("unit").default("unidad"),
   isActive: boolean("is_active").default(true).notNull(),
   isFeatured: boolean("is_featured").default(false).notNull(),
+  soldOut: boolean("sold_out").default(false).notNull(),
   tags: text("tags").array(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
