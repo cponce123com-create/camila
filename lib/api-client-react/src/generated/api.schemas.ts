@@ -1283,6 +1283,196 @@ export interface SaleListResponse {
   totalPages: number;
 }
 
+export interface SalesAnalyticsTrendItem {
+  date: string;
+  revenue: number;
+  count: number;
+}
+
+export interface SalesAnalyticsPaymentItem {
+  method: string;
+  count: number;
+  revenue: number;
+}
+
+export interface SalesAnalyticsPeakHourItem {
+  hour: number;
+  count: number;
+  revenue: number;
+}
+
+export type SalesAnalyticsPeriod = {
+  from: string;
+  to: string;
+};
+
+export type SalesAnalyticsTotals = {
+  revenue: number;
+  count: number;
+  avgOrder: number;
+  totalDiscount: number;
+};
+
+export interface SalesAnalytics {
+  period: SalesAnalyticsPeriod;
+  totals: SalesAnalyticsTotals;
+  trend: SalesAnalyticsTrendItem[];
+  paymentMethods: SalesAnalyticsPaymentItem[];
+  peakHours: SalesAnalyticsPeakHourItem[];
+}
+
+export interface ProductAnalyticsItem {
+  productId?: string | null;
+  productName?: string | null;
+  quantity: number;
+  revenue: number;
+}
+
+export interface ProductCategoryItem {
+  categoryId?: string | null;
+  categoryName: string;
+  quantity: number;
+  revenue: number;
+}
+
+export type ProductsAnalyticsPeriod = {
+  from: string;
+  to: string;
+};
+
+export interface ProductsAnalytics {
+  period: ProductsAnalyticsPeriod;
+  topByQuantity: ProductAnalyticsItem[];
+  topByRevenue: ProductAnalyticsItem[];
+  bottomByQuantity: ProductAnalyticsItem[];
+  categories: ProductCategoryItem[];
+}
+
+export interface InventoryCriticalItem {
+  id: string;
+  name: string;
+  stock: number;
+  minStock: number;
+  unit?: string | null;
+  sku?: string | null;
+}
+
+export interface InventoryRotationItem {
+  productId?: string | null;
+  productName?: string | null;
+  totalSold: number;
+  currentStock: number;
+  rotationRate: number;
+}
+
+export type InventoryAnalyticsSummary = {
+  totalActive: number;
+  criticalCount: number;
+  outOfStockCount: number;
+  stockValue: number;
+};
+
+export interface InventoryAnalytics {
+  criticalStock: InventoryCriticalItem[];
+  outOfStock: InventoryCriticalItem[];
+  rotation: InventoryRotationItem[];
+  summary: InventoryAnalyticsSummary;
+}
+
+export interface RestaurantTableAnalyticsItem {
+  tableId: string;
+  tableName: string;
+  ordersCount: number;
+  revenue: number;
+  avgTicket: number;
+}
+
+export interface RestaurantDishItem {
+  productId?: string | null;
+  productName?: string | null;
+  quantity: number;
+  revenue: number;
+}
+
+export interface RestaurantServiceHourItem {
+  hour: number;
+  avgMinutes: number;
+  ordersCount: number;
+}
+
+export interface RestaurantAnalyticsTrendItem {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
+export type RestaurantAnalyticsPeriod = {
+  from: string;
+  to: string;
+};
+
+export type RestaurantAnalyticsTotals = {
+  ordersCount: number;
+  revenue: number;
+  avgTicket: number;
+  avgServiceMinutes: number;
+  avgGuests: number;
+};
+
+export interface RestaurantAnalytics {
+  period: RestaurantAnalyticsPeriod;
+  totals: RestaurantAnalyticsTotals;
+  trend: RestaurantAnalyticsTrendItem[];
+  topTables: RestaurantTableAnalyticsItem[];
+  topDishes: RestaurantDishItem[];
+  paymentMethods: SalesAnalyticsPaymentItem[];
+  serviceByHour: RestaurantServiceHourItem[];
+}
+
+export interface AdminAnalyticsBusinessItem {
+  businessType?: string | null;
+  count: number;
+}
+
+export interface AdminAnalyticsCountItem {
+  status?: string | null;
+  count: number;
+}
+
+export interface AdminAnalyticsPlanItem {
+  plan?: string | null;
+  count: number;
+}
+
+export interface AdminAnalyticsGrowthItem {
+  month?: string | null;
+  stores: number;
+}
+
+export interface AdminAnalyticsDistrictItem {
+  district: string;
+  count: number;
+}
+
+export interface AdminAnalyticsTopStoreItem {
+  storeId: string;
+  storeName: string;
+  revenue: number;
+  ordersCount: number;
+}
+
+export interface AdminAnalytics {
+  byBusinessType: AdminAnalyticsBusinessItem[];
+  byDistrict: AdminAnalyticsDistrictItem[];
+  licenseStatus: AdminAnalyticsCountItem[];
+  licensePlan: AdminAnalyticsPlanItem[];
+  monthlyGrowth: AdminAnalyticsGrowthItem[];
+  newStores30days: number;
+  totalSalesAmount: number;
+  totalSalesCount: number;
+  topStores: AdminAnalyticsTopStoreItem[];
+}
+
 export interface ClientListResponse {
   data: Client[];
   total: number;
@@ -1511,4 +1701,20 @@ export const UpdateSaleBodyStatus = {
 export type UpdateSaleBody = {
   status?: UpdateSaleBodyStatus;
   notes?: string;
+};
+
+export type GetAnalyticsSalesParams = {
+  from?: string;
+  to?: string;
+};
+
+export type GetAnalyticsProductsParams = {
+  from?: string;
+  to?: string;
+  limit?: number;
+};
+
+export type GetRestaurantAnalyticsParams = {
+  from?: string;
+  to?: string;
 };

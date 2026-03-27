@@ -2309,6 +2309,118 @@ paths:
         "200":
           description: Deleted
 
+  /analytics/sales:
+    get:
+      tags: [Analytics]
+      summary: Sales analytics for a store
+      operationId: getAnalyticsSales
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Sales analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesAnalytics'
+
+  /analytics/products:
+    get:
+      tags: [Analytics]
+      summary: Product performance analytics
+      operationId: getAnalyticsProducts
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductsAnalytics'
+
+  /analytics/inventory:
+    get:
+      tags: [Analytics]
+      summary: Inventory analytics
+      operationId: getAnalyticsInventory
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Inventory analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryAnalytics'
+
+  /restaurant/analytics:
+    get:
+      tags: [Analytics]
+      summary: Restaurant analytics
+      operationId: getRestaurantAnalytics
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Restaurant analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantAnalytics'
+
+  /admin/analytics:
+    get:
+      tags: [Admin]
+      summary: Global admin analytics
+      operationId: getAdminAnalytics
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Admin analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminAnalytics'
+
 components:
   schemas:
     HealthStatus:
@@ -4514,6 +4626,395 @@ components:
         - page
         - limit
         - totalPages
+
+    SalesAnalyticsTrendItem:
+      type: object
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+        count:
+          type: integer
+      required: [date, revenue, count]
+
+    SalesAnalyticsPaymentItem:
+      type: object
+      properties:
+        method:
+          type: string
+        count:
+          type: integer
+        revenue:
+          type: number
+      required: [method, count, revenue]
+
+    SalesAnalyticsPeakHourItem:
+      type: object
+      properties:
+        hour:
+          type: integer
+        count:
+          type: integer
+        revenue:
+          type: number
+      required: [hour, count, revenue]
+
+    SalesAnalytics:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+            to:
+              type: string
+          required: [from, to]
+        totals:
+          type: object
+          properties:
+            revenue:
+              type: number
+            count:
+              type: integer
+            avgOrder:
+              type: number
+            totalDiscount:
+              type: number
+          required: [revenue, count, avgOrder, totalDiscount]
+        trend:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesAnalyticsTrendItem'
+        paymentMethods:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesAnalyticsPaymentItem'
+        peakHours:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesAnalyticsPeakHourItem'
+      required: [period, totals, trend, paymentMethods, peakHours]
+
+    ProductAnalyticsItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          nullable: true
+        productName:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+        revenue:
+          type: number
+      required: [quantity, revenue]
+
+    ProductCategoryItem:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          nullable: true
+        categoryName:
+          type: string
+        quantity:
+          type: integer
+        revenue:
+          type: number
+      required: [categoryName, quantity, revenue]
+
+    ProductsAnalytics:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+            to:
+              type: string
+          required: [from, to]
+        topByQuantity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAnalyticsItem'
+        topByRevenue:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAnalyticsItem'
+        bottomByQuantity:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAnalyticsItem'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductCategoryItem'
+      required: [period, topByQuantity, topByRevenue, bottomByQuantity, categories]
+
+    InventoryCriticalItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        stock:
+          type: integer
+        minStock:
+          type: integer
+        unit:
+          type: string
+          nullable: true
+        sku:
+          type: string
+          nullable: true
+      required: [id, name, stock, minStock]
+
+    InventoryRotationItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          nullable: true
+        productName:
+          type: string
+          nullable: true
+        totalSold:
+          type: integer
+        currentStock:
+          type: integer
+        rotationRate:
+          type: number
+      required: [totalSold, currentStock, rotationRate]
+
+    InventoryAnalytics:
+      type: object
+      properties:
+        criticalStock:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryCriticalItem'
+        outOfStock:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryCriticalItem'
+        rotation:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryRotationItem'
+        summary:
+          type: object
+          properties:
+            totalActive:
+              type: integer
+            criticalCount:
+              type: integer
+            outOfStockCount:
+              type: integer
+            stockValue:
+              type: number
+          required: [totalActive, criticalCount, outOfStockCount, stockValue]
+      required: [criticalStock, outOfStock, rotation, summary]
+
+    RestaurantTableAnalyticsItem:
+      type: object
+      properties:
+        tableId:
+          type: string
+        tableName:
+          type: string
+        ordersCount:
+          type: integer
+        revenue:
+          type: number
+        avgTicket:
+          type: number
+      required: [tableId, tableName, ordersCount, revenue, avgTicket]
+
+    RestaurantDishItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          nullable: true
+        productName:
+          type: string
+          nullable: true
+        quantity:
+          type: integer
+        revenue:
+          type: number
+      required: [quantity, revenue]
+
+    RestaurantServiceHourItem:
+      type: object
+      properties:
+        hour:
+          type: integer
+        avgMinutes:
+          type: number
+        ordersCount:
+          type: integer
+      required: [hour, avgMinutes, ordersCount]
+
+    RestaurantAnalyticsTrendItem:
+      type: object
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+        orders:
+          type: integer
+      required: [date, revenue, orders]
+
+    RestaurantAnalytics:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+            to:
+              type: string
+          required: [from, to]
+        totals:
+          type: object
+          properties:
+            ordersCount:
+              type: integer
+            revenue:
+              type: number
+            avgTicket:
+              type: number
+            avgServiceMinutes:
+              type: number
+            avgGuests:
+              type: number
+          required: [ordersCount, revenue, avgTicket, avgServiceMinutes, avgGuests]
+        trend:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestaurantAnalyticsTrendItem'
+        topTables:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestaurantTableAnalyticsItem'
+        topDishes:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestaurantDishItem'
+        paymentMethods:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesAnalyticsPaymentItem'
+        serviceByHour:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestaurantServiceHourItem'
+      required: [period, totals, trend, topTables, topDishes, paymentMethods, serviceByHour]
+
+    AdminAnalyticsBusinessItem:
+      type: object
+      properties:
+        businessType:
+          type: string
+          nullable: true
+        count:
+          type: integer
+      required: [count]
+
+    AdminAnalyticsCountItem:
+      type: object
+      properties:
+        status:
+          type: string
+          nullable: true
+        count:
+          type: integer
+      required: [count]
+
+    AdminAnalyticsPlanItem:
+      type: object
+      properties:
+        plan:
+          type: string
+          nullable: true
+        count:
+          type: integer
+      required: [count]
+
+    AdminAnalyticsGrowthItem:
+      type: object
+      properties:
+        month:
+          type: string
+          nullable: true
+        stores:
+          type: integer
+      required: [stores]
+
+    AdminAnalyticsDistrictItem:
+      type: object
+      properties:
+        district:
+          type: string
+        count:
+          type: integer
+      required: [district, count]
+
+    AdminAnalyticsTopStoreItem:
+      type: object
+      properties:
+        storeId:
+          type: string
+        storeName:
+          type: string
+        revenue:
+          type: number
+        ordersCount:
+          type: integer
+      required: [storeId, storeName, revenue, ordersCount]
+
+    AdminAnalytics:
+      type: object
+      properties:
+        byBusinessType:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAnalyticsBusinessItem'
+        byDistrict:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAnalyticsDistrictItem'
+        licenseStatus:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAnalyticsCountItem'
+        licensePlan:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAnalyticsPlanItem'
+        monthlyGrowth:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAnalyticsGrowthItem'
+        newStores30days:
+          type: integer
+        totalSalesAmount:
+          type: number
+        totalSalesCount:
+          type: integer
+        topStores:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminAnalyticsTopStoreItem'
+      required: [byBusinessType, byDistrict, licenseStatus, licensePlan, monthlyGrowth, newStores30days, totalSalesAmount, totalSalesCount, topStores]
 
     ClientListResponse:
       type: object

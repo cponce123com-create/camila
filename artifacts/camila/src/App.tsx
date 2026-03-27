@@ -22,6 +22,9 @@ import AdminStoreDetailPage from "@/pages/admin/store-detail";
 import AdminAuditPage from "@/pages/admin/audit";
 import AdminSupportPage from "@/pages/admin/support";
 import AdminAnnouncementsPage from "@/pages/admin/announcements";
+import AdminAnalyticsPage from "@/pages/admin/analytics";
+import StoreAnalyticsPage from "@/pages/dashboard/analytics";
+import RestaurantAnalyticsPage from "@/pages/dashboard/analytics/restaurant";
 import NotFound from "@/pages/not-found";
 
 // Restaurant pages
@@ -67,12 +70,16 @@ function Router() {
       <Route path="/dashboard/sales/:id" component={SaleDetailPage} />
 
       {/* Protected Superadmin */}
+      <Route path="/dashboard/analytics" component={StoreAnalyticsPage} />
+      <Route path="/dashboard/analytics/restaurant" component={RestaurantAnalyticsPage} />
+
       <Route path="/admin" component={AdminPage} />
       <Route path="/admin/stores" component={AdminStoresPage} />
       <Route path="/admin/stores/:id" component={AdminStoreDetailPage} />
       <Route path="/admin/audit" component={AdminAuditPage} />
       <Route path="/admin/support" component={AdminSupportPage} />
       <Route path="/admin/announcements" component={AdminAnnouncementsPage} />
+      <Route path="/admin/analytics" component={AdminAnalyticsPage} />
 
       <Route component={NotFound} />
     </Switch>

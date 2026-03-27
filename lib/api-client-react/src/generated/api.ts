@@ -22,6 +22,7 @@ import type {
   AddProductImageRequest,
   AddUserRequest,
   AdjustInventoryRequest,
+  AdminAnalytics,
   AdminGetAllStoresParams,
   AdminGetAuditLogsParams,
   AdminGetSupportTicketsParams,
@@ -55,6 +56,8 @@ import type {
   ExportProductsParams,
   ForgotPasswordRequest,
   GetAllReviewsParams,
+  GetAnalyticsProductsParams,
+  GetAnalyticsSalesParams,
   GetClientsParams,
   GetDailyMenuParams,
   GetInventoryMovementsParams,
@@ -62,6 +65,7 @@ import type {
   GetProductReviewsParams,
   GetProductVariantsParams,
   GetProductsParams,
+  GetRestaurantAnalyticsParams,
   GetRestaurantOrdersParams,
   GetRestaurantTablesParams,
   GetSalesParams,
@@ -69,6 +73,7 @@ import type {
   HealthStatus,
   ImportProductsRequest,
   ImportResult,
+  InventoryAnalytics,
   InventoryMovement,
   License,
   LicenseHistory,
@@ -86,16 +91,19 @@ import type {
   ProductKardex,
   ProductReview,
   ProductVariant,
+  ProductsAnalytics,
   PublishDailyMenuBody,
   RegisterStoreRequest,
   ReorderRequest,
   ResetPasswordRequest,
+  RestaurantAnalytics,
   RestaurantOrder,
   RestaurantOrderWithItems,
   RestaurantStats,
   RestaurantTable,
   Sale,
   SaleListResponse,
+  SalesAnalytics,
   Store,
   StoreBanner,
   StoreSettings,
@@ -8625,3 +8633,453 @@ export const useDeleteSale = <
 > => {
   return useMutation(getDeleteSaleMutationOptions(options));
 };
+
+/**
+ * @summary Sales analytics for a store
+ */
+export const getGetAnalyticsSalesUrl = (params?: GetAnalyticsSalesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/analytics/sales?${stringifiedParams}`
+    : `/api/analytics/sales`;
+};
+
+export const getAnalyticsSales = async (
+  params?: GetAnalyticsSalesParams,
+  options?: RequestInit,
+): Promise<SalesAnalytics> => {
+  return customFetch<SalesAnalytics>(getGetAnalyticsSalesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnalyticsSalesQueryKey = (
+  params?: GetAnalyticsSalesParams,
+) => {
+  return [`/api/analytics/sales`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAnalyticsSalesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnalyticsSales>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAnalyticsSalesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnalyticsSales>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAnalyticsSalesQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAnalyticsSales>>
+  > = ({ signal }) => getAnalyticsSales(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAnalyticsSales>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAnalyticsSalesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnalyticsSales>>
+>;
+export type GetAnalyticsSalesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Sales analytics for a store
+ */
+
+export function useGetAnalyticsSales<
+  TData = Awaited<ReturnType<typeof getAnalyticsSales>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAnalyticsSalesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnalyticsSales>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnalyticsSalesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Product performance analytics
+ */
+export const getGetAnalyticsProductsUrl = (
+  params?: GetAnalyticsProductsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/analytics/products?${stringifiedParams}`
+    : `/api/analytics/products`;
+};
+
+export const getAnalyticsProducts = async (
+  params?: GetAnalyticsProductsParams,
+  options?: RequestInit,
+): Promise<ProductsAnalytics> => {
+  return customFetch<ProductsAnalytics>(getGetAnalyticsProductsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnalyticsProductsQueryKey = (
+  params?: GetAnalyticsProductsParams,
+) => {
+  return [`/api/analytics/products`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAnalyticsProductsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnalyticsProducts>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAnalyticsProductsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnalyticsProducts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAnalyticsProductsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAnalyticsProducts>>
+  > = ({ signal }) =>
+    getAnalyticsProducts(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAnalyticsProducts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAnalyticsProductsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnalyticsProducts>>
+>;
+export type GetAnalyticsProductsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Product performance analytics
+ */
+
+export function useGetAnalyticsProducts<
+  TData = Awaited<ReturnType<typeof getAnalyticsProducts>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAnalyticsProductsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAnalyticsProducts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnalyticsProductsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Inventory analytics
+ */
+export const getGetAnalyticsInventoryUrl = () => {
+  return `/api/analytics/inventory`;
+};
+
+export const getAnalyticsInventory = async (
+  options?: RequestInit,
+): Promise<InventoryAnalytics> => {
+  return customFetch<InventoryAnalytics>(getGetAnalyticsInventoryUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAnalyticsInventoryQueryKey = () => {
+  return [`/api/analytics/inventory`] as const;
+};
+
+export const getGetAnalyticsInventoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAnalyticsInventory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAnalyticsInventory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAnalyticsInventoryQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAnalyticsInventory>>
+  > = ({ signal }) => getAnalyticsInventory({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAnalyticsInventory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAnalyticsInventoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAnalyticsInventory>>
+>;
+export type GetAnalyticsInventoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Inventory analytics
+ */
+
+export function useGetAnalyticsInventory<
+  TData = Awaited<ReturnType<typeof getAnalyticsInventory>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAnalyticsInventory>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnalyticsInventoryQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Restaurant analytics
+ */
+export const getGetRestaurantAnalyticsUrl = (
+  params?: GetRestaurantAnalyticsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/restaurant/analytics?${stringifiedParams}`
+    : `/api/restaurant/analytics`;
+};
+
+export const getRestaurantAnalytics = async (
+  params?: GetRestaurantAnalyticsParams,
+  options?: RequestInit,
+): Promise<RestaurantAnalytics> => {
+  return customFetch<RestaurantAnalytics>(
+    getGetRestaurantAnalyticsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetRestaurantAnalyticsQueryKey = (
+  params?: GetRestaurantAnalyticsParams,
+) => {
+  return [`/api/restaurant/analytics`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetRestaurantAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRestaurantAnalytics>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRestaurantAnalyticsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantAnalytics>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetRestaurantAnalyticsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getRestaurantAnalytics>>
+  > = ({ signal }) =>
+    getRestaurantAnalytics(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getRestaurantAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetRestaurantAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRestaurantAnalytics>>
+>;
+export type GetRestaurantAnalyticsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Restaurant analytics
+ */
+
+export function useGetRestaurantAnalytics<
+  TData = Awaited<ReturnType<typeof getRestaurantAnalytics>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetRestaurantAnalyticsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getRestaurantAnalytics>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetRestaurantAnalyticsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Global admin analytics
+ */
+export const getGetAdminAnalyticsUrl = () => {
+  return `/api/admin/analytics`;
+};
+
+export const getAdminAnalytics = async (
+  options?: RequestInit,
+): Promise<AdminAnalytics> => {
+  return customFetch<AdminAnalytics>(getGetAdminAnalyticsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAdminAnalyticsQueryKey = () => {
+  return [`/api/admin/analytics`] as const;
+};
+
+export const getGetAdminAnalyticsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAdminAnalyticsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAdminAnalytics>>
+  > = ({ signal }) => getAdminAnalytics({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminAnalytics>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAdminAnalyticsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminAnalytics>>
+>;
+export type GetAdminAnalyticsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Global admin analytics
+ */
+
+export function useGetAdminAnalytics<
+  TData = Awaited<ReturnType<typeof getAdminAnalytics>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminAnalytics>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAdminAnalyticsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

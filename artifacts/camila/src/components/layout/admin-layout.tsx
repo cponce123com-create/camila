@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import {
   LayoutDashboard, Store, FileText, Megaphone, LifeBuoy,
-  LogOut, Menu, X, Shield, ChevronRight,
+  LogOut, Menu, X, Shield, ChevronRight, BarChart2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,6 +15,7 @@ interface AdminLayoutProps {
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: Store, label: "Tiendas", path: "/admin/stores" },
+  { icon: BarChart2, label: "Analítica", path: "/admin/analytics" },
   { icon: FileText, label: "Auditoría", path: "/admin/audit" },
   { icon: LifeBuoy, label: "Soporte", path: "/admin/support" },
   { icon: Megaphone, label: "Anuncios", path: "/admin/announcements" },

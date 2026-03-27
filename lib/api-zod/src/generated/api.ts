@@ -2751,3 +2751,241 @@ export const UpdateSaleResponse = zod.object({
 export const DeleteSaleParams = zod.object({
   saleId: zod.coerce.string(),
 });
+
+/**
+ * @summary Sales analytics for a store
+ */
+export const GetAnalyticsSalesQueryParams = zod.object({
+  from: zod.date().optional(),
+  to: zod.date().optional(),
+});
+
+export const GetAnalyticsSalesResponse = zod.object({
+  period: zod.object({
+    from: zod.string(),
+    to: zod.string(),
+  }),
+  totals: zod.object({
+    revenue: zod.number(),
+    count: zod.number(),
+    avgOrder: zod.number(),
+    totalDiscount: zod.number(),
+  }),
+  trend: zod.array(
+    zod.object({
+      date: zod.string(),
+      revenue: zod.number(),
+      count: zod.number(),
+    }),
+  ),
+  paymentMethods: zod.array(
+    zod.object({
+      method: zod.string(),
+      count: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+  peakHours: zod.array(
+    zod.object({
+      hour: zod.number(),
+      count: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Product performance analytics
+ */
+export const GetAnalyticsProductsQueryParams = zod.object({
+  from: zod.date().optional(),
+  to: zod.date().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const GetAnalyticsProductsResponse = zod.object({
+  period: zod.object({
+    from: zod.string(),
+    to: zod.string(),
+  }),
+  topByQuantity: zod.array(
+    zod.object({
+      productId: zod.string().nullish(),
+      productName: zod.string().nullish(),
+      quantity: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+  topByRevenue: zod.array(
+    zod.object({
+      productId: zod.string().nullish(),
+      productName: zod.string().nullish(),
+      quantity: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+  bottomByQuantity: zod.array(
+    zod.object({
+      productId: zod.string().nullish(),
+      productName: zod.string().nullish(),
+      quantity: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+  categories: zod.array(
+    zod.object({
+      categoryId: zod.string().nullish(),
+      categoryName: zod.string(),
+      quantity: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Inventory analytics
+ */
+export const GetAnalyticsInventoryResponse = zod.object({
+  criticalStock: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      stock: zod.number(),
+      minStock: zod.number(),
+      unit: zod.string().nullish(),
+      sku: zod.string().nullish(),
+    }),
+  ),
+  outOfStock: zod.array(
+    zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      stock: zod.number(),
+      minStock: zod.number(),
+      unit: zod.string().nullish(),
+      sku: zod.string().nullish(),
+    }),
+  ),
+  rotation: zod.array(
+    zod.object({
+      productId: zod.string().nullish(),
+      productName: zod.string().nullish(),
+      totalSold: zod.number(),
+      currentStock: zod.number(),
+      rotationRate: zod.number(),
+    }),
+  ),
+  summary: zod.object({
+    totalActive: zod.number(),
+    criticalCount: zod.number(),
+    outOfStockCount: zod.number(),
+    stockValue: zod.number(),
+  }),
+});
+
+/**
+ * @summary Restaurant analytics
+ */
+export const GetRestaurantAnalyticsQueryParams = zod.object({
+  from: zod.date().optional(),
+  to: zod.date().optional(),
+});
+
+export const GetRestaurantAnalyticsResponse = zod.object({
+  period: zod.object({
+    from: zod.string(),
+    to: zod.string(),
+  }),
+  totals: zod.object({
+    ordersCount: zod.number(),
+    revenue: zod.number(),
+    avgTicket: zod.number(),
+    avgServiceMinutes: zod.number(),
+    avgGuests: zod.number(),
+  }),
+  trend: zod.array(
+    zod.object({
+      date: zod.string(),
+      revenue: zod.number(),
+      orders: zod.number(),
+    }),
+  ),
+  topTables: zod.array(
+    zod.object({
+      tableId: zod.string(),
+      tableName: zod.string(),
+      ordersCount: zod.number(),
+      revenue: zod.number(),
+      avgTicket: zod.number(),
+    }),
+  ),
+  topDishes: zod.array(
+    zod.object({
+      productId: zod.string().nullish(),
+      productName: zod.string().nullish(),
+      quantity: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+  paymentMethods: zod.array(
+    zod.object({
+      method: zod.string(),
+      count: zod.number(),
+      revenue: zod.number(),
+    }),
+  ),
+  serviceByHour: zod.array(
+    zod.object({
+      hour: zod.number(),
+      avgMinutes: zod.number(),
+      ordersCount: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Global admin analytics
+ */
+export const GetAdminAnalyticsResponse = zod.object({
+  byBusinessType: zod.array(
+    zod.object({
+      businessType: zod.string().nullish(),
+      count: zod.number(),
+    }),
+  ),
+  byDistrict: zod.array(
+    zod.object({
+      district: zod.string(),
+      count: zod.number(),
+    }),
+  ),
+  licenseStatus: zod.array(
+    zod.object({
+      status: zod.string().nullish(),
+      count: zod.number(),
+    }),
+  ),
+  licensePlan: zod.array(
+    zod.object({
+      plan: zod.string().nullish(),
+      count: zod.number(),
+    }),
+  ),
+  monthlyGrowth: zod.array(
+    zod.object({
+      month: zod.string().nullish(),
+      stores: zod.number(),
+    }),
+  ),
+  newStores30days: zod.number(),
+  totalSalesAmount: zod.number(),
+  totalSalesCount: zod.number(),
+  topStores: zod.array(
+    zod.object({
+      storeId: zod.string(),
+      storeName: zod.string(),
+      revenue: zod.number(),
+      ordersCount: zod.number(),
+    }),
+  ),
+});

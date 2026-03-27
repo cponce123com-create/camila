@@ -9,8 +9,9 @@ import {
   supportTicketsTable,
   announcementsTable,
   salesTable,
+  saleItemsTable,
 } from "@workspace/db";
-import { eq, ilike, count, and, sql, desc, asc, or } from "drizzle-orm";
+import { eq, ilike, count, and, sql, desc, asc, or, gte, inArray } from "drizzle-orm";
 import { requireSuperAdmin, requireAuth } from "../middlewares/session";
 import { hashPassword } from "../lib/auth";
 import { z } from "zod";
@@ -620,6 +621,113 @@ router.patch("/support-tickets/:ticketId", requireSuperAdmin, async (req, res) =
     res.json(updated);
   } catch (err) {
     req.log.error({ err }, "Admin update ticket error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.get("/analytics", requireSuperAdmin, async (req, res) => {
+  try {
+    const businessTypeRows = await db
+      .select({
+        businessType: storesTable.businessType,
+        count: count(),
+      })
+      .from(storesTable)
+      .groupBy(storesTable.businessType)
+      .orderBy(desc(count()));
+
+    const districtRows = await db
+      .select({
+        district: storesTable.district,
+        count: count(),
+      })
+      .from(storesTable)
+      .groupBy(storesTable.district)
+      .orderBy(desc(count()))
+      .limit(15);
+
+    const licenseStatusRows = await db
+      .select({
+        status: licensesTable.status,
+        count: count(),
+      })
+      .from(licensesTable)
+      .groupBy(licensesTable.status);
+
+    const licensePlanRows = await db
+      .select({
+        plan: licensesTable.plan,
+        count: count(),
+      })
+      .from(licensesTable)
+      .groupBy(licensesTable.plan);
+
+    const monthlyGrowth = await db
+      .select({
+        month: sql<string>`TO_CHAR(${storesTable.createdAt}, 'YYYY-MM')`,
+        stores: count(),
+      })
+      .from(storesTable)
+      .where(sql`${storesTable.createdAt} >= NOW() - INTERVAL '12 months'`)
+      .groupBy(sql`TO_CHAR(${storesTable.createdAt}, 'YYYY-MM')`)
+      .orderBy(sql`TO_CHAR(${storesTable.createdAt}, 'YYYY-MM')`);
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const [newRecent] = await db
+      .select({ count: count() })
+      .from(storesTable)
+      .where(gte(storesTable.createdAt, thirtyDaysAgo));
+
+    const [totalSales] = await db
+      .select({
+        totalAmount: sql<number>`COALESCE(SUM(CAST(${salesTable.total} AS NUMERIC)), 0)::float`,
+        totalCount: count(),
+      })
+      .from(salesTable)
+      .where(eq(salesTable.status, "paid"));
+
+    // Sales by store per month (top 5 stores by revenue)
+    const topStoresByRevenue = await db
+      .select({
+        storeId: salesTable.storeId,
+        revenue: sql<number>`COALESCE(SUM(CAST(${salesTable.total} AS NUMERIC)), 0)::float`,
+        ordersCount: count(),
+      })
+      .from(salesTable)
+      .where(and(eq(salesTable.status, "paid"), gte(salesTable.createdAt, thirtyDaysAgo)))
+      .groupBy(salesTable.storeId)
+      .orderBy(sql`SUM(CAST(${salesTable.total} AS NUMERIC)) DESC`)
+      .limit(5);
+
+    // Get store names for top stores
+    const topStoreIds = topStoresByRevenue.map((r) => r.storeId);
+    const storeNames = topStoreIds.length > 0
+      ? await db
+          .select({ id: storesTable.id, name: storesTable.businessName })
+          .from(storesTable)
+          .where(inArray(storesTable.id, topStoreIds))
+      : [];
+    const storeNameMap = new Map(storeNames.map((s) => [s.id, s.name]));
+
+    res.json({
+      byBusinessType: businessTypeRows.map((r) => ({ businessType: r.businessType, count: r.count })),
+      byDistrict: districtRows.map((r) => ({ district: r.district || "Sin distrito", count: r.count })),
+      licenseStatus: licenseStatusRows.map((r) => ({ status: r.status, count: r.count })),
+      licensePlan: licensePlanRows.map((r) => ({ plan: r.plan, count: r.count })),
+      monthlyGrowth: monthlyGrowth.map((r) => ({ month: r.month, stores: r.stores })),
+      newStores30days: newRecent.count,
+      totalSalesAmount: totalSales.totalAmount,
+      totalSalesCount: totalSales.totalCount,
+      topStores: topStoresByRevenue.map((r) => ({
+        storeId: r.storeId,
+        storeName: storeNameMap.get(r.storeId) ?? r.storeId,
+        revenue: r.revenue,
+        ordersCount: r.ordersCount,
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Admin analytics error");
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
