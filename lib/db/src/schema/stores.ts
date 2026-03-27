@@ -5,6 +5,7 @@ import {
   boolean,
   pgEnum,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -25,6 +26,7 @@ export const documentTypeEnum = pgEnum("document_type", [
 
 export const storesTable = pgTable("stores", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  slug: text("slug").unique(),
   businessName: text("business_name").notNull(),
   businessType: businessTypeEnum("business_type").notNull(),
   documentType: documentTypeEnum("document_type").notNull(),
@@ -48,6 +50,7 @@ export const storesTable = pgTable("stores", {
   index("stores_created_at_idx").on(t.createdAt),
   index("stores_is_active_idx").on(t.isActive),
   index("stores_business_type_idx").on(t.businessType),
+  uniqueIndex("stores_slug_idx").on(t.slug),
 ]);
 
 export const insertStoreSchema = createInsertSchema(storesTable).omit({

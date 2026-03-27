@@ -25,6 +25,7 @@ import AdminAnnouncementsPage from "@/pages/admin/announcements";
 import AdminAnalyticsPage from "@/pages/admin/analytics";
 import StoreAnalyticsPage from "@/pages/dashboard/analytics";
 import RestaurantAnalyticsPage from "@/pages/dashboard/analytics/restaurant";
+import TiendaPage from "@/pages/tienda";
 import NotFound from "@/pages/not-found";
 
 // Restaurant pages
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/" component={LandingPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      <Route path="/tienda/:slug" component={TiendaPage} />
 
       {/* Protected Dashboard */}
       <Route path="/dashboard" component={DashboardPage} />

@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
   Users, Settings, LogOut, Menu, X, ShieldCheck, Palette,
   MessageSquare, UtensilsCrossed, ShoppingBag, BarChart2, ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -145,6 +146,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <p className="text-sm font-semibold truncate" style={{ color: "hsl(var(--sidebar-fg))" }}>
               {store.businessName}
             </p>
+            {(store as unknown as { slug?: string }).slug && (
+              <a
+                href={`/tienda/${(store as unknown as { slug?: string }).slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1.5 flex items-center gap-1 text-xs transition-colors hover:opacity-80"
+                style={{ color: "hsl(var(--sidebar-accent))" }}
+              >
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">Ver tienda pública</span>
+              </a>
+            )}
           </div>
         )}
       </div>

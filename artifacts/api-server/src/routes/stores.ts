@@ -8,6 +8,7 @@ import {
 import { eq } from "drizzle-orm";
 import { requireAuth, requireStoreAdmin } from "../middlewares/session";
 import { hashPassword } from "../lib/auth";
+import { generateUniqueSlug, toSlug } from "../lib/slug";
 import { z } from "zod";
 
 const router: IRouter = Router();
@@ -54,6 +55,7 @@ router.patch("/me", requireAuth, requireStoreAdmin, async (req, res) => {
   }
 
   const schema = z.object({
+    slug: z.string().min(3).max(60).regex(/^[a-z0-9-]+$/, "Solo letras minúsculas, números y guiones").optional(),
     businessName: z.string().min(2).optional(),
     address: z.string().optional(),
     district: z.string().min(2).optional(),
@@ -74,9 +76,23 @@ router.patch("/me", requireAuth, requireStoreAdmin, async (req, res) => {
   }
 
   try {
+    let finalSlug = result.data.slug;
+    if (finalSlug) {
+      const unique = await generateUniqueSlug(finalSlug, user.storeId);
+      if (unique !== toSlug(finalSlug)) {
+        res.status(409).json({ error: "Este slug ya está en uso. Elige otro." });
+        return;
+      }
+      finalSlug = unique;
+    }
+
+    const { slug: _slug, ...rest } = result.data;
+    const updateData: Record<string, unknown> = { ...rest, updatedAt: new Date() };
+    if (finalSlug !== undefined) updateData.slug = finalSlug;
+
     const [updated] = await db
       .update(storesTable)
-      .set({ ...result.data, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(storesTable.id, user.storeId))
       .returning();
 

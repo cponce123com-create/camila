@@ -21,6 +21,7 @@ import supportTicketsRouter from "./support-tickets";
 import activeAnnouncementsRouter from "./announcements";
 import analyticsRouter from "./analytics";
 import restaurantAnalyticsRouter from "./restaurant/analytics";
+import publicRouter from "./public";
 
 const router: IRouter = Router();
 
@@ -47,5 +48,6 @@ router.use("/support-tickets", supportTicketsRouter);
 router.use("/active-announcements", activeAnnouncementsRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/restaurant/analytics", restaurantAnalyticsRouter);
+router.use("/public", publicRouter);
 
 export default router;

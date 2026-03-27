@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateResetToken } from "../lib/auth";
+import { generateUniqueSlug } from "../lib/slug";
 import { requireAuth, sessionMiddleware } from "../middlewares/session";
 import { z } from "zod";
 
@@ -70,8 +71,11 @@ router.post("/register", async (req, res) => {
     const userId = crypto.randomUUID();
     const licenseId = crypto.randomUUID();
 
+    const slug = await generateUniqueSlug(data.businessName);
+
     const [store] = await db.insert(storesTable).values({
       id: storeId,
+      slug,
       businessName: data.businessName,
       businessType: data.businessType,
       documentType: data.documentType,

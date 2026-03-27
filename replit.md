@@ -1,5 +1,12 @@
 # Camila — SaaS para Emprendedores Locales
 
+## Phase 10 — Public Store Pages (Complete)
+- `stores` table has a `slug` (nullable, unique) column — auto-generated on registration
+- Public API at `/api/public/stores/:slug` (GET store, categories, products, reviews; POST review)
+- Public store page at `/tienda/:slug` — unauthenticated, shows banner, product grid, category filters, review cards, and review submission modal with interactive star picker
+- Dashboard sidebar shows "Ver tienda pública" link when slug is set
+- `lib/slug.ts` utility: `toSlug()` and `generateUniqueSlug()` with collision handling
+
 ## Overview
 
 Camila is a multi-tenant SaaS platform designed for local entrepreneurs in San Ramón, Chanchamayo, Peru. It empowers local businesses (clothing stores, restaurants, bakeries, market stalls, catalogs) to manage their operations digitally with a local focus and scalable technology. The platform provides tools for product management, inventory control, customer engagement, and business customization, aiming to digitalize and streamline local commerce.
