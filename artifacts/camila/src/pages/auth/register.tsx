@@ -52,6 +52,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <Helmet>
+        <title>Crear Tienda Gratis — Camila</title>
+        <meta name="description" content="Registra tu negocio en Camila y empieza a gestionar ventas, inventario y clientes de forma gratuita. Para emprendedores de Chanchamayo y todo Perú." />
+      </Helmet>
       <Link href="/" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary mb-8 self-start md:self-auto transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" /> Volver al inicio
       </Link>

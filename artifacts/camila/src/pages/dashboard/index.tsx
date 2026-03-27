@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useGetStoreStats, useGetStoreUsers } from "@workspace/api-client-react";
 import { StatCardGridSkeleton, CardListSkeleton } from "@/components/ui/skeletons";
+import { Helmet } from "react-helmet-async";
 
 function StatCard({ title, value, icon: Icon, color, bg, sub }: {
   title: string; value: string | number; icon: any; color: string; bg: string; sub?: string;
@@ -45,6 +46,9 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
+      <Helmet>
+        <title>Inicio — {store?.businessName ?? "Camila"}</title>
+      </Helmet>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground">

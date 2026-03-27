@@ -11,6 +11,9 @@ import { sessionMiddleware } from "./middlewares/session";
 
 const app: Express = express();
 
+// Trust the first proxy (Replit / reverse proxy layers)
+app.set("trust proxy", 1);
+
 // ─── Compression ────────────────────────────────────────────────────────────
 app.use(compression());
 

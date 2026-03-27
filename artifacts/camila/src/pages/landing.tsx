@@ -56,6 +56,8 @@ export default function LandingPage() {
             <img 
               src={`${import.meta.env.BASE_URL}images/hero-bg.png`} 
               alt="Jungle foliage background" 
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover opacity-15"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />

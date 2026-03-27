@@ -29,6 +29,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex">
+      <Helmet>
+        <title>Ingresar — Camila</title>
+        <meta name="description" content="Accede a tu panel de control de Camila para gestionar ventas, inventario y tu negocio." />
+        <meta name="robots" content="noindex" />
+      </Helmet>
       {/* Form Side */}
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm">

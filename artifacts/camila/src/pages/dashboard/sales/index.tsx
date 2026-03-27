@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { ShoppingBag, Plus, Eye, TrendingUp } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/skeletons";
+import { Helmet } from "react-helmet-async";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -55,6 +56,9 @@ export default function SalesPage() {
 
   return (
     <DashboardLayout>
+      <Helmet>
+        <title>Ventas — Camila</title>
+      </Helmet>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">

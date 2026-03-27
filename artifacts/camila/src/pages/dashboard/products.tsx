@@ -27,6 +27,7 @@ import {
   Upload, Layers, MoreHorizontal,
 } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/skeletons";
+import { Helmet } from "react-helmet-async";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -352,6 +353,9 @@ export default function ProductsPage() {
 
   return (
     <DashboardLayout>
+      <Helmet>
+        <title>Productos — Camila</title>
+      </Helmet>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold">Productos</h1>
@@ -482,7 +486,7 @@ export default function ProductsPage() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {p.imageUrl ? (
-                            <img src={p.imageUrl} alt={p.name} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                            <img src={p.imageUrl} alt={p.name} loading="lazy" decoding="async" className="h-10 w-10 rounded-lg object-cover shrink-0" />
                           ) : (
                             <div className="h-10 w-10 bg-secondary rounded-lg flex items-center justify-center shrink-0">
                               <PackageX className="h-5 w-5 text-muted-foreground/40" />

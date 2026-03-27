@@ -19,7 +19,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="space-y-3 w-48">
+          <div className="h-8 rounded-lg bg-muted animate-pulse" />
+          <div className="h-4 rounded-lg bg-muted animate-pulse w-3/4" />
+          <div className="h-4 rounded-lg bg-muted animate-pulse w-1/2" />
+        </div>
+      </div>
+    );
   }
 
   if (!user) return null;
@@ -136,7 +144,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <img src={`${import.meta.env.BASE_URL}images/camila-logo.png`} alt="Camila" className="h-6 w-6" />
             <span className="font-display font-bold text-lg text-primary">Camila</span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
@@ -155,7 +168,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </AnimatePresence>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-background/50 pt-16 md:pt-0">
+        <main id="main-content" className="flex-1 overflow-y-auto bg-background/50 pt-16 md:pt-0">
           <div className="p-4 md:p-8 max-w-7xl mx-auto">
             {children}
           </div>

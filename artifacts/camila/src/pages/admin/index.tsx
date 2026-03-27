@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, CheckCircle, Clock, ShieldAlert, DollarSign, TrendingUp, ShoppingBag, Plus } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Helmet } from "react-helmet-async";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -88,6 +89,10 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminLayout>
+      <Helmet>
+        <title>Panel Global — Camila Admin</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-foreground">Panel Global</h1>
         <p className="text-muted-foreground mt-1">Visión completa de la plataforma Camila.</p>

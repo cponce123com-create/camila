@@ -24,6 +24,7 @@ import {
   Package, BarChart2, Plus, Search, Filter, BookOpen,
 } from "lucide-react";
 import { TableSkeleton } from "@/components/ui/skeletons";
+import { Helmet } from "react-helmet-async";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -121,6 +122,9 @@ export default function InventoryPage() {
 
   return (
     <DashboardLayout>
+      <Helmet>
+        <title>Inventario — Camila</title>
+      </Helmet>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold">Inventario</h1>
