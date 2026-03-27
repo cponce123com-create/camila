@@ -448,9 +448,12 @@ export const AdminUpdateStoreParams = zod.object({
 
 export const AdminUpdateStoreBody = zod.object({
   businessName: zod.string().optional(),
+  ownerName: zod.string().optional(),
   address: zod.string().optional(),
   district: zod.string().optional(),
   phone: zod.string().optional(),
+  email: zod.string().optional(),
+  documentNumber: zod.string().optional(),
   isActive: zod.boolean().optional(),
 });
 
@@ -502,6 +505,9 @@ export const AdminUpdateLicenseParams = zod.object({
 
 export const AdminUpdateLicenseBody = zod.object({
   status: zod.enum(["trial", "active", "expired", "suspended"]),
+  plan: zod
+    .enum(["trial", "monthly", "quarterly", "semi_annual", "annual", "free"])
+    .optional(),
   startsAt: zod.date().optional(),
   expiresAt: zod.date().optional(),
   notes: zod.string().optional(),
@@ -527,7 +533,299 @@ export const AdminGetStatsResponse = zod.object({
   expiredStores: zod.number(),
   suspendedStores: zod.number(),
   newThisMonth: zod.number(),
+  totalSalesAmount: zod.number(),
+  totalSalesCount: zod.number(),
+  monthlyGrowth: zod.array(
+    zod.object({
+      month: zod.string(),
+      stores: zod.number(),
+    }),
+  ),
 });
+
+/**
+ * @summary Get users for a specific store
+ */
+export const AdminGetStoreUsersParams = zod.object({
+  storeId: zod.coerce.string(),
+});
+
+export const AdminGetStoreUsersResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.enum(["superadmin", "store_admin", "store_staff", "cashier"]),
+  isActive: zod.boolean(),
+  createdAt: zod.date(),
+});
+export const AdminGetStoreUsersResponse = zod.array(
+  AdminGetStoreUsersResponseItem,
+);
+
+/**
+ * @summary Update user (block/unblock, role, reset password)
+ */
+export const AdminUpdateStoreUserParams = zod.object({
+  storeId: zod.coerce.string(),
+  userId: zod.coerce.string(),
+});
+
+export const AdminUpdateStoreUserBody = zod.object({
+  isActive: zod.boolean().optional(),
+  role: zod.enum(["store_admin", "store_staff", "cashier"]).optional(),
+  resetPassword: zod.string().optional(),
+});
+
+export const AdminUpdateStoreUserResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.enum(["superadmin", "store_admin", "store_staff", "cashier"]),
+  isActive: zod.boolean(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Get license change history for a store
+ */
+export const AdminGetLicenseHistoryParams = zod.object({
+  storeId: zod.coerce.string(),
+});
+
+export const AdminGetLicenseHistoryResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  actorEmail: zod.string().nullish(),
+  prevStatus: zod.string().nullish(),
+  newStatus: zod.string().nullish(),
+  prevPlan: zod.string().nullish(),
+  newPlan: zod.string().nullish(),
+  prevExpiresAt: zod.string().nullish(),
+  newExpiresAt: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const AdminGetLicenseHistoryResponse = zod.array(
+  AdminGetLicenseHistoryResponseItem,
+);
+
+/**
+ * @summary Get audit logs
+ */
+export const AdminGetAuditLogsQueryParams = zod.object({
+  targetType: zod.coerce.string().optional(),
+  targetId: zod.coerce.string().optional(),
+  actorId: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const AdminGetAuditLogsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      actorId: zod.string().nullish(),
+      actorEmail: zod.string().nullish(),
+      actorRole: zod.string().nullish(),
+      action: zod.string(),
+      targetType: zod.string().nullish(),
+      targetId: zod.string().nullish(),
+      targetLabel: zod.string().nullish(),
+      details: zod.object({}).passthrough().nullish(),
+      ipAddress: zod.string().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Get all announcements
+ */
+export const AdminGetAnnouncementsResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  type: zod.enum(["info", "warning", "success", "maintenance"]),
+  isActive: zod.boolean(),
+  targetAll: zod.boolean(),
+  startsAt: zod.string().nullish(),
+  expiresAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const AdminGetAnnouncementsResponse = zod.array(
+  AdminGetAnnouncementsResponseItem,
+);
+
+/**
+ * @summary Create announcement
+ */
+export const AdminCreateAnnouncementBody = zod.object({
+  title: zod.string(),
+  body: zod.string(),
+  type: zod.enum(["info", "warning", "success", "maintenance"]).optional(),
+  isActive: zod.boolean().optional(),
+  expiresAt: zod.string().optional(),
+});
+
+/**
+ * @summary Update announcement
+ */
+export const AdminUpdateAnnouncementParams = zod.object({
+  announcementId: zod.coerce.string(),
+});
+
+export const AdminUpdateAnnouncementBody = zod.object({
+  title: zod.string(),
+  body: zod.string(),
+  type: zod.enum(["info", "warning", "success", "maintenance"]).optional(),
+  isActive: zod.boolean().optional(),
+  expiresAt: zod.string().optional(),
+});
+
+export const AdminUpdateAnnouncementResponse = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  type: zod.enum(["info", "warning", "success", "maintenance"]),
+  isActive: zod.boolean(),
+  targetAll: zod.boolean(),
+  startsAt: zod.string().nullish(),
+  expiresAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete announcement
+ */
+export const AdminDeleteAnnouncementParams = zod.object({
+  announcementId: zod.coerce.string(),
+});
+
+/**
+ * @summary Get all support tickets
+ */
+export const AdminGetSupportTicketsQueryParams = zod.object({
+  status: zod.coerce.string().optional(),
+  priority: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const AdminGetSupportTicketsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string().nullish(),
+      storeName: zod.string().nullish(),
+      requesterName: zod.string().nullish(),
+      requesterEmail: zod.string().nullish(),
+      subject: zod.string(),
+      body: zod.string(),
+      status: zod.enum(["open", "in_progress", "resolved", "closed"]),
+      priority: zod.enum(["low", "medium", "high", "urgent"]),
+      assignedTo: zod.string().nullish(),
+      responses: zod.array(zod.object({}).passthrough()).optional(),
+      resolvedAt: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Get ticket detail
+ */
+export const AdminGetSupportTicketParams = zod.object({
+  ticketId: zod.coerce.string(),
+});
+
+export const AdminGetSupportTicketResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string().nullish(),
+  storeName: zod.string().nullish(),
+  requesterName: zod.string().nullish(),
+  requesterEmail: zod.string().nullish(),
+  subject: zod.string(),
+  body: zod.string(),
+  status: zod.enum(["open", "in_progress", "resolved", "closed"]),
+  priority: zod.enum(["low", "medium", "high", "urgent"]),
+  assignedTo: zod.string().nullish(),
+  responses: zod.array(zod.object({}).passthrough()).optional(),
+  resolvedAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Update ticket status / add response
+ */
+export const AdminUpdateSupportTicketParams = zod.object({
+  ticketId: zod.coerce.string(),
+});
+
+export const AdminUpdateSupportTicketBody = zod.object({
+  status: zod.enum(["open", "in_progress", "resolved", "closed"]).optional(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]).optional(),
+  assignedTo: zod.string().optional(),
+  response: zod.string().optional(),
+});
+
+export const AdminUpdateSupportTicketResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string().nullish(),
+  storeName: zod.string().nullish(),
+  requesterName: zod.string().nullish(),
+  requesterEmail: zod.string().nullish(),
+  subject: zod.string(),
+  body: zod.string(),
+  status: zod.enum(["open", "in_progress", "resolved", "closed"]),
+  priority: zod.enum(["low", "medium", "high", "urgent"]),
+  assignedTo: zod.string().nullish(),
+  responses: zod.array(zod.object({}).passthrough()).optional(),
+  resolvedAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Create support ticket (store user)
+ */
+export const CreateSupportTicketBody = zod.object({
+  subject: zod.string(),
+  body: zod.string(),
+  priority: zod.enum(["low", "medium", "high", "urgent"]).optional(),
+});
+
+/**
+ * @summary Get active announcements for current store
+ */
+export const GetActiveAnnouncementsResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  body: zod.string(),
+  type: zod.enum(["info", "warning", "success", "maintenance"]),
+  isActive: zod.boolean(),
+  targetAll: zod.boolean(),
+  startsAt: zod.string().nullish(),
+  expiresAt: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+export const GetActiveAnnouncementsResponse = zod.array(
+  GetActiveAnnouncementsResponseItem,
+);
 
 /**
  * @summary Get product categories for current store

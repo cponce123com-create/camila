@@ -15,6 +15,15 @@ export const licenseStatusEnum = pgEnum("license_status", [
   "suspended",
 ]);
 
+export const licensePlanEnum = pgEnum("license_plan", [
+  "trial",
+  "monthly",
+  "quarterly",
+  "semi_annual",
+  "annual",
+  "free",
+]);
+
 export const licensesTable = pgTable("licenses", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   storeId: text("store_id")
@@ -24,6 +33,7 @@ export const licensesTable = pgTable("licenses", {
   status: licenseStatusEnum("status").default("trial").notNull(),
   startsAt: timestamp("starts_at", { withTimezone: true }).defaultNow(),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
+  plan: licensePlanEnum("plan").default("trial").notNull(),
   notes: text("notes"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });

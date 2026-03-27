@@ -5,6 +5,7 @@
  * Camila SaaS - API para emprendedores locales
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminStatsMonthlyGrowthItem } from "./adminStatsMonthlyGrowthItem";
 
 export interface AdminStats {
   totalStores: number;
@@ -13,4 +14,7 @@ export interface AdminStats {
   expiredStores: number;
   suspendedStores: number;
   newThisMonth: number;
+  totalSalesAmount: number;
+  totalSalesCount: number;
+  monthlyGrowth: AdminStatsMonthlyGrowthItem[];
 }

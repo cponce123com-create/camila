@@ -17,7 +17,11 @@ import SettingsPage from "@/pages/dashboard/settings";
 import CustomizePage from "@/pages/dashboard/customize";
 import ReviewsPage from "@/pages/dashboard/reviews";
 import AdminPage from "@/pages/admin";
+import AdminStoresPage from "@/pages/admin/stores";
 import AdminStoreDetailPage from "@/pages/admin/store-detail";
+import AdminAuditPage from "@/pages/admin/audit";
+import AdminSupportPage from "@/pages/admin/support";
+import AdminAnnouncementsPage from "@/pages/admin/announcements";
 import NotFound from "@/pages/not-found";
 
 // Restaurant pages
@@ -64,7 +68,11 @@ function Router() {
 
       {/* Protected Superadmin */}
       <Route path="/admin" component={AdminPage} />
+      <Route path="/admin/stores" component={AdminStoresPage} />
       <Route path="/admin/stores/:id" component={AdminStoreDetailPage} />
+      <Route path="/admin/audit" component={AdminAuditPage} />
+      <Route path="/admin/support" component={AdminSupportPage} />
+      <Route path="/admin/announcements" component={AdminAnnouncementsPage} />
 
       <Route component={NotFound} />
     </Switch>

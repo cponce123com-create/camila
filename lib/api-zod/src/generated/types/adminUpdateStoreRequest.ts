@@ -8,8 +8,11 @@
 
 export interface AdminUpdateStoreRequest {
   businessName?: string;
+  ownerName?: string;
   address?: string;
   district?: string;
   phone?: string;
+  email?: string;
+  documentNumber?: string;
   isActive?: boolean;
 }

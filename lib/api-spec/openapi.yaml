@@ -394,6 +394,288 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminStats"
 
+  /admin/stores/{storeId}/users:
+    get:
+      operationId: adminGetStoreUsers
+      tags: [admin]
+      summary: Get users for a specific store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/stores/{storeId}/users/{userId}:
+    patch:
+      operationId: adminUpdateStoreUser
+      tags: [admin]
+      summary: Update user (block/unblock, role, reset password)
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /admin/stores/{storeId}/license-history:
+    get:
+      operationId: adminGetLicenseHistory
+      tags: [admin]
+      summary: Get license change history for a store
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: License history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LicenseHistory"
+
+  /admin/audit-logs:
+    get:
+      operationId: adminGetAuditLogs
+      tags: [admin]
+      summary: Get audit logs
+      parameters:
+        - in: query
+          name: targetType
+          schema:
+            type: string
+        - in: query
+          name: targetId
+          schema:
+            type: string
+        - in: query
+          name: actorId
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponse"
+
+  /admin/announcements:
+    get:
+      operationId: adminGetAnnouncements
+      tags: [admin]
+      summary: Get all announcements
+      responses:
+        "200":
+          description: List of announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+    post:
+      operationId: adminCreateAnnouncement
+      tags: [admin]
+      summary: Create announcement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnnouncementRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+
+  /admin/announcements/{announcementId}:
+    patch:
+      operationId: adminUpdateAnnouncement
+      tags: [admin]
+      summary: Update announcement
+      parameters:
+        - name: announcementId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnnouncementRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+    delete:
+      operationId: adminDeleteAnnouncement
+      tags: [admin]
+      summary: Delete announcement
+      parameters:
+        - name: announcementId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  /admin/support-tickets:
+    get:
+      operationId: adminGetSupportTickets
+      tags: [admin]
+      summary: Get all support tickets
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: priority
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicketListResponse"
+
+  /admin/support-tickets/{ticketId}:
+    get:
+      operationId: adminGetSupportTicket
+      tags: [admin]
+      summary: Get ticket detail
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+    patch:
+      operationId: adminUpdateSupportTicket
+      tags: [admin]
+      summary: Update ticket status / add response
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateTicketRequest"
+      responses:
+        "200":
+          description: Updated ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+
+  /support-tickets:
+    post:
+      operationId: createSupportTicket
+      tags: [admin]
+      summary: Create support ticket (store user)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTicketRequest"
+      responses:
+        "201":
+          description: Created ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTicket"
+
+  /active-announcements:
+    get:
+      operationId: getActiveAnnouncements
+      tags: [admin]
+      summary: Get active announcements for current store
+      responses:
+        "200":
+          description: Active announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+
   /categories:
     get:
       operationId: getCategories
@@ -2188,14 +2470,283 @@ components:
       properties:
         businessName:
           type: string
+        ownerName:
+          type: string
         address:
           type: string
         district:
           type: string
         phone:
           type: string
+        email:
+          type: string
+        documentNumber:
+          type: string
         isActive:
           type: boolean
+
+    AdminUpdateUserRequest:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+        role:
+          type: string
+          enum: [store_admin, store_staff, cashier]
+        resetPassword:
+          type: string
+
+    LicenseHistory:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        actorEmail:
+          type: string
+          nullable: true
+        prevStatus:
+          type: string
+          nullable: true
+        newStatus:
+          type: string
+          nullable: true
+        prevPlan:
+          type: string
+          nullable: true
+        newPlan:
+          type: string
+          nullable: true
+        prevExpiresAt:
+          type: string
+          nullable: true
+        newExpiresAt:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - createdAt
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        actorId:
+          type: string
+          nullable: true
+        actorEmail:
+          type: string
+          nullable: true
+        actorRole:
+          type: string
+          nullable: true
+        action:
+          type: string
+        targetType:
+          type: string
+          nullable: true
+        targetId:
+          type: string
+          nullable: true
+        targetLabel:
+          type: string
+          nullable: true
+        details:
+          type: object
+          nullable: true
+        ipAddress:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - action
+        - createdAt
+
+    AuditLogListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    SupportTicket:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+          nullable: true
+        storeName:
+          type: string
+          nullable: true
+        requesterName:
+          type: string
+          nullable: true
+        requesterEmail:
+          type: string
+          nullable: true
+        subject:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assignedTo:
+          type: string
+          nullable: true
+        responses:
+          type: array
+          items:
+            type: object
+        resolvedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - subject
+        - body
+        - status
+        - priority
+        - createdAt
+        - updatedAt
+
+    SupportTicketListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportTicket"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        type:
+          type: string
+          enum: [info, warning, success, maintenance]
+        isActive:
+          type: boolean
+        targetAll:
+          type: boolean
+        startsAt:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - title
+        - body
+        - type
+        - isActive
+        - targetAll
+        - createdAt
+        - updatedAt
+
+    CreateAnnouncementRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        type:
+          type: string
+          enum: [info, warning, success, maintenance]
+        isActive:
+          type: boolean
+        expiresAt:
+          type: string
+      required:
+        - title
+        - body
+
+    CreateTicketRequest:
+      type: object
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+      required:
+        - subject
+        - body
+
+    AdminUpdateTicketRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assignedTo:
+          type: string
+        response:
+          type: string
 
     AddUserRequest:
       type: object
@@ -2223,6 +2774,9 @@ components:
         status:
           type: string
           enum: [trial, active, expired, suspended]
+        plan:
+          type: string
+          enum: [trial, monthly, quarterly, semi_annual, annual, free]
         startsAt:
           type: string
           format: date-time
@@ -2385,6 +2939,22 @@ components:
           type: integer
         newThisMonth:
           type: integer
+        totalSalesAmount:
+          type: number
+        totalSalesCount:
+          type: integer
+        monthlyGrowth:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              stores:
+                type: integer
+            required:
+              - month
+              - stores
       required:
         - totalStores
         - activeStores
@@ -2392,6 +2962,9 @@ components:
         - expiredStores
         - suspendedStores
         - newThisMonth
+        - totalSalesAmount
+        - totalSalesCount
+        - monthlyGrowth
 
     Category:
       type: object

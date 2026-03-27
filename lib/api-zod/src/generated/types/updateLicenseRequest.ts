@@ -5,10 +5,12 @@
  * Camila SaaS - API para emprendedores locales
  * OpenAPI spec version: 0.1.0
  */
+import type { UpdateLicenseRequestPlan } from "./updateLicenseRequestPlan";
 import type { UpdateLicenseRequestStatus } from "./updateLicenseRequestStatus";
 
 export interface UpdateLicenseRequest {
   status: UpdateLicenseRequestStatus;
+  plan?: UpdateLicenseRequestPlan;
   startsAt?: Date;
   expiresAt?: Date;
   notes?: string;

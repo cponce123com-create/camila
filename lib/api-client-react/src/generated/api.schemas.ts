@@ -180,10 +180,197 @@ export interface UpdateStoreRequest {
 
 export interface AdminUpdateStoreRequest {
   businessName?: string;
+  ownerName?: string;
   address?: string;
   district?: string;
   phone?: string;
+  email?: string;
+  documentNumber?: string;
   isActive?: boolean;
+}
+
+export type AdminUpdateUserRequestRole =
+  (typeof AdminUpdateUserRequestRole)[keyof typeof AdminUpdateUserRequestRole];
+
+export const AdminUpdateUserRequestRole = {
+  store_admin: "store_admin",
+  store_staff: "store_staff",
+  cashier: "cashier",
+} as const;
+
+export interface AdminUpdateUserRequest {
+  isActive?: boolean;
+  role?: AdminUpdateUserRequestRole;
+  resetPassword?: string;
+}
+
+export interface LicenseHistory {
+  id: string;
+  storeId: string;
+  actorEmail?: string | null;
+  prevStatus?: string | null;
+  newStatus?: string | null;
+  prevPlan?: string | null;
+  newPlan?: string | null;
+  prevExpiresAt?: string | null;
+  newExpiresAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export type AuditLogDetails = { [key: string]: unknown } | null;
+
+export interface AuditLog {
+  id: string;
+  actorId?: string | null;
+  actorEmail?: string | null;
+  actorRole?: string | null;
+  action: string;
+  targetType?: string | null;
+  targetId?: string | null;
+  targetLabel?: string | null;
+  details?: AuditLogDetails;
+  ipAddress?: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogListResponse {
+  data: AuditLog[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export type SupportTicketStatus =
+  (typeof SupportTicketStatus)[keyof typeof SupportTicketStatus];
+
+export const SupportTicketStatus = {
+  open: "open",
+  in_progress: "in_progress",
+  resolved: "resolved",
+  closed: "closed",
+} as const;
+
+export type SupportTicketPriority =
+  (typeof SupportTicketPriority)[keyof typeof SupportTicketPriority];
+
+export const SupportTicketPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  urgent: "urgent",
+} as const;
+
+export type SupportTicketResponsesItem = { [key: string]: unknown };
+
+export interface SupportTicket {
+  id: string;
+  storeId?: string | null;
+  storeName?: string | null;
+  requesterName?: string | null;
+  requesterEmail?: string | null;
+  subject: string;
+  body: string;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  assignedTo?: string | null;
+  responses?: SupportTicketResponsesItem[];
+  resolvedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupportTicketListResponse {
+  data: SupportTicket[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export type AnnouncementType =
+  (typeof AnnouncementType)[keyof typeof AnnouncementType];
+
+export const AnnouncementType = {
+  info: "info",
+  warning: "warning",
+  success: "success",
+  maintenance: "maintenance",
+} as const;
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  type: AnnouncementType;
+  isActive: boolean;
+  targetAll: boolean;
+  startsAt?: string | null;
+  expiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateAnnouncementRequestType =
+  (typeof CreateAnnouncementRequestType)[keyof typeof CreateAnnouncementRequestType];
+
+export const CreateAnnouncementRequestType = {
+  info: "info",
+  warning: "warning",
+  success: "success",
+  maintenance: "maintenance",
+} as const;
+
+export interface CreateAnnouncementRequest {
+  title: string;
+  body: string;
+  type?: CreateAnnouncementRequestType;
+  isActive?: boolean;
+  expiresAt?: string;
+}
+
+export type CreateTicketRequestPriority =
+  (typeof CreateTicketRequestPriority)[keyof typeof CreateTicketRequestPriority];
+
+export const CreateTicketRequestPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  urgent: "urgent",
+} as const;
+
+export interface CreateTicketRequest {
+  subject: string;
+  body: string;
+  priority?: CreateTicketRequestPriority;
+}
+
+export type AdminUpdateTicketRequestStatus =
+  (typeof AdminUpdateTicketRequestStatus)[keyof typeof AdminUpdateTicketRequestStatus];
+
+export const AdminUpdateTicketRequestStatus = {
+  open: "open",
+  in_progress: "in_progress",
+  resolved: "resolved",
+  closed: "closed",
+} as const;
+
+export type AdminUpdateTicketRequestPriority =
+  (typeof AdminUpdateTicketRequestPriority)[keyof typeof AdminUpdateTicketRequestPriority];
+
+export const AdminUpdateTicketRequestPriority = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+  urgent: "urgent",
+} as const;
+
+export interface AdminUpdateTicketRequest {
+  status?: AdminUpdateTicketRequestStatus;
+  priority?: AdminUpdateTicketRequestPriority;
+  assignedTo?: string;
+  response?: string;
 }
 
 export type AddUserRequestRole =
@@ -213,8 +400,21 @@ export const UpdateLicenseRequestStatus = {
   suspended: "suspended",
 } as const;
 
+export type UpdateLicenseRequestPlan =
+  (typeof UpdateLicenseRequestPlan)[keyof typeof UpdateLicenseRequestPlan];
+
+export const UpdateLicenseRequestPlan = {
+  trial: "trial",
+  monthly: "monthly",
+  quarterly: "quarterly",
+  semi_annual: "semi_annual",
+  annual: "annual",
+  free: "free",
+} as const;
+
 export interface UpdateLicenseRequest {
   status: UpdateLicenseRequestStatus;
+  plan?: UpdateLicenseRequestPlan;
   startsAt?: string;
   expiresAt?: string;
   notes?: string;
@@ -228,6 +428,11 @@ export interface PaginatedStores {
   totalPages: number;
 }
 
+export type AdminStatsMonthlyGrowthItem = {
+  month: string;
+  stores: number;
+};
+
 export interface AdminStats {
   totalStores: number;
   activeStores: number;
@@ -235,6 +440,9 @@ export interface AdminStats {
   expiredStores: number;
   suspendedStores: number;
   newThisMonth: number;
+  totalSalesAmount: number;
+  totalSalesCount: number;
+  monthlyGrowth: AdminStatsMonthlyGrowthItem[];
 }
 
 export interface Category {
@@ -1099,6 +1307,21 @@ export const AdminGetAllStoresStatus = {
   expired: "expired",
   suspended: "suspended",
 } as const;
+
+export type AdminGetAuditLogsParams = {
+  targetType?: string;
+  targetId?: string;
+  actorId?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type AdminGetSupportTicketsParams = {
+  status?: string;
+  priority?: string;
+  page?: number;
+  limit?: number;
+};
 
 export type GetProductsParams = {
   page?: number;
