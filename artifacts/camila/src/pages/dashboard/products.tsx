@@ -26,6 +26,7 @@ import {
   Search, Plus, Trash2, Edit, PackageX, Loader2, Star, Download,
   Upload, Layers, MoreHorizontal,
 } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/skeletons";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -437,7 +438,13 @@ export default function ProductsPage() {
 
       <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
         {isLoading ? (
-          <div className="p-12 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto text-muted-foreground" /></div>
+          <div className="p-4">
+            <TableSkeleton
+              rows={10}
+              cols={8}
+              headers={["Imagen", "Nombre", "SKU", "Precio", "Stock", "Categoría", "Estado", ""]}
+            />
+          </div>
         ) : !products.length ? (
           <div className="p-16 text-center flex flex-col items-center">
             <div className="h-16 w-16 bg-secondary rounded-full flex items-center justify-center mb-4">

@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   pgEnum,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -43,7 +44,11 @@ export const storesTable = pgTable("stores", {
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (t) => [
+  index("stores_created_at_idx").on(t.createdAt),
+  index("stores_is_active_idx").on(t.isActive),
+  index("stores_business_type_idx").on(t.businessType),
+]);
 
 export const insertStoreSchema = createInsertSchema(storesTable).omit({
   id: true,

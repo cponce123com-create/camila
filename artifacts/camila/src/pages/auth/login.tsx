@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 export default function LoginPage() {
   const { login } = useAuth();

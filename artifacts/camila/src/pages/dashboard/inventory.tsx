@@ -23,6 +23,7 @@ import {
   ArrowDownRight, ArrowUpRight, MinusSquare, Loader2, AlertTriangle,
   Package, BarChart2, Plus, Search, Filter, BookOpen,
 } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/skeletons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -219,7 +220,9 @@ export default function InventoryPage() {
 
           <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
             {movementsQuery.isLoading ? (
-              <div className="p-12 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto text-muted-foreground" /></div>
+              <div className="p-4">
+                <TableSkeleton rows={8} cols={6} headers={["Fecha", "Producto", "Tipo", "Cantidad", "Razón", "Usuario"]} />
+              </div>
             ) : !movements?.data?.length ? (
               <div className="p-16 text-center flex flex-col items-center">
                 <div className="h-16 w-16 bg-secondary rounded-full flex items-center justify-center mb-4">
@@ -297,7 +300,9 @@ export default function InventoryPage() {
       {tab === "bajo-stock" && (
         <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
           {lowStockQuery.isLoading ? (
-            <div className="p-12 text-center"><Loader2 className="animate-spin h-8 w-8 mx-auto" /></div>
+            <div className="p-4">
+              <TableSkeleton rows={6} cols={5} headers={["Producto", "Stock Actual", "Stock Mínimo", "Unidad", "Estado"]} />
+            </div>
           ) : !lowStock.length ? (
             <div className="p-16 text-center flex flex-col items-center">
               <div className="h-16 w-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
@@ -401,8 +406,8 @@ export default function InventoryPage() {
               <p className="text-muted-foreground">Selecciona un producto para ver su kárdex.</p>
             </div>
           ) : kardexQuery.isLoading ? (
-            <div className="bg-card rounded-2xl border border-border/50 p-12 text-center">
-              <Loader2 className="animate-spin h-8 w-8 mx-auto text-muted-foreground" />
+            <div className="bg-card rounded-2xl border border-border/50 p-4">
+              <TableSkeleton rows={8} cols={6} headers={["Fecha", "Tipo", "Cantidad", "Costo", "Stock Final", "Razón"]} />
             </div>
           ) : kardexQuery.data ? (
             <>

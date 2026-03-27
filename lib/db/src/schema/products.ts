@@ -5,6 +5,7 @@ import {
   boolean,
   integer,
   numeric,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -16,6 +17,7 @@ export const productsTable = pgTable("products", {
   storeId: text("store_id")
     .notNull()
     .references(() => storesTable.id, { onDelete: "cascade" }),
+
   categoryId: text("category_id").references(() => categoriesTable.id, {
     onDelete: "set null",
   }),
@@ -39,7 +41,11 @@ export const productsTable = pgTable("products", {
   tags: text("tags").array(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (t) => [
+  index("products_store_id_idx").on(t.storeId),
+  index("products_store_id_created_at_idx").on(t.storeId, t.createdAt),
+  index("products_is_active_idx").on(t.isActive),
+]);
 
 export const insertProductSchema = createInsertSchema(productsTable).omit({
   id: true,

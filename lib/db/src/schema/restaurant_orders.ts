@@ -5,6 +5,7 @@ import {
   integer,
   numeric,
   pgEnum,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -49,7 +50,12 @@ export const restaurantOrdersTable = pgTable("restaurant_orders", {
   closedAt: timestamp("closed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (t) => [
+  index("restaurant_orders_store_id_idx").on(t.storeId),
+  index("restaurant_orders_store_id_opened_at_idx").on(t.storeId, t.openedAt),
+  index("restaurant_orders_status_idx").on(t.status),
+  index("restaurant_orders_store_id_status_idx").on(t.storeId, t.status),
+]);
 
 export const insertRestaurantOrderSchema = createInsertSchema(restaurantOrdersTable).omit({
   id: true,

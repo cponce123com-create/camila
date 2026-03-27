@@ -2,10 +2,34 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Store, TrendingUp, ShieldCheck, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
+
+const BASE = import.meta.env.BASE_URL;
+const SITE_URL = "https://camila.replit.app";
+const OG_IMAGE = `${SITE_URL}${BASE}images/opengraph.jpg`;
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Helmet>
+        <title>Camila — Software de Gestión para Negocios Locales en Chanchamayo</title>
+        <meta
+          name="description"
+          content="Camila es el sistema de ventas, inventario y gestión todo-en-uno diseñado para emprendedores de San Ramón, Chanchamayo y toda la selva peruana. Prueba gratis."
+        />
+        <meta name="keywords" content="software tienda peru, sistema ventas chanchamayo, inventario san ramon, gestion negocio local peru, camila saas" />
+        <link rel="canonical" href={SITE_URL} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={SITE_URL} />
+        <meta property="og:title" content="Camila — Software de Gestión para Negocios Locales en Chanchamayo" />
+        <meta property="og:description" content="Sistema de ventas, inventario y analítica diseñado para emprendedores de la selva peruana. Fácil, rápido y desde S/ 0." />
+        <meta property="og:image" content={OG_IMAGE} />
+        <meta property="og:locale" content="es_PE" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Camila — Software para Negocios en Chanchamayo" />
+        <meta name="twitter:description" content="Gestiona ventas, inventario y análisis de tu negocio desde cualquier dispositivo." />
+        <meta name="twitter:image" content={OG_IMAGE} />
+      </Helmet>
       <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md border-b border-border/50 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">

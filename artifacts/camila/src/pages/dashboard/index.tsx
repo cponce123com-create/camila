@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   Package, Users, Activity, TrendingUp, TrendingDown,
   AlertTriangle, BarChart3, Plus, ArrowRight, BoxIcon,
-  Loader2, Star, DollarSign,
+  Star, DollarSign,
 } from "lucide-react";
 import { useGetStoreStats, useGetStoreUsers } from "@workspace/api-client-react";
+import { StatCardGridSkeleton, CardListSkeleton } from "@/components/ui/skeletons";
 
 function StatCard({ title, value, icon: Icon, color, bg, sub }: {
   title: string; value: string | number; icon: any; color: string; bg: string; sub?: string;
@@ -67,9 +68,12 @@ export default function DashboardPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
+        <>
+          <StatCardGridSkeleton count={4} />
+          <div className="mt-8">
+            <CardListSkeleton rows={5} />
+          </div>
+        </>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

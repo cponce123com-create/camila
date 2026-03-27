@@ -4,6 +4,7 @@ import {
   timestamp,
   numeric,
   pgEnum,
+  index,
 } from "drizzle-orm/pg-core";
 import { storesTable } from "./stores";
 import { usersTable } from "./users";
@@ -35,7 +36,12 @@ export const salesTable = pgTable("sales", {
   soldAt: timestamp("sold_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("sales_store_id_idx").on(t.storeId),
+  index("sales_store_id_created_at_idx").on(t.storeId, t.createdAt),
+  index("sales_status_idx").on(t.status),
+  index("sales_store_id_status_idx").on(t.storeId, t.status),
+]);
 
 export type Sale = typeof salesTable.$inferSelect;
 export type NewSale = typeof salesTable.$inferInsert;

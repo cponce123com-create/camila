@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Loader2, Store } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet-async";
 
 const DISTRICTS = ["San Ramón", "La Merced", "Pichanaqui", "Chanchamayo", "Perené", "Villa Rica", "Satipo"];
 

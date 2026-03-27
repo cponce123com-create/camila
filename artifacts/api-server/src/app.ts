@@ -2,12 +2,62 @@ import express, { type Express } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
+import helmet from "helmet";
+import compression from "compression";
+import { rateLimit } from "express-rate-limit";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { sessionMiddleware } from "./middlewares/session";
 
 const app: Express = express();
 
+// ─── Compression ────────────────────────────────────────────────────────────
+app.use(compression());
+
+// ─── Security Headers ────────────────────────────────────────────────────────
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false,
+  })
+);
+
+// ─── CORS ───────────────────────────────────────────────────────────────────
+const allowedOrigins = process.env.NODE_ENV === "production"
+  ? (process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()) ?? [])
+  : true;
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
+// ─── Rate Limiting ───────────────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: "Demasiados intentos. Intenta de nuevo en 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  message: { error: "Límite de solicitudes alcanzado. Intenta más tarde." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== "production",
+});
+
+// ─── Body Parsing ────────────────────────────────────────────────────────────
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+app.use(cookieParser());
+
+// ─── Request Logging ─────────────────────────────────────────────────────────
 app.use(
   pinoHttp({
     logger,
@@ -28,15 +78,12 @@ app.use(
   }),
 );
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+// ─── Session ──────────────────────────────────────────────────────────────────
 app.use(sessionMiddleware);
 
+// ─── Routes ──────────────────────────────────────────────────────────────────
+app.use("/api/auth", authLimiter);
+app.use("/api", apiLimiter);
 app.use("/api", router);
 
 export default app;

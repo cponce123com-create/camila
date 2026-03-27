@@ -4,6 +4,7 @@ import {
   timestamp,
   numeric,
   integer,
+  index,
 } from "drizzle-orm/pg-core";
 import { storesTable } from "./stores";
 import { salesTable } from "./sales";
@@ -25,7 +26,11 @@ export const saleItemsTable = pgTable("sale_items", {
   discount: numeric("discount", { precision: 12, scale: 2 }).default("0").notNull(),
   subtotal: numeric("subtotal", { precision: 12, scale: 2 }).default("0").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => [
+  index("sale_items_sale_id_idx").on(t.saleId),
+  index("sale_items_store_id_idx").on(t.storeId),
+  index("sale_items_product_id_idx").on(t.productId),
+]);
 
 export type SaleItem = typeof saleItemsTable.$inferSelect;
 export type NewSaleItem = typeof saleItemsTable.$inferInsert;

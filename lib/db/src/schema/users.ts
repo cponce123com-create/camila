@@ -4,6 +4,7 @@ import {
   timestamp,
   boolean,
   pgEnum,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -30,7 +31,10 @@ export const usersTable = pgTable("users", {
   resetTokenExpiresAt: timestamp("reset_token_expires_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (t) => [
+  index("users_store_id_idx").on(t.storeId),
+  index("users_role_idx").on(t.role),
+]);
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({
   id: true,

@@ -11,7 +11,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ShoppingBag, Plus, Eye, TrendingUp } from "lucide-react";
+import { ShoppingBag, Plus, Eye, TrendingUp } from "lucide-react";
+import { TableSkeleton } from "@/components/ui/skeletons";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -125,8 +126,12 @@ export default function SalesPage() {
 
       <div className="bg-card rounded-2xl border border-border/50 overflow-hidden">
         {isLoading ? (
-          <div className="p-12 text-center">
-            <Loader2 className="animate-spin h-8 w-8 mx-auto text-muted-foreground" />
+          <div className="p-4">
+            <TableSkeleton
+              rows={10}
+              cols={9}
+              headers={["Recibo", "Fecha", "Cliente", "Vendedor", "Items", "Total", "Pago", "Estado", ""]}
+            />
           </div>
         ) : !sales.length ? (
           <div className="p-16 text-center">

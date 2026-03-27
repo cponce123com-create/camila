@@ -9,6 +9,7 @@ import { Search, Store as StoreIcon, ChevronLeft, ChevronRight } from "lucide-re
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { TableSkeleton } from "@/components/ui/skeletons";
 
 const STATUS_STYLES: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-700",
@@ -91,7 +92,13 @@ export default function AdminStoresPage() {
 
       <div className="bg-card rounded-2xl shadow-sm border border-border/50 overflow-hidden">
         {isLoading ? (
-          <div className="p-12 text-center text-muted-foreground">Cargando...</div>
+          <div className="p-4">
+            <TableSkeleton
+              rows={8}
+              cols={8}
+              headers={["Negocio", "Titular", "Contacto", "Distrito", "Licencia", "Plan", "Creada", ""]}
+            />
+          </div>
         ) : (
           <>
             <Table>
