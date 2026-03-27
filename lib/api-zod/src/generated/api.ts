@@ -2198,3 +2198,258 @@ export const GetRestaurantStatsResponse = zod.object({
   openOrders: zod.number(),
   avgOrderValue: zod.number(),
 });
+
+/**
+ * @summary List clients
+ */
+export const GetClientsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const GetClientsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      name: zod.string(),
+      phone: zod.string().nullish(),
+      email: zod.string().nullish(),
+      notes: zod.string().nullish(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Create client
+ */
+export const CreateClientBody = zod.object({
+  name: zod.string(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+/**
+ * @summary Update client
+ */
+export const UpdateClientParams = zod.object({
+  clientId: zod.coerce.string(),
+});
+
+export const UpdateClientBody = zod.object({
+  name: zod.string(),
+  phone: zod.string().optional(),
+  email: zod.string().optional(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateClientResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  name: zod.string(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Delete client
+ */
+export const DeleteClientParams = zod.object({
+  clientId: zod.coerce.string(),
+});
+
+/**
+ * @summary List sales with filters
+ */
+export const GetSalesQueryParams = zod.object({
+  dateFrom: zod.coerce.string().optional(),
+  dateTo: zod.coerce.string().optional(),
+  staffUserId: zod.coerce.string().optional(),
+  paymentMethod: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  clientId: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const GetSalesResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      receiptCode: zod.string(),
+      clientId: zod.string().nullish(),
+      clientName: zod.string().nullish(),
+      clientPhone: zod.string().nullish(),
+      staffUserId: zod.string().nullish(),
+      staffName: zod.string().nullish(),
+      status: zod.enum(["open", "paid", "cancelled", "refunded"]),
+      subtotal: zod.number(),
+      discount: zod.number(),
+      discountPercent: zod.number(),
+      tax: zod.number(),
+      total: zod.number(),
+      paymentMethod: zod.enum(["cash", "card", "transfer", "other"]),
+      notes: zod.string().nullish(),
+      soldAt: zod.string(),
+      createdAt: zod.string(),
+      updatedAt: zod.string(),
+      items: zod
+        .array(
+          zod.object({
+            id: zod.string(),
+            saleId: zod.string(),
+            productId: zod.string().nullish(),
+            productName: zod.string(),
+            productSku: zod.string().nullish(),
+            unitPrice: zod.number(),
+            quantity: zod.number(),
+            discount: zod.number(),
+            subtotal: zod.number(),
+            createdAt: zod.string(),
+          }),
+        )
+        .optional(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Create a sale
+ */
+export const CreateSaleBody = zod.object({
+  clientId: zod.string().optional(),
+  clientName: zod.string().optional(),
+  clientPhone: zod.string().optional(),
+  notes: zod.string().optional(),
+  discount: zod.number().optional(),
+  discountPercent: zod.number().optional(),
+  paymentMethod: zod.enum(["cash", "card", "transfer", "other"]).optional(),
+  items: zod.array(
+    zod.object({
+      productId: zod.string().optional(),
+      productName: zod.string(),
+      productSku: zod.string().optional(),
+      unitPrice: zod.number(),
+      quantity: zod.number(),
+      discount: zod.number().optional(),
+    }),
+  ),
+});
+
+/**
+ * @summary Get sale with items
+ */
+export const GetSaleParams = zod.object({
+  saleId: zod.coerce.string(),
+});
+
+export const GetSaleResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  receiptCode: zod.string(),
+  clientId: zod.string().nullish(),
+  clientName: zod.string().nullish(),
+  clientPhone: zod.string().nullish(),
+  staffUserId: zod.string().nullish(),
+  staffName: zod.string().nullish(),
+  status: zod.enum(["open", "paid", "cancelled", "refunded"]),
+  subtotal: zod.number(),
+  discount: zod.number(),
+  discountPercent: zod.number(),
+  tax: zod.number(),
+  total: zod.number(),
+  paymentMethod: zod.enum(["cash", "card", "transfer", "other"]),
+  notes: zod.string().nullish(),
+  soldAt: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  items: zod
+    .array(
+      zod.object({
+        id: zod.string(),
+        saleId: zod.string(),
+        productId: zod.string().nullish(),
+        productName: zod.string(),
+        productSku: zod.string().nullish(),
+        unitPrice: zod.number(),
+        quantity: zod.number(),
+        discount: zod.number(),
+        subtotal: zod.number(),
+        createdAt: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Update sale status
+ */
+export const UpdateSaleParams = zod.object({
+  saleId: zod.coerce.string(),
+});
+
+export const UpdateSaleBody = zod.object({
+  status: zod.enum(["paid", "cancelled", "refunded"]).optional(),
+  notes: zod.string().optional(),
+});
+
+export const UpdateSaleResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  receiptCode: zod.string(),
+  clientId: zod.string().nullish(),
+  clientName: zod.string().nullish(),
+  clientPhone: zod.string().nullish(),
+  staffUserId: zod.string().nullish(),
+  staffName: zod.string().nullish(),
+  status: zod.enum(["open", "paid", "cancelled", "refunded"]),
+  subtotal: zod.number(),
+  discount: zod.number(),
+  discountPercent: zod.number(),
+  tax: zod.number(),
+  total: zod.number(),
+  paymentMethod: zod.enum(["cash", "card", "transfer", "other"]),
+  notes: zod.string().nullish(),
+  soldAt: zod.string(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+  items: zod
+    .array(
+      zod.object({
+        id: zod.string(),
+        saleId: zod.string(),
+        productId: zod.string().nullish(),
+        productName: zod.string(),
+        productSku: zod.string().nullish(),
+        unitPrice: zod.number(),
+        quantity: zod.number(),
+        discount: zod.number(),
+        subtotal: zod.number(),
+        createdAt: zod.string(),
+      }),
+    )
+    .optional(),
+});
+
+/**
+ * @summary Delete sale
+ */
+export const DeleteSaleParams = zod.object({
+  saleId: zod.coerce.string(),
+});

@@ -15,3 +15,6 @@ export * from "./restaurant_orders";
 export * from "./restaurant_order_items";
 export * from "./daily_menus";
 export * from "./daily_menu_items";
+export * from "./clients";
+export * from "./sales";
+export * from "./sale_items";

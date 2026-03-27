@@ -1804,6 +1804,229 @@ paths:
               schema:
                 $ref: "#/components/schemas/RestaurantStats"
 
+  /clients:
+    get:
+      operationId: getClients
+      summary: List clients
+      tags: [Clients]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientListResponse"
+    post:
+      operationId: createClient
+      summary: Create client
+      tags: [Clients]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientRequest"
+      responses:
+        "201":
+          description: Created client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{clientId}:
+    patch:
+      operationId: updateClient
+      summary: Update client
+      tags: [Clients]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClientRequest"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      summary: Delete client
+      tags: [Clients]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: clientId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
+  /sales:
+    get:
+      operationId: getSales
+      summary: List sales with filters
+      tags: [Sales]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+        - in: query
+          name: staffUserId
+          schema:
+            type: string
+        - in: query
+          name: paymentMethod
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: clientId
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Sale list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleListResponse"
+    post:
+      operationId: createSale
+      summary: Create a sale
+      tags: [Sales]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSaleRequest"
+      responses:
+        "201":
+          description: Created sale
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+
+  /sales/{saleId}:
+    get:
+      operationId: getSale
+      summary: Get sale with items
+      tags: [Sales]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: saleId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sale with items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+    patch:
+      operationId: updateSale
+      summary: Update sale status
+      tags: [Sales]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: saleId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [paid, cancelled, refunded]
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Updated sale
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sale"
+    delete:
+      operationId: deleteSale
+      summary: Delete sale
+      tags: [Sales]
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: saleId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+
 components:
   schemas:
     HealthStatus:
@@ -3508,3 +3731,235 @@ components:
         - totalTables
         - openOrders
         - avgOrderValue
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - storeId
+        - name
+        - createdAt
+        - updatedAt
+
+    SaleItem:
+      type: object
+      properties:
+        id:
+          type: string
+        saleId:
+          type: string
+        productId:
+          type: string
+          nullable: true
+        productName:
+          type: string
+        productSku:
+          type: string
+          nullable: true
+        unitPrice:
+          type: number
+        quantity:
+          type: integer
+        discount:
+          type: number
+        subtotal:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - saleId
+        - productName
+        - unitPrice
+        - quantity
+        - discount
+        - subtotal
+        - createdAt
+
+    Sale:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        receiptCode:
+          type: string
+        clientId:
+          type: string
+          nullable: true
+        clientName:
+          type: string
+          nullable: true
+        clientPhone:
+          type: string
+          nullable: true
+        staffUserId:
+          type: string
+          nullable: true
+        staffName:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [open, paid, cancelled, refunded]
+        subtotal:
+          type: number
+        discount:
+          type: number
+        discountPercent:
+          type: number
+        tax:
+          type: number
+        total:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, card, transfer, other]
+        notes:
+          type: string
+          nullable: true
+        soldAt:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleItem'
+      required:
+        - id
+        - storeId
+        - receiptCode
+        - status
+        - subtotal
+        - discount
+        - discountPercent
+        - tax
+        - total
+        - paymentMethod
+        - soldAt
+        - createdAt
+        - updatedAt
+
+    CreateSaleRequest:
+      type: object
+      properties:
+        clientId:
+          type: string
+        clientName:
+          type: string
+        clientPhone:
+          type: string
+        notes:
+          type: string
+        discount:
+          type: number
+        discountPercent:
+          type: number
+        paymentMethod:
+          type: string
+          enum: [cash, card, transfer, other]
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              productName:
+                type: string
+              productSku:
+                type: string
+              unitPrice:
+                type: number
+              quantity:
+                type: integer
+              discount:
+                type: number
+            required:
+              - productName
+              - unitPrice
+              - quantity
+      required:
+        - items
+
+    CreateClientRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        notes:
+          type: string
+      required:
+        - name
+
+    SaleListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sale'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    ClientListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages

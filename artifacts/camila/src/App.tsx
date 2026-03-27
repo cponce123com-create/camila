@@ -26,6 +26,9 @@ import RestaurantSetupPage from "@/pages/dashboard/restaurant/setup";
 import RestaurantOrdersPage from "@/pages/dashboard/restaurant/orders";
 import DailyMenuPage from "@/pages/dashboard/restaurant/daily-menu";
 import TableOrderPage from "@/pages/dashboard/restaurant/table-order";
+import SalesPage from "@/pages/dashboard/sales";
+import NewSalePage from "@/pages/dashboard/sales/new";
+import SaleDetailPage from "@/pages/dashboard/sales/detail";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +56,11 @@ function Router() {
       <Route path="/dashboard/restaurant/orders" component={RestaurantOrdersPage} />
       <Route path="/dashboard/restaurant/daily-menu" component={DailyMenuPage} />
       <Route path="/dashboard/restaurant/tables/:tableId" component={TableOrderPage} />
+
+      {/* Sales module */}
+      <Route path="/dashboard/sales" component={SalesPage} />
+      <Route path="/dashboard/sales/new" component={NewSalePage} />
+      <Route path="/dashboard/sales/:id" component={SaleDetailPage} />
 
       {/* Protected Superadmin */}
       <Route path="/admin" component={AdminPage} />

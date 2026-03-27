@@ -964,6 +964,125 @@ export interface RestaurantStats {
   avgOrderValue: number;
 }
 
+export interface Client {
+  id: string;
+  storeId: string;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaleItem {
+  id: string;
+  saleId: string;
+  productId?: string | null;
+  productName: string;
+  productSku?: string | null;
+  unitPrice: number;
+  quantity: number;
+  discount: number;
+  subtotal: number;
+  createdAt: string;
+}
+
+export type SaleStatus = (typeof SaleStatus)[keyof typeof SaleStatus];
+
+export const SaleStatus = {
+  open: "open",
+  paid: "paid",
+  cancelled: "cancelled",
+  refunded: "refunded",
+} as const;
+
+export type SalePaymentMethod =
+  (typeof SalePaymentMethod)[keyof typeof SalePaymentMethod];
+
+export const SalePaymentMethod = {
+  cash: "cash",
+  card: "card",
+  transfer: "transfer",
+  other: "other",
+} as const;
+
+export interface Sale {
+  id: string;
+  storeId: string;
+  receiptCode: string;
+  clientId?: string | null;
+  clientName?: string | null;
+  clientPhone?: string | null;
+  staffUserId?: string | null;
+  staffName?: string | null;
+  status: SaleStatus;
+  subtotal: number;
+  discount: number;
+  discountPercent: number;
+  tax: number;
+  total: number;
+  paymentMethod: SalePaymentMethod;
+  notes?: string | null;
+  soldAt: string;
+  createdAt: string;
+  updatedAt: string;
+  items?: SaleItem[];
+}
+
+export type CreateSaleRequestPaymentMethod =
+  (typeof CreateSaleRequestPaymentMethod)[keyof typeof CreateSaleRequestPaymentMethod];
+
+export const CreateSaleRequestPaymentMethod = {
+  cash: "cash",
+  card: "card",
+  transfer: "transfer",
+  other: "other",
+} as const;
+
+export type CreateSaleRequestItemsItem = {
+  productId?: string;
+  productName: string;
+  productSku?: string;
+  unitPrice: number;
+  quantity: number;
+  discount?: number;
+};
+
+export interface CreateSaleRequest {
+  clientId?: string;
+  clientName?: string;
+  clientPhone?: string;
+  notes?: string;
+  discount?: number;
+  discountPercent?: number;
+  paymentMethod?: CreateSaleRequestPaymentMethod;
+  items: CreateSaleRequestItemsItem[];
+}
+
+export interface CreateClientRequest {
+  name: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+}
+
+export interface SaleListResponse {
+  data: Sale[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ClientListResponse {
+  data: Client[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export type AdminGetAllStoresParams = {
   page?: number;
   limit?: number;
@@ -1138,4 +1257,35 @@ export type GetDailyMenuParams = {
 
 export type PublishDailyMenuBody = {
   isPublished: boolean;
+};
+
+export type GetClientsParams = {
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type GetSalesParams = {
+  dateFrom?: string;
+  dateTo?: string;
+  staffUserId?: string;
+  paymentMethod?: string;
+  status?: string;
+  clientId?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type UpdateSaleBodyStatus =
+  (typeof UpdateSaleBodyStatus)[keyof typeof UpdateSaleBodyStatus];
+
+export const UpdateSaleBodyStatus = {
+  paid: "paid",
+  cancelled: "cancelled",
+  refunded: "refunded",
+} as const;
+
+export type UpdateSaleBody = {
+  status?: UpdateSaleBodyStatus;
+  notes?: string;
 };

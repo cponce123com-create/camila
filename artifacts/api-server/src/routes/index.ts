@@ -15,6 +15,8 @@ import restaurantTablesRouter from "./restaurant/tables";
 import restaurantOrdersRouter from "./restaurant/orders";
 import restaurantDailyMenuRouter from "./restaurant/daily-menu";
 import restaurantStatsRouter from "./restaurant/stats";
+import salesRouter from "./sales";
+import clientsRouter from "./clients";
 
 const router: IRouter = Router();
 
@@ -35,5 +37,7 @@ router.use("/restaurant/tables", restaurantTablesRouter);
 router.use("/restaurant/orders", restaurantOrdersRouter);
 router.use("/restaurant/daily-menu", restaurantDailyMenuRouter);
 router.use("/restaurant/stats", restaurantStatsRouter);
+router.use("/sales", salesRouter);
+router.use("/clients", clientsRouter);
 
 export default router;
