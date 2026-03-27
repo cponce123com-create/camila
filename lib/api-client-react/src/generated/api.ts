@@ -27,13 +27,18 @@ import type {
   Category,
   CreateCategoryRequest,
   CreateProductRequest,
+  CreateReviewRequest,
   CreateStoreBannerRequest,
+  CreateVariantRequest,
   CurrentUserResponse,
   ErrorResponse,
   ExportProductsParams,
   ForgotPasswordRequest,
+  GetAllReviewsParams,
   GetInventoryMovementsParams,
   GetProductKardexParams,
+  GetProductReviewsParams,
+  GetProductVariantsParams,
   GetProductsParams,
   GetStoreStatsParams,
   HealthStatus,
@@ -42,13 +47,17 @@ import type {
   InventoryMovement,
   License,
   LoginRequest,
+  ModerateProductReviewBody,
   PaginatedInventoryMovements,
   PaginatedProducts,
+  PaginatedReviews,
   PaginatedStores,
   Product,
   ProductExportRow,
   ProductImage,
   ProductKardex,
+  ProductReview,
+  ProductVariant,
   RegisterStoreRequest,
   ReorderRequest,
   ResetPasswordRequest,
@@ -4042,3 +4051,922 @@ export const useDeleteProductImage = <
 > => {
   return useMutation(getDeleteProductImageMutationOptions(options));
 };
+
+/**
+ * @summary Get all variants for a product
+ */
+export const getGetProductVariantsUrl = (
+  productId: string,
+  params?: GetProductVariantsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/products/${productId}/variants?${stringifiedParams}`
+    : `/api/products/${productId}/variants`;
+};
+
+export const getProductVariants = async (
+  productId: string,
+  params?: GetProductVariantsParams,
+  options?: RequestInit,
+): Promise<ProductVariant[]> => {
+  return customFetch<ProductVariant[]>(
+    getGetProductVariantsUrl(productId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetProductVariantsQueryKey = (
+  productId: string,
+  params?: GetProductVariantsParams,
+) => {
+  return [
+    `/api/products/${productId}/variants`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetProductVariantsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProductVariants>>,
+  TError = ErrorType<unknown>,
+>(
+  productId: string,
+  params?: GetProductVariantsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProductVariants>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetProductVariantsQueryKey(productId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getProductVariants>>
+  > = ({ signal }) =>
+    getProductVariants(productId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!productId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProductVariants>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProductVariantsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProductVariants>>
+>;
+export type GetProductVariantsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all variants for a product
+ */
+
+export function useGetProductVariants<
+  TData = Awaited<ReturnType<typeof getProductVariants>>,
+  TError = ErrorType<unknown>,
+>(
+  productId: string,
+  params?: GetProductVariantsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProductVariants>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProductVariantsQueryOptions(
+    productId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a new product variant
+ */
+export const getCreateProductVariantUrl = (productId: string) => {
+  return `/api/products/${productId}/variants`;
+};
+
+export const createProductVariant = async (
+  productId: string,
+  createVariantRequest: CreateVariantRequest,
+  options?: RequestInit,
+): Promise<ProductVariant> => {
+  return customFetch<ProductVariant>(getCreateProductVariantUrl(productId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createVariantRequest),
+  });
+};
+
+export const getCreateProductVariantMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProductVariant>>,
+    TError,
+    { productId: string; data: BodyType<CreateVariantRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createProductVariant>>,
+  TError,
+  { productId: string; data: BodyType<CreateVariantRequest> },
+  TContext
+> => {
+  const mutationKey = ["createProductVariant"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createProductVariant>>,
+    { productId: string; data: BodyType<CreateVariantRequest> }
+  > = (props) => {
+    const { productId, data } = props ?? {};
+
+    return createProductVariant(productId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateProductVariantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createProductVariant>>
+>;
+export type CreateProductVariantMutationBody = BodyType<CreateVariantRequest>;
+export type CreateProductVariantMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new product variant
+ */
+export const useCreateProductVariant = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProductVariant>>,
+    TError,
+    { productId: string; data: BodyType<CreateVariantRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createProductVariant>>,
+  TError,
+  { productId: string; data: BodyType<CreateVariantRequest> },
+  TContext
+> => {
+  return useMutation(getCreateProductVariantMutationOptions(options));
+};
+
+/**
+ * @summary Update a product variant
+ */
+export const getUpdateProductVariantUrl = (
+  productId: string,
+  variantId: string,
+) => {
+  return `/api/products/${productId}/variants/${variantId}`;
+};
+
+export const updateProductVariant = async (
+  productId: string,
+  variantId: string,
+  createVariantRequest: CreateVariantRequest,
+  options?: RequestInit,
+): Promise<ProductVariant> => {
+  return customFetch<ProductVariant>(
+    getUpdateProductVariantUrl(productId, variantId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(createVariantRequest),
+    },
+  );
+};
+
+export const getUpdateProductVariantMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProductVariant>>,
+    TError,
+    {
+      productId: string;
+      variantId: string;
+      data: BodyType<CreateVariantRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProductVariant>>,
+  TError,
+  {
+    productId: string;
+    variantId: string;
+    data: BodyType<CreateVariantRequest>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateProductVariant"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProductVariant>>,
+    {
+      productId: string;
+      variantId: string;
+      data: BodyType<CreateVariantRequest>;
+    }
+  > = (props) => {
+    const { productId, variantId, data } = props ?? {};
+
+    return updateProductVariant(productId, variantId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProductVariantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProductVariant>>
+>;
+export type UpdateProductVariantMutationBody = BodyType<CreateVariantRequest>;
+export type UpdateProductVariantMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a product variant
+ */
+export const useUpdateProductVariant = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProductVariant>>,
+    TError,
+    {
+      productId: string;
+      variantId: string;
+      data: BodyType<CreateVariantRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateProductVariant>>,
+  TError,
+  {
+    productId: string;
+    variantId: string;
+    data: BodyType<CreateVariantRequest>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateProductVariantMutationOptions(options));
+};
+
+/**
+ * @summary Delete a product variant
+ */
+export const getDeleteProductVariantUrl = (
+  productId: string,
+  variantId: string,
+) => {
+  return `/api/products/${productId}/variants/${variantId}`;
+};
+
+export const deleteProductVariant = async (
+  productId: string,
+  variantId: string,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(
+    getDeleteProductVariantUrl(productId, variantId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteProductVariantMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProductVariant>>,
+    TError,
+    { productId: string; variantId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProductVariant>>,
+  TError,
+  { productId: string; variantId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteProductVariant"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProductVariant>>,
+    { productId: string; variantId: string }
+  > = (props) => {
+    const { productId, variantId } = props ?? {};
+
+    return deleteProductVariant(productId, variantId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProductVariantMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProductVariant>>
+>;
+
+export type DeleteProductVariantMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a product variant
+ */
+export const useDeleteProductVariant = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProductVariant>>,
+    TError,
+    { productId: string; variantId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProductVariant>>,
+  TError,
+  { productId: string; variantId: string },
+  TContext
+> => {
+  return useMutation(getDeleteProductVariantMutationOptions(options));
+};
+
+/**
+ * @summary Get reviews for a product
+ */
+export const getGetProductReviewsUrl = (
+  productId: string,
+  params?: GetProductReviewsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/products/${productId}/reviews?${stringifiedParams}`
+    : `/api/products/${productId}/reviews`;
+};
+
+export const getProductReviews = async (
+  productId: string,
+  params?: GetProductReviewsParams,
+  options?: RequestInit,
+): Promise<PaginatedReviews> => {
+  return customFetch<PaginatedReviews>(
+    getGetProductReviewsUrl(productId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetProductReviewsQueryKey = (
+  productId: string,
+  params?: GetProductReviewsParams,
+) => {
+  return [
+    `/api/products/${productId}/reviews`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetProductReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProductReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  productId: string,
+  params?: GetProductReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProductReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetProductReviewsQueryKey(productId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getProductReviews>>
+  > = ({ signal }) =>
+    getProductReviews(productId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!productId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProductReviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProductReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProductReviews>>
+>;
+export type GetProductReviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get reviews for a product
+ */
+
+export function useGetProductReviews<
+  TData = Awaited<ReturnType<typeof getProductReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  productId: string,
+  params?: GetProductReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProductReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProductReviewsQueryOptions(
+    productId,
+    params,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Submit a customer review for a product
+ */
+export const getCreateProductReviewUrl = (productId: string) => {
+  return `/api/products/${productId}/reviews`;
+};
+
+export const createProductReview = async (
+  productId: string,
+  createReviewRequest: CreateReviewRequest,
+  options?: RequestInit,
+): Promise<ProductReview> => {
+  return customFetch<ProductReview>(getCreateProductReviewUrl(productId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createReviewRequest),
+  });
+};
+
+export const getCreateProductReviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProductReview>>,
+    TError,
+    { productId: string; data: BodyType<CreateReviewRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createProductReview>>,
+  TError,
+  { productId: string; data: BodyType<CreateReviewRequest> },
+  TContext
+> => {
+  const mutationKey = ["createProductReview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createProductReview>>,
+    { productId: string; data: BodyType<CreateReviewRequest> }
+  > = (props) => {
+    const { productId, data } = props ?? {};
+
+    return createProductReview(productId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateProductReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createProductReview>>
+>;
+export type CreateProductReviewMutationBody = BodyType<CreateReviewRequest>;
+export type CreateProductReviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Submit a customer review for a product
+ */
+export const useCreateProductReview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createProductReview>>,
+    TError,
+    { productId: string; data: BodyType<CreateReviewRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createProductReview>>,
+  TError,
+  { productId: string; data: BodyType<CreateReviewRequest> },
+  TContext
+> => {
+  return useMutation(getCreateProductReviewMutationOptions(options));
+};
+
+/**
+ * @summary Approve or reject a review (store admin)
+ */
+export const getModerateProductReviewUrl = (
+  productId: string,
+  reviewId: string,
+) => {
+  return `/api/products/${productId}/reviews/${reviewId}`;
+};
+
+export const moderateProductReview = async (
+  productId: string,
+  reviewId: string,
+  moderateProductReviewBody: ModerateProductReviewBody,
+  options?: RequestInit,
+): Promise<ProductReview> => {
+  return customFetch<ProductReview>(
+    getModerateProductReviewUrl(productId, reviewId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(moderateProductReviewBody),
+    },
+  );
+};
+
+export const getModerateProductReviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moderateProductReview>>,
+    TError,
+    {
+      productId: string;
+      reviewId: string;
+      data: BodyType<ModerateProductReviewBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moderateProductReview>>,
+  TError,
+  {
+    productId: string;
+    reviewId: string;
+    data: BodyType<ModerateProductReviewBody>;
+  },
+  TContext
+> => {
+  const mutationKey = ["moderateProductReview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moderateProductReview>>,
+    {
+      productId: string;
+      reviewId: string;
+      data: BodyType<ModerateProductReviewBody>;
+    }
+  > = (props) => {
+    const { productId, reviewId, data } = props ?? {};
+
+    return moderateProductReview(productId, reviewId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ModerateProductReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof moderateProductReview>>
+>;
+export type ModerateProductReviewMutationBody =
+  BodyType<ModerateProductReviewBody>;
+export type ModerateProductReviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Approve or reject a review (store admin)
+ */
+export const useModerateProductReview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moderateProductReview>>,
+    TError,
+    {
+      productId: string;
+      reviewId: string;
+      data: BodyType<ModerateProductReviewBody>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof moderateProductReview>>,
+  TError,
+  {
+    productId: string;
+    reviewId: string;
+    data: BodyType<ModerateProductReviewBody>;
+  },
+  TContext
+> => {
+  return useMutation(getModerateProductReviewMutationOptions(options));
+};
+
+/**
+ * @summary Delete a review (store admin)
+ */
+export const getDeleteProductReviewUrl = (
+  productId: string,
+  reviewId: string,
+) => {
+  return `/api/products/${productId}/reviews/${reviewId}`;
+};
+
+export const deleteProductReview = async (
+  productId: string,
+  reviewId: string,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(
+    getDeleteProductReviewUrl(productId, reviewId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteProductReviewMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProductReview>>,
+    TError,
+    { productId: string; reviewId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProductReview>>,
+  TError,
+  { productId: string; reviewId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteProductReview"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProductReview>>,
+    { productId: string; reviewId: string }
+  > = (props) => {
+    const { productId, reviewId } = props ?? {};
+
+    return deleteProductReview(productId, reviewId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProductReviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProductReview>>
+>;
+
+export type DeleteProductReviewMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a review (store admin)
+ */
+export const useDeleteProductReview = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProductReview>>,
+    TError,
+    { productId: string; reviewId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProductReview>>,
+  TError,
+  { productId: string; reviewId: string },
+  TContext
+> => {
+  return useMutation(getDeleteProductReviewMutationOptions(options));
+};
+
+/**
+ * @summary Get all reviews for the store (for moderation dashboard)
+ */
+export const getGetAllReviewsUrl = (params?: GetAllReviewsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/reviews?${stringifiedParams}`
+    : `/api/reviews`;
+};
+
+export const getAllReviews = async (
+  params?: GetAllReviewsParams,
+  options?: RequestInit,
+): Promise<PaginatedReviews> => {
+  return customFetch<PaginatedReviews>(getGetAllReviewsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAllReviewsQueryKey = (params?: GetAllReviewsParams) => {
+  return [`/api/reviews`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAllReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAllReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAllReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAllReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAllReviewsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllReviews>>> = ({
+    signal,
+  }) => getAllReviews(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAllReviews>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAllReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAllReviews>>
+>;
+export type GetAllReviewsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all reviews for the store (for moderation dashboard)
+ */
+
+export function useGetAllReviews<
+  TData = Awaited<ReturnType<typeof getAllReviews>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetAllReviewsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAllReviews>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAllReviewsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

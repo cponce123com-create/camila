@@ -4,6 +4,8 @@ export * from "./users";
 export * from "./sessions";
 export * from "./categories";
 export * from "./products";
+export * from "./product_variants";
+export * from "./product_reviews";
 export * from "./inventory";
 export * from "./store_banners";
 export * from "./store_settings";

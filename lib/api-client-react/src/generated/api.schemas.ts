@@ -594,6 +594,104 @@ export interface ImportResult {
   errors: ImportResultErrorsItem[];
 }
 
+export interface ProductVariant {
+  id: string;
+  storeId: string;
+  productId: string;
+  sku?: string;
+  talla?: string;
+  color?: string;
+  colorHex?: string;
+  estilo?: string;
+  material?: string;
+  genero?: string;
+  temporada?: string;
+  price?: number;
+  salePrice?: number;
+  imageUrl?: string;
+  stock: number;
+  minStock: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateVariantRequest {
+  sku?: string;
+  talla?: string;
+  color?: string;
+  colorHex?: string;
+  estilo?: string;
+  material?: string;
+  genero?: string;
+  temporada?: string;
+  price?: number;
+  salePrice?: number;
+  imageUrl?: string;
+  stock?: number;
+  minStock?: number;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface ProductReview {
+  id: string;
+  storeId: string;
+  productId: string;
+  variantId?: string;
+  customerName: string;
+  customerEmail?: string;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating: number;
+  comment?: string;
+  isApproved: boolean;
+  createdAt: string;
+  updatedAt: string;
+  productName?: string;
+  variantLabel?: string;
+}
+
+export interface CreateReviewRequest {
+  variantId?: string;
+  customerName: string;
+  customerEmail?: string;
+  /**
+   * @minimum 1
+   * @maximum 5
+   */
+  rating: number;
+  comment?: string;
+}
+
+export interface PaginatedReviews {
+  data: ProductReview[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export type ProductRatingSummaryDistribution = {
+  "1"?: number;
+  "2"?: number;
+  "3"?: number;
+  "4"?: number;
+  "5"?: number;
+};
+
+export interface ProductRatingSummary {
+  productId: string;
+  averageRating: number;
+  totalReviews: number;
+  approvedReviews: number;
+  pendingReviews: number;
+  distribution?: ProductRatingSummaryDistribution;
+}
+
 export type AdminGetAllStoresParams = {
   page?: number;
   limit?: number;
@@ -625,6 +723,24 @@ export type GetProductsParams = {
   tags?: string;
   sortBy?: GetProductsSortBy;
   sortDir?: GetProductsSortDir;
+  /**
+   * Filter by size (talla)
+   */
+  talla?: string;
+  /**
+   * Filter by color name
+   */
+  color?: string;
+  /**
+   * Filter by style (estilo)
+   */
+  estilo?: string;
+  precioMin?: number;
+  precioMax?: number;
+  /**
+   * Only return products that have variants
+   */
+  hasVariants?: boolean;
 };
 
 export type GetProductsSortBy =
@@ -684,4 +800,24 @@ export const GetStoreStatsPeriod = {
 export type ExportProductsParams = {
   categoryId?: string;
   isActive?: boolean;
+};
+
+export type GetProductVariantsParams = {
+  isActive?: boolean;
+};
+
+export type GetProductReviewsParams = {
+  isApproved?: boolean;
+  page?: number;
+  limit?: number;
+};
+
+export type ModerateProductReviewBody = {
+  isApproved: boolean;
+};
+
+export type GetAllReviewsParams = {
+  isApproved?: boolean;
+  page?: number;
+  limit?: number;
 };

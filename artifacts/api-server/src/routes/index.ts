@@ -9,6 +9,8 @@ import inventoryRouter from "./inventory";
 import customizationRouter from "./customization";
 import productImagesRouter from "./product_images";
 import statsRouter from "./stats";
+import variantsRouter from "./variants";
+import { perProductRouter as reviewsPerProductRouter, allReviewsRouter } from "./reviews";
 
 const router: IRouter = Router();
 
@@ -20,6 +22,9 @@ router.use("/admin", adminRouter);
 router.use("/categories", categoriesRouter);
 router.use("/products", productsRouter);
 router.use("/products", productImagesRouter);
+router.use("/products/:productId/variants", variantsRouter);
+router.use("/products/:productId/reviews", reviewsPerProductRouter);
+router.use("/reviews", allReviewsRouter);
 router.use("/inventory", inventoryRouter);
 router.use("/stats", statsRouter);
 

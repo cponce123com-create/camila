@@ -9,6 +9,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { storesTable } from "./stores";
 import { productsTable } from "./products";
+import { productVariantsTable } from "./product_variants";
 import { usersTable } from "./users";
 
 export const inventoryMovementTypeEnum = pgEnum("inventory_movement_type", [
@@ -25,6 +26,9 @@ export const inventoryMovementsTable = pgTable("inventory_movements", {
   productId: text("product_id")
     .notNull()
     .references(() => productsTable.id, { onDelete: "cascade" }),
+  variantId: text("variant_id").references(() => productVariantsTable.id, {
+    onDelete: "set null",
+  }),
   userId: text("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "restrict" }),

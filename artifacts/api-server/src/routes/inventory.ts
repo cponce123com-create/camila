@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { inventoryMovementsTable, productsTable, categoriesTable, usersTable } from "@workspace/db";
+import { inventoryMovementsTable, productsTable, categoriesTable, productVariantsTable } from "@workspace/db";
 import { eq, and, count, gte, lte, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/session";
 import { z } from "zod";
@@ -16,6 +16,7 @@ router.post("/adjust", requireAuth, async (req, res) => {
 
   const schema = z.object({
     productId: z.string(),
+    variantId: z.string().optional(),
     quantity: z.number().int(),
     type: z.enum(["in", "out", "adjustment"]),
     reason: z.string().optional(),
@@ -47,7 +48,28 @@ router.post("/adjust", requireAuth, async (req, res) => {
       return;
     }
 
-    const previousStock = product.stock;
+    // If variantId provided, adjust variant stock too
+    let variant: { id: string; stock: number; minStock: number } | undefined;
+    if (data.variantId) {
+      const [v] = await db
+        .select({ id: productVariantsTable.id, stock: productVariantsTable.stock, minStock: productVariantsTable.minStock })
+        .from(productVariantsTable)
+        .where(
+          and(
+            eq(productVariantsTable.id, data.variantId),
+            eq(productVariantsTable.productId, data.productId),
+            eq(productVariantsTable.storeId, user.storeId)
+          )
+        )
+        .limit(1);
+      if (!v) {
+        res.status(404).json({ error: "Variante no encontrada" });
+        return;
+      }
+      variant = v;
+    }
+
+    const previousStock = variant ? variant.stock : product.stock;
     let newStock: number;
 
     if (data.type === "in") {
@@ -63,16 +85,24 @@ router.post("/adjust", requireAuth, async (req, res) => {
       newStock = data.quantity;
     }
 
-    await db
-      .update(productsTable)
-      .set({ stock: newStock, updatedAt: new Date() })
-      .where(eq(productsTable.id, product.id));
+    if (variant) {
+      await db
+        .update(productVariantsTable)
+        .set({ stock: newStock, updatedAt: new Date() })
+        .where(eq(productVariantsTable.id, variant.id));
+    } else {
+      await db
+        .update(productsTable)
+        .set({ stock: newStock, updatedAt: new Date() })
+        .where(eq(productsTable.id, product.id));
+    }
 
     const [movement] = await db
       .insert(inventoryMovementsTable)
       .values({
         storeId: user.storeId,
         productId: data.productId,
+        variantId: data.variantId,
         userId: user.id,
         type: data.type,
         quantity: data.quantity,
@@ -83,8 +113,8 @@ router.post("/adjust", requireAuth, async (req, res) => {
       })
       .returning();
 
-    // Include low stock warning
-    const isLowStock = newStock <= product.minStock;
+    const minStockThreshold = variant ? variant.minStock : product.minStock;
+    const isLowStock = newStock <= minStockThreshold;
     res.json({
       ...movement,
       isLowStock,

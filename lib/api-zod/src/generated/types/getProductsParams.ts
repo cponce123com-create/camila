@@ -22,4 +22,22 @@ export type GetProductsParams = {
   tags?: string;
   sortBy?: GetProductsSortBy;
   sortDir?: GetProductsSortDir;
+  /**
+   * Filter by size (talla)
+   */
+  talla?: string;
+  /**
+   * Filter by color name
+   */
+  color?: string;
+  /**
+   * Filter by style (estilo)
+   */
+  estilo?: string;
+  precioMin?: number;
+  precioMax?: number;
+  /**
+   * Only return products that have variants
+   */
+  hasVariants?: boolean;
 };

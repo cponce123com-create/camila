@@ -621,6 +621,15 @@ export const GetProductsQueryParams = zod.object({
     .enum(["name", "price", "stock", "createdAt"])
     .default(getProductsQuerySortByDefault),
   sortDir: zod.enum(["asc", "desc"]).default(getProductsQuerySortDirDefault),
+  talla: zod.coerce.string().optional().describe("Filter by size (talla)"),
+  color: zod.coerce.string().optional().describe("Filter by color name"),
+  estilo: zod.coerce.string().optional().describe("Filter by style (estilo)"),
+  precioMin: zod.coerce.number().optional(),
+  precioMax: zod.coerce.number().optional(),
+  hasVariants: zod.coerce
+    .boolean()
+    .optional()
+    .describe("Only return products that have variants"),
 });
 
 export const GetProductsResponse = zod.object({
@@ -1418,4 +1427,279 @@ export const DeleteProductImageParams = zod.object({
 export const DeleteProductImageResponse = zod.object({
   success: zod.boolean(),
   message: zod.string().optional(),
+});
+
+/**
+ * @summary Get all variants for a product
+ */
+export const GetProductVariantsParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const GetProductVariantsQueryParams = zod.object({
+  isActive: zod.coerce.boolean().optional(),
+});
+
+export const GetProductVariantsResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string(),
+  sku: zod.string().optional(),
+  talla: zod.string().optional(),
+  color: zod.string().optional(),
+  colorHex: zod.string().optional(),
+  estilo: zod.string().optional(),
+  material: zod.string().optional(),
+  genero: zod.string().optional(),
+  temporada: zod.string().optional(),
+  price: zod.number().optional(),
+  salePrice: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  stock: zod.number(),
+  minStock: zod.number(),
+  isActive: zod.boolean(),
+  sortOrder: zod.number(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+export const GetProductVariantsResponse = zod.array(
+  GetProductVariantsResponseItem,
+);
+
+/**
+ * @summary Create a new product variant
+ */
+export const CreateProductVariantParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const createProductVariantBodyStockDefault = 0;
+export const createProductVariantBodyMinStockDefault = 0;
+export const createProductVariantBodyIsActiveDefault = true;
+
+export const CreateProductVariantBody = zod.object({
+  sku: zod.string().optional(),
+  talla: zod.string().optional(),
+  color: zod.string().optional(),
+  colorHex: zod.string().optional(),
+  estilo: zod.string().optional(),
+  material: zod.string().optional(),
+  genero: zod.string().optional(),
+  temporada: zod.string().optional(),
+  price: zod.number().optional(),
+  salePrice: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  stock: zod.number().default(createProductVariantBodyStockDefault),
+  minStock: zod.number().default(createProductVariantBodyMinStockDefault),
+  isActive: zod.boolean().default(createProductVariantBodyIsActiveDefault),
+  sortOrder: zod.number().optional(),
+});
+
+/**
+ * @summary Update a product variant
+ */
+export const UpdateProductVariantParams = zod.object({
+  productId: zod.coerce.string(),
+  variantId: zod.coerce.string(),
+});
+
+export const updateProductVariantBodyStockDefault = 0;
+export const updateProductVariantBodyMinStockDefault = 0;
+export const updateProductVariantBodyIsActiveDefault = true;
+
+export const UpdateProductVariantBody = zod.object({
+  sku: zod.string().optional(),
+  talla: zod.string().optional(),
+  color: zod.string().optional(),
+  colorHex: zod.string().optional(),
+  estilo: zod.string().optional(),
+  material: zod.string().optional(),
+  genero: zod.string().optional(),
+  temporada: zod.string().optional(),
+  price: zod.number().optional(),
+  salePrice: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  stock: zod.number().default(updateProductVariantBodyStockDefault),
+  minStock: zod.number().default(updateProductVariantBodyMinStockDefault),
+  isActive: zod.boolean().default(updateProductVariantBodyIsActiveDefault),
+  sortOrder: zod.number().optional(),
+});
+
+export const UpdateProductVariantResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string(),
+  sku: zod.string().optional(),
+  talla: zod.string().optional(),
+  color: zod.string().optional(),
+  colorHex: zod.string().optional(),
+  estilo: zod.string().optional(),
+  material: zod.string().optional(),
+  genero: zod.string().optional(),
+  temporada: zod.string().optional(),
+  price: zod.number().optional(),
+  salePrice: zod.number().optional(),
+  imageUrl: zod.string().optional(),
+  stock: zod.number(),
+  minStock: zod.number(),
+  isActive: zod.boolean(),
+  sortOrder: zod.number(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Delete a product variant
+ */
+export const DeleteProductVariantParams = zod.object({
+  productId: zod.coerce.string(),
+  variantId: zod.coerce.string(),
+});
+
+export const DeleteProductVariantResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Get reviews for a product
+ */
+export const GetProductReviewsParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const getProductReviewsQueryPageDefault = 1;
+export const getProductReviewsQueryLimitDefault = 20;
+
+export const GetProductReviewsQueryParams = zod.object({
+  isApproved: zod.coerce.boolean().optional(),
+  page: zod.coerce.number().default(getProductReviewsQueryPageDefault),
+  limit: zod.coerce.number().default(getProductReviewsQueryLimitDefault),
+});
+
+export const getProductReviewsResponseDataItemRatingMax = 5;
+
+export const GetProductReviewsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      productId: zod.string(),
+      variantId: zod.string().optional(),
+      customerName: zod.string(),
+      customerEmail: zod.string().optional(),
+      rating: zod
+        .number()
+        .min(1)
+        .max(getProductReviewsResponseDataItemRatingMax),
+      comment: zod.string().optional(),
+      isApproved: zod.boolean(),
+      createdAt: zod.date(),
+      updatedAt: zod.date(),
+      productName: zod.string().optional(),
+      variantLabel: zod.string().optional(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
+ * @summary Submit a customer review for a product
+ */
+export const CreateProductReviewParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const createProductReviewBodyRatingMax = 5;
+
+export const CreateProductReviewBody = zod.object({
+  variantId: zod.string().optional(),
+  customerName: zod.string(),
+  customerEmail: zod.string().optional(),
+  rating: zod.number().min(1).max(createProductReviewBodyRatingMax),
+  comment: zod.string().optional(),
+});
+
+/**
+ * @summary Approve or reject a review (store admin)
+ */
+export const ModerateProductReviewParams = zod.object({
+  productId: zod.coerce.string(),
+  reviewId: zod.coerce.string(),
+});
+
+export const ModerateProductReviewBody = zod.object({
+  isApproved: zod.boolean(),
+});
+
+export const moderateProductReviewResponseRatingMax = 5;
+
+export const ModerateProductReviewResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string(),
+  variantId: zod.string().optional(),
+  customerName: zod.string(),
+  customerEmail: zod.string().optional(),
+  rating: zod.number().min(1).max(moderateProductReviewResponseRatingMax),
+  comment: zod.string().optional(),
+  isApproved: zod.boolean(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+  productName: zod.string().optional(),
+  variantLabel: zod.string().optional(),
+});
+
+/**
+ * @summary Delete a review (store admin)
+ */
+export const DeleteProductReviewParams = zod.object({
+  productId: zod.coerce.string(),
+  reviewId: zod.coerce.string(),
+});
+
+export const DeleteProductReviewResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Get all reviews for the store (for moderation dashboard)
+ */
+export const getAllReviewsQueryPageDefault = 1;
+export const getAllReviewsQueryLimitDefault = 20;
+
+export const GetAllReviewsQueryParams = zod.object({
+  isApproved: zod.coerce.boolean().optional(),
+  page: zod.coerce.number().default(getAllReviewsQueryPageDefault),
+  limit: zod.coerce.number().default(getAllReviewsQueryLimitDefault),
+});
+
+export const getAllReviewsResponseDataItemRatingMax = 5;
+
+export const GetAllReviewsResponse = zod.object({
+  data: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      productId: zod.string(),
+      variantId: zod.string().optional(),
+      customerName: zod.string(),
+      customerEmail: zod.string().optional(),
+      rating: zod.number().min(1).max(getAllReviewsResponseDataItemRatingMax),
+      comment: zod.string().optional(),
+      isApproved: zod.boolean(),
+      createdAt: zod.date(),
+      updatedAt: zod.date(),
+      productName: zod.string().optional(),
+      variantLabel: zod.string().optional(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+  totalPages: zod.number(),
 });

@@ -2,9 +2,10 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import {
   useGetProducts, useCreateProduct, useDeleteProduct, useGetCategories,
-  useUpdateProduct, useGetProduct, useExportProducts, useImportProducts,
+  useUpdateProduct, useExportProducts, useImportProducts,
+  useGetProductVariants, useCreateProductVariant, useUpdateProductVariant, useDeleteProductVariant,
 } from "@workspace/api-client-react";
-import type { Product } from "@workspace/api-client-react";
+import type { Product, ProductVariant } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,9 +21,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Search, Plus, Trash2, Edit, PackageX, Loader2, Star, Download,
-  Upload, Tag, Filter, ChevronDown, MoreHorizontal,
+  Upload, Layers, MoreHorizontal,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -44,6 +46,12 @@ const EMPTY_FORM = {
   tags: "",
 };
 
+const EMPTY_VARIANT_FORM = {
+  talla: "", color: "", colorHex: "", estilo: "", material: "",
+  genero: "", temporada: "", sku: "", price: "", salePrice: "",
+  imageUrl: "", stock: "0", minStock: "0", sortOrder: "0", isActive: true,
+};
+
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -56,6 +64,12 @@ export default function ProductsPage() {
   const [dialogMode, setDialogMode] = useState<"create" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
+  const [activeTab, setActiveTab] = useState<"datos" | "variantes">("datos");
+
+  // Variant state
+  const [variantDialogOpen, setVariantDialogOpen] = useState(false);
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [variantForm, setVariantForm] = useState({ ...EMPTY_VARIANT_FORM });
 
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -85,17 +99,34 @@ export default function ProductsPage() {
     {}, { query: { enabled: false } }
   );
 
+  // Variants
+  const { data: variants, isLoading: variantsLoading } = useGetProductVariants(
+    editingId ?? "",
+    {},
+    { query: { enabled: !!editingId && activeTab === "variantes" } }
+  );
+  const createVariantMutation = useCreateProductVariant();
+  const updateVariantMutation = useUpdateProductVariant();
+  const deleteVariantMutation = useDeleteProductVariant();
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+  };
+
+  const invalidateVariants = () => {
+    if (editingId) {
+      queryClient.invalidateQueries({ queryKey: [`/api/products/${editingId}/variants`] });
+    }
   };
 
   const openCreate = () => {
     setEditingId(null);
     setFormData({ ...EMPTY_FORM });
+    setActiveTab("datos");
     setDialogMode("create");
   };
 
-  const openEdit = (p: Product) => {
+  const openEdit = (p: Product, tab: "datos" | "variantes" = "datos") => {
     setEditingId(p.id);
     setFormData({
       name: p.name,
@@ -115,6 +146,7 @@ export default function ProductsPage() {
       isFeatured: p.isFeatured,
       tags: p.tags ? p.tags.join(", ") : "",
     });
+    setActiveTab(tab);
     setDialogMode("edit");
   };
 
@@ -232,9 +264,90 @@ export default function ProductsPage() {
     }
   };
 
+  // Variant handlers
+  const openCreateVariant = () => {
+    setEditingVariantId(null);
+    setVariantForm({ ...EMPTY_VARIANT_FORM });
+    setVariantDialogOpen(true);
+  };
+
+  const openEditVariant = (v: ProductVariant) => {
+    setEditingVariantId(v.id);
+    setVariantForm({
+      talla: v.talla || "",
+      color: v.color || "",
+      colorHex: v.colorHex || "",
+      estilo: v.estilo || "",
+      material: v.material || "",
+      genero: v.genero || "",
+      temporada: v.temporada || "",
+      sku: v.sku || "",
+      price: v.price ? String(v.price) : "",
+      salePrice: v.salePrice ? String(v.salePrice) : "",
+      imageUrl: v.imageUrl || "",
+      stock: String(v.stock),
+      minStock: String(v.minStock),
+      sortOrder: String(v.sortOrder),
+      isActive: v.isActive,
+    });
+    setVariantDialogOpen(true);
+  };
+
+  const handleSaveVariant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId) return;
+
+    const payload = {
+      talla: variantForm.talla || undefined,
+      color: variantForm.color || undefined,
+      colorHex: variantForm.colorHex || undefined,
+      estilo: variantForm.estilo || undefined,
+      material: variantForm.material || undefined,
+      genero: variantForm.genero || undefined,
+      temporada: variantForm.temporada || undefined,
+      sku: variantForm.sku || undefined,
+      price: variantForm.price ? parseFloat(variantForm.price) : undefined,
+      salePrice: variantForm.salePrice ? parseFloat(variantForm.salePrice) : undefined,
+      imageUrl: variantForm.imageUrl || undefined,
+      stock: parseInt(variantForm.stock) || 0,
+      minStock: parseInt(variantForm.minStock) || 0,
+      sortOrder: parseInt(variantForm.sortOrder) || 0,
+      isActive: variantForm.isActive,
+    };
+
+    try {
+      if (editingVariantId) {
+        await updateVariantMutation.mutateAsync({
+          productId: editingId,
+          variantId: editingVariantId,
+          data: payload,
+        });
+        toast({ title: "Variante actualizada" });
+      } else {
+        await createVariantMutation.mutateAsync({
+          productId: editingId,
+          data: payload,
+        });
+        toast({ title: "Variante creada" });
+      }
+      invalidateVariants();
+      setVariantDialogOpen(false);
+    } catch {
+      toast({ title: "Error al guardar variante", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!editingId || !confirm("¿Eliminar esta variante?")) return;
+    await deleteVariantMutation.mutateAsync({ productId: editingId, variantId });
+    invalidateVariants();
+    toast({ title: "Variante eliminada" });
+  };
+
   const products = productsData?.data ?? [];
   const totalPages = productsData?.totalPages ?? 1;
   const isPending = createMutation.isPending || updateMutation.isPending;
+  const isVariantPending = createVariantMutation.isPending || updateVariantMutation.isPending;
 
   return (
     <DashboardLayout>
@@ -426,8 +539,11 @@ export default function ProductsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="rounded-xl">
-                            <DropdownMenuItem onClick={() => openEdit(p)}>
+                            <DropdownMenuItem onClick={() => openEdit(p, "datos")}>
                               <Edit className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(p, "variantes")}>
+                              <Layers className="mr-2 h-4 w-4" /> Gestionar Variantes
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
@@ -477,180 +593,222 @@ export default function ProductsPage() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogMode !== null} onOpenChange={(o) => !o && setDialogMode(null)}>
-        <DialogContent className="sm:max-w-[640px] rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[680px] rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
               {dialogMode === "edit" ? "Editar Producto" : "Nuevo Producto"}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+
+          {dialogMode === "edit" ? (
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mt-2">
+              <TabsList className="rounded-xl mb-4">
+                <TabsTrigger value="datos" className="rounded-lg">Datos</TabsTrigger>
+                <TabsTrigger value="variantes" className="rounded-lg">
+                  <Layers className="h-4 w-4 mr-1.5" />
+                  Variantes
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="datos">
+                <ProductForm
+                  formData={formData}
+                  setFormData={setFormData}
+                  categories={categories ?? []}
+                  isPending={isPending}
+                  onSubmit={handleSubmit}
+                  mode="edit"
+                />
+              </TabsContent>
+
+              <TabsContent value="variantes">
+                <VariantManager
+                  productId={editingId!}
+                  variants={variants ?? []}
+                  isLoading={variantsLoading}
+                  onAdd={openCreateVariant}
+                  onEdit={openEditVariant}
+                  onDelete={handleDeleteVariant}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <ProductForm
+              formData={formData}
+              setFormData={setFormData}
+              categories={categories ?? []}
+              isPending={isPending}
+              onSubmit={handleSubmit}
+              mode="create"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Variant Form Dialog */}
+      <Dialog open={variantDialogOpen} onOpenChange={setVariantDialogOpen}>
+        <DialogContent className="sm:max-w-[560px] rounded-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">
+              {editingVariantId ? "Editar Variante" : "Nueva Variante"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSaveVariant} className="space-y-4 mt-2">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
-                <Label>Nombre <span className="text-destructive">*</span></Label>
+              <div className="space-y-2">
+                <Label>Talla</Label>
                 <Input
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={variantForm.talla}
+                  onChange={(e) => setVariantForm({ ...variantForm, talla: e.target.value })}
                   className="rounded-xl"
+                  placeholder="S, M, L, XL, 38, 40..."
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>Precio (S/) <span className="text-destructive">*</span></Label>
+                <Label>Color</Label>
                 <Input
-                  required
+                  value={variantForm.color}
+                  onChange={(e) => setVariantForm({ ...variantForm, color: e.target.value })}
+                  className="rounded-xl"
+                  placeholder="Rojo, Azul..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Color (hex)</Label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="color"
+                    value={variantForm.colorHex || "#000000"}
+                    onChange={(e) => setVariantForm({ ...variantForm, colorHex: e.target.value })}
+                    className="h-10 w-12 rounded-lg border border-input cursor-pointer p-1"
+                  />
+                  <Input
+                    value={variantForm.colorHex}
+                    onChange={(e) => setVariantForm({ ...variantForm, colorHex: e.target.value })}
+                    className="rounded-xl flex-1"
+                    placeholder="#ff0000"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Estilo</Label>
+                <Input
+                  value={variantForm.estilo}
+                  onChange={(e) => setVariantForm({ ...variantForm, estilo: e.target.value })}
+                  className="rounded-xl"
+                  placeholder="Casual, Formal..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Material</Label>
+                <Input
+                  value={variantForm.material}
+                  onChange={(e) => setVariantForm({ ...variantForm, material: e.target.value })}
+                  className="rounded-xl"
+                  placeholder="Algodón, Poliéster..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Género</Label>
+                <Select
+                  value={variantForm.genero || "__none__"}
+                  onValueChange={(v) => setVariantForm({ ...variantForm, genero: v === "__none__" ? "" : v })}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sin especificar</SelectItem>
+                    <SelectItem value="hombre">Hombre</SelectItem>
+                    <SelectItem value="mujer">Mujer</SelectItem>
+                    <SelectItem value="unisex">Unisex</SelectItem>
+                    <SelectItem value="niño">Niño</SelectItem>
+                    <SelectItem value="niña">Niña</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Temporada</Label>
+                <Input
+                  value={variantForm.temporada}
+                  onChange={(e) => setVariantForm({ ...variantForm, temporada: e.target.value })}
+                  className="rounded-xl"
+                  placeholder="Verano 2025, Invierno..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>SKU variante</Label>
+                <Input
+                  value={variantForm.sku}
+                  onChange={(e) => setVariantForm({ ...variantForm, sku: e.target.value })}
+                  className="rounded-xl"
+                  placeholder="Código único"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Precio (S/)</Label>
+                <Input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  value={variantForm.price}
+                  onChange={(e) => setVariantForm({ ...variantForm, price: e.target.value })}
                   className="rounded-xl"
+                  placeholder="Deja vacío para usar el del producto"
                 />
               </div>
-
               <div className="space-y-2">
                 <Label>Precio de oferta (S/)</Label>
                 <Input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.salePrice}
-                  onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                  value={variantForm.salePrice}
+                  onChange={(e) => setVariantForm({ ...variantForm, salePrice: e.target.value })}
                   className="rounded-xl"
                   placeholder="Opcional"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>Precio de costo (S/)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.costPrice}
-                  onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                  className="rounded-xl"
-                  placeholder="Opcional"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <Select
-                  value={formData.categoryId || "__none__"}
-                  onValueChange={(v) => setFormData({ ...formData, categoryId: v === "__none__" ? "" : v })}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Sin categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">Sin categoría</SelectItem>
-                    {categories?.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Stock inicial</Label>
+                <Label>Stock</Label>
                 <Input
                   type="number"
                   min="0"
-                  value={formData.stock}
-                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  value={variantForm.stock}
+                  onChange={(e) => setVariantForm({ ...variantForm, stock: e.target.value })}
                   className="rounded-xl"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label>Stock mínimo (alerta)</Label>
+                <Label>Stock mínimo</Label>
                 <Input
                   type="number"
                   min="0"
-                  value={formData.minStock}
-                  onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                  value={variantForm.minStock}
+                  onChange={(e) => setVariantForm({ ...variantForm, minStock: e.target.value })}
                   className="rounded-xl"
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label>Unidad</Label>
-                <Select
-                  value={formData.unit}
-                  onValueChange={(v) => setFormData({ ...formData, unit: v })}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["unidad", "kg", "g", "litro", "ml", "metro", "caja", "pack", "docena"].map((u) => (
-                      <SelectItem key={u} value={u}>{u}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>SKU</Label>
-                <Input
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  className="rounded-xl"
-                  placeholder="Código único"
-                />
-              </div>
-
               <div className="col-span-2 space-y-2">
-                <Label>URL de imagen</Label>
+                <Label>URL imagen de variante</Label>
                 <Input
                   type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  value={variantForm.imageUrl}
+                  onChange={(e) => setVariantForm({ ...variantForm, imageUrl: e.target.value })}
                   className="rounded-xl"
                   placeholder="https://..."
                 />
               </div>
-
-              <div className="col-span-2 space-y-2">
-                <Label>Descripción corta</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="rounded-xl resize-none"
-                  rows={2}
-                />
-              </div>
-
-              <div className="col-span-2 space-y-2">
-                <Label>Etiquetas (separadas por coma)</Label>
-                <Input
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  className="rounded-xl"
-                  placeholder="Ej: nuevo, oferta, verano"
-                />
-              </div>
-
               <div className="flex items-center gap-3">
                 <Switch
-                  checked={formData.isActive}
-                  onCheckedChange={(v) => setFormData({ ...formData, isActive: v })}
+                  checked={variantForm.isActive}
+                  onCheckedChange={(v) => setVariantForm({ ...variantForm, isActive: v })}
                 />
-                <Label>Producto activo</Label>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={formData.isFeatured}
-                  onCheckedChange={(v) => setFormData({ ...formData, isFeatured: v })}
-                />
-                <Label>Producto destacado</Label>
+                <Label>Variante activa</Label>
               </div>
             </div>
-
-            <Button type="submit" disabled={isPending} className="w-full h-12 rounded-xl mt-2">
-              {isPending ? <Loader2 className="animate-spin" /> : dialogMode === "edit" ? "Guardar Cambios" : "Crear Producto"}
+            <Button type="submit" disabled={isVariantPending} className="w-full h-12 rounded-xl mt-2">
+              {isVariantPending ? <Loader2 className="animate-spin" /> : editingVariantId ? "Guardar Cambios" : "Crear Variante"}
             </Button>
           </form>
         </DialogContent>
@@ -691,5 +849,290 @@ export default function ProductsPage() {
         </DialogContent>
       </Dialog>
     </DashboardLayout>
+  );
+}
+
+// ───────────────────────────── Sub-components ─────────────────────────────
+
+interface ProductFormProps {
+  formData: typeof EMPTY_FORM;
+  setFormData: (d: typeof EMPTY_FORM) => void;
+  categories: any[];
+  isPending: boolean;
+  onSubmit: (e: React.FormEvent) => void;
+  mode: "create" | "edit";
+}
+
+function ProductForm({ formData, setFormData, categories, isPending, onSubmit, mode }: ProductFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="col-span-2 space-y-2">
+          <Label>Nombre <span className="text-destructive">*</span></Label>
+          <Input
+            required
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="rounded-xl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Precio (S/) <span className="text-destructive">*</span></Label>
+          <Input
+            required
+            type="number"
+            step="0.01"
+            min="0"
+            value={formData.price}
+            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            className="rounded-xl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Precio de oferta (S/)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={formData.salePrice}
+            onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+            className="rounded-xl"
+            placeholder="Opcional"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Precio de costo (S/)</Label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            value={formData.costPrice}
+            onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+            className="rounded-xl"
+            placeholder="Opcional"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Categoría</Label>
+          <Select
+            value={formData.categoryId || "__none__"}
+            onValueChange={(v) => setFormData({ ...formData, categoryId: v === "__none__" ? "" : v })}
+          >
+            <SelectTrigger className="rounded-xl">
+              <SelectValue placeholder="Sin categoría" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sin categoría</SelectItem>
+              {categories?.map((c: any) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Stock inicial</Label>
+          <Input
+            type="number"
+            min="0"
+            value={formData.stock}
+            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+            className="rounded-xl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Stock mínimo (alerta)</Label>
+          <Input
+            type="number"
+            min="0"
+            value={formData.minStock}
+            onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+            className="rounded-xl"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Unidad</Label>
+          <Select
+            value={formData.unit}
+            onValueChange={(v) => setFormData({ ...formData, unit: v })}
+          >
+            <SelectTrigger className="rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["unidad", "kg", "g", "litro", "ml", "metro", "caja", "pack", "docena"].map((u) => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>SKU</Label>
+          <Input
+            value={formData.sku}
+            onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+            className="rounded-xl"
+            placeholder="Código único"
+          />
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          <Label>URL de imagen</Label>
+          <Input
+            type="url"
+            value={formData.imageUrl}
+            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+            className="rounded-xl"
+            placeholder="https://..."
+          />
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          <Label>Descripción corta</Label>
+          <Textarea
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            className="rounded-xl resize-none"
+            rows={2}
+          />
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          <Label>Etiquetas (separadas por coma)</Label>
+          <Input
+            value={formData.tags}
+            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+            className="rounded-xl"
+            placeholder="Ej: nuevo, oferta, verano"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={formData.isActive}
+            onCheckedChange={(v) => setFormData({ ...formData, isActive: v })}
+          />
+          <Label>Producto activo</Label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Switch
+            checked={formData.isFeatured}
+            onCheckedChange={(v) => setFormData({ ...formData, isFeatured: v })}
+          />
+          <Label>Producto destacado</Label>
+        </div>
+      </div>
+
+      <Button type="submit" disabled={isPending} className="w-full h-12 rounded-xl mt-2">
+        {isPending ? <Loader2 className="animate-spin" /> : mode === "edit" ? "Guardar Cambios" : "Crear Producto"}
+      </Button>
+    </form>
+  );
+}
+
+interface VariantManagerProps {
+  productId: string;
+  variants: ProductVariant[];
+  isLoading: boolean;
+  onAdd: () => void;
+  onEdit: (v: ProductVariant) => void;
+  onDelete: (id: string) => void;
+}
+
+function VariantManager({ variants, isLoading, onAdd, onEdit, onDelete }: VariantManagerProps) {
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-muted-foreground">
+          {variants.length} {variants.length === 1 ? "variante" : "variantes"}
+        </p>
+        <Button size="sm" onClick={onAdd} className="rounded-xl">
+          <Plus className="h-4 w-4 mr-1.5" /> Nueva Variante
+        </Button>
+      </div>
+
+      {!variants.length ? (
+        <div className="text-center py-10 border-2 border-dashed border-border/60 rounded-2xl">
+          <Layers className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">Sin variantes</p>
+          <p className="text-sm text-muted-foreground/70 mt-1">
+            Añade tallas, colores u otras variantes de este producto
+          </p>
+          <Button variant="outline" size="sm" className="mt-4 rounded-xl" onClick={onAdd}>
+            <Plus className="h-4 w-4 mr-1.5" /> Agregar primera variante
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {variants.map((v) => {
+            const label = [v.talla, v.color, v.estilo].filter(Boolean).join(" / ") || "Variante sin nombre";
+            const isLow = v.stock <= v.minStock && v.minStock > 0;
+            const isOut = v.stock === 0;
+            return (
+              <div
+                key={v.id}
+                className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-secondary/10 transition-colors"
+              >
+                {v.colorHex && (
+                  <div
+                    className="h-6 w-6 rounded-full border border-border/50 shrink-0"
+                    style={{ backgroundColor: v.colorHex }}
+                  />
+                )}
+                {v.imageUrl && !v.colorHex && (
+                  <img src={v.imageUrl} alt={label} className="h-8 w-8 rounded-lg object-cover shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm truncate">{label}</span>
+                    {!v.isActive && (
+                      <Badge variant="secondary" className="text-xs py-0">Inactivo</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    {v.price && (
+                      <span className="text-xs text-muted-foreground">S/ {parseFloat(String(v.price)).toFixed(2)}</span>
+                    )}
+                    <span className={`text-xs font-medium ${isOut ? "text-destructive" : isLow ? "text-amber-600" : "text-emerald-600"}`}>
+                      Stock: {v.stock}
+                    </span>
+                    {v.sku && <span className="text-xs text-muted-foreground">SKU: {v.sku}</span>}
+                  </div>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(v)}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
+                    onClick={() => onDelete(v.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

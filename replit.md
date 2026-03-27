@@ -48,7 +48,7 @@ artifacts/
 │   │   ├── pages/
 │   │   │   ├── landing.tsx
 │   │   │   ├── auth/login.tsx, register.tsx
-│   │   │   ├── dashboard/ (index, products, categories, inventory, team, settings, customize)
+│   │   │   ├── dashboard/ (index, products, categories, inventory, team, settings, customize, reviews)
 │   │   │   └── admin/ (index, store-detail)
 │   │   ├── components/
 │   │   │   ├── layout/dashboard-layout.tsx
@@ -69,7 +69,9 @@ lib/
         ├── inventory.ts        # Movimientos de inventario
         ├── store_settings.ts   # Personalización: template, font, feature flags
         ├── store_banners.ts    # Banners promocionales (max 5)
-        └── product_images.ts   # Imágenes múltiples por producto (max 10)
+        ├── product_images.ts   # Imágenes múltiples por producto (max 10)
+        ├── product_variants.ts # Variantes (talla/color/estilo/material/género/temporada) + stock por variante
+        └── product_reviews.ts  # Reseñas de clientes con aprobación/moderación
 scripts/
 └── src/seed-superadmin.ts   # Script para crear superadmin
 ```
@@ -127,6 +129,15 @@ scripts/
 - `GET /api/inventory/kardex/:productId` — Kárdex de un producto con resumen
 - `GET/PATCH /api/stores/me/settings` — Personalización de tienda
 - `GET/POST /api/stores/me/banners` — Banners promocionales
+- `GET /api/products/:id/variants` — Listar variantes del producto
+- `POST /api/products/:id/variants` — Crear variante (talla, color, colorHex, estilo, material, género, temporada, sku, price, stock)
+- `PATCH /api/products/:id/variants/:variantId` — Editar variante
+- `DELETE /api/products/:id/variants/:variantId` — Eliminar variante
+- `GET /api/reviews` — [Auth] Listar todas las reseñas con filtro isApproved
+- `GET /api/products/:id/reviews` — Listar reseñas de un producto
+- `POST /api/products/:id/reviews` — [Public] Crear reseña
+- `PATCH /api/products/:id/reviews/:reviewId/moderate` — Aprobar/rechazar reseña
+- `DELETE /api/products/:id/reviews/:reviewId` — Eliminar reseña
 - `PATCH /api/stores/me/banners/reorder` — Reordenar banners
 - `PATCH/DELETE /api/stores/me/banners/:id` — Editar/eliminar banner
 - `GET/POST /api/products/:id/images` — Imágenes múltiples del producto

@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { productsTable, categoriesTable } from "@workspace/db";
-import { eq, and, ilike, count, lte, sql, asc, desc, or } from "drizzle-orm";
+import { eq, and, ilike, count, lte, gte, sql, asc, desc, or, exists } from "drizzle-orm";
+import { productVariantsTable } from "@workspace/db";
 import { requireAuth, requireStoreAdmin } from "../middlewares/session";
 import { z } from "zod";
 
@@ -252,8 +253,35 @@ router.get("/", requireAuth, async (req, res) => {
   const tags = req.query.tags as string | undefined;
   const sortBy = (req.query.sortBy as string) || "name";
   const sortDir = (req.query.sortDir as string) || "asc";
+  const talla = req.query.talla as string | undefined;
+  const color = req.query.color as string | undefined;
+  const estilo = req.query.estilo as string | undefined;
+  const precioMin = req.query.precioMin ? Number(req.query.precioMin) : undefined;
+  const precioMax = req.query.precioMax ? Number(req.query.precioMax) : undefined;
+  const hasVariants = req.query.hasVariants !== undefined
+    ? req.query.hasVariants === "true"
+    : undefined;
 
   try {
+    const variantSubFilters = [
+      eq(productVariantsTable.productId, productsTable.id),
+      talla ? ilike(productVariantsTable.talla, `%${talla}%`) : undefined,
+      color ? ilike(productVariantsTable.color, `%${color}%`) : undefined,
+      estilo ? ilike(productVariantsTable.estilo, `%${estilo}%`) : undefined,
+    ].filter(Boolean) as Parameters<typeof and>[];
+
+    const hasVariantFilter =
+      (talla || color || estilo || hasVariants === true)
+        ? exists(
+            db
+              .select({ one: sql`1` })
+              .from(productVariantsTable)
+              .where(and(...variantSubFilters))
+          )
+        : hasVariants === false
+        ? sql`NOT EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = ${productsTable.id})`
+        : undefined;
+
     const filters = [
       eq(productsTable.storeId, user.storeId),
       categoryId ? eq(productsTable.categoryId, categoryId) : undefined,
@@ -274,6 +302,9 @@ router.get("/", requireAuth, async (req, res) => {
               .join(",")
           )}]::text[]`
         : undefined,
+      precioMin !== undefined ? gte(productsTable.price, String(precioMin)) : undefined,
+      precioMax !== undefined ? lte(productsTable.price, String(precioMax)) : undefined,
+      hasVariantFilter,
     ].filter(Boolean) as Parameters<typeof and>[];
 
     const orderCol =

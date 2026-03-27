@@ -521,6 +521,34 @@ paths:
             type: string
             enum: [asc, desc]
             default: asc
+        - name: talla
+          in: query
+          schema:
+            type: string
+          description: Filter by size (talla)
+        - name: color
+          in: query
+          schema:
+            type: string
+          description: Filter by color name
+        - name: estilo
+          in: query
+          schema:
+            type: string
+          description: Filter by style (estilo)
+        - name: precioMin
+          in: query
+          schema:
+            type: number
+        - name: precioMax
+          in: query
+          schema:
+            type: number
+        - name: hasVariants
+          in: query
+          schema:
+            type: boolean
+          description: Only return products that have variants
       responses:
         "200":
           description: Paginated products
@@ -1063,6 +1091,247 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SuccessResponse"
+
+  /products/{productId}/variants:
+    get:
+      operationId: getProductVariants
+      tags: [product-variants]
+      summary: Get all variants for a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of product variants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductVariant"
+    post:
+      operationId: createProductVariant
+      tags: [product-variants]
+      summary: Create a new product variant
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVariantRequest"
+      responses:
+        "201":
+          description: Variant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductVariant"
+
+  /products/{productId}/variants/{variantId}:
+    patch:
+      operationId: updateProductVariant
+      tags: [product-variants]
+      summary: Update a product variant
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variantId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVariantRequest"
+      responses:
+        "200":
+          description: Variant updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductVariant"
+    delete:
+      operationId: deleteProductVariant
+      tags: [product-variants]
+      summary: Delete a product variant
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Variant deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /products/{productId}/reviews:
+    get:
+      operationId: getProductReviews
+      tags: [product-reviews]
+      summary: Get reviews for a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: isApproved
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedReviews"
+    post:
+      operationId: createProductReview
+      tags: [product-reviews]
+      summary: Submit a customer review for a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review submitted (pending approval)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductReview"
+
+  /products/{productId}/reviews/{reviewId}:
+    patch:
+      operationId: moderateProductReview
+      tags: [product-reviews]
+      summary: Approve or reject a review (store admin)
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reviewId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isApproved:
+                  type: boolean
+              required:
+                - isApproved
+      responses:
+        "200":
+          description: Review moderated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductReview"
+    delete:
+      operationId: deleteProductReview
+      tags: [product-reviews]
+      summary: Delete a review (store admin)
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reviewId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Review deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /reviews:
+    get:
+      operationId: getAllReviews
+      tags: [product-reviews]
+      summary: Get all reviews for the store (for moderation dashboard)
+      parameters:
+        - name: isApproved
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated reviews with product info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedReviews"
 
 components:
   schemas:
@@ -2095,3 +2364,213 @@ components:
         - updated
         - skipped
         - errors
+
+    ProductVariant:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        productId:
+          type: string
+        sku:
+          type: string
+        talla:
+          type: string
+        color:
+          type: string
+        colorHex:
+          type: string
+        estilo:
+          type: string
+        material:
+          type: string
+        genero:
+          type: string
+        temporada:
+          type: string
+        price:
+          type: number
+        salePrice:
+          type: number
+        imageUrl:
+          type: string
+        stock:
+          type: integer
+        minStock:
+          type: integer
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - productId
+        - stock
+        - minStock
+        - isActive
+        - sortOrder
+        - createdAt
+        - updatedAt
+
+    CreateVariantRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+        talla:
+          type: string
+        color:
+          type: string
+        colorHex:
+          type: string
+        estilo:
+          type: string
+        material:
+          type: string
+        genero:
+          type: string
+        temporada:
+          type: string
+        price:
+          type: number
+        salePrice:
+          type: number
+        imageUrl:
+          type: string
+        stock:
+          type: integer
+          default: 0
+        minStock:
+          type: integer
+          default: 0
+        isActive:
+          type: boolean
+          default: true
+        sortOrder:
+          type: integer
+
+    ProductReview:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        productId:
+          type: string
+        variantId:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        isApproved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        productName:
+          type: string
+        variantLabel:
+          type: string
+      required:
+        - id
+        - storeId
+        - productId
+        - customerName
+        - rating
+        - isApproved
+        - createdAt
+        - updatedAt
+
+    CreateReviewRequest:
+      type: object
+      properties:
+        variantId:
+          type: string
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required:
+        - customerName
+        - rating
+
+    PaginatedReviews:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductReview"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    ProductRatingSummary:
+      type: object
+      properties:
+        productId:
+          type: string
+        averageRating:
+          type: number
+        totalReviews:
+          type: integer
+        approvedReviews:
+          type: integer
+        pendingReviews:
+          type: integer
+        distribution:
+          type: object
+          properties:
+            "1":
+              type: integer
+            "2":
+              type: integer
+            "3":
+              type: integer
+            "4":
+              type: integer
+            "5":
+              type: integer
+      required:
+        - productId
+        - averageRating
+        - totalReviews
+        - approvedReviews
+        - pendingReviews
