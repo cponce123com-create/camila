@@ -1,0 +1,22 @@
+packages:
+  "framer-motion": "For page transitions and interactive micro-animations"
+  "recharts": "For dashboard statistics and analytics visualization"
+  "react-hook-form": "For robust form state management"
+  "@hookform/resolvers": "For integrating Zod validation with forms"
+  "zod": "For frontend schema validation"
+  "date-fns": "For human-readable date formatting"
+
+images:
+  - path: "artifacts/camila/public/images/hero-bg.png"
+    description: "Abstract modern jungle foliage, deep elegant greens, soft light leaks, depth of field, premium saas background, sophisticated"
+    aspect_ratio: "16:9"
+  - path: "artifacts/camila/public/images/camila-logo.png"
+    description: "Minimalist elegant logo mark of a jungle leaf combined with a geometric shape, deep green on transparent background, modern startup logo"
+    aspect_ratio: "1:1"
+  - path: "artifacts/camila/public/images/login-side.png"
+    description: "A modern stylish local entrepreneur in a chic boutique with lush green plants, warm lighting, professional photography, smiling"
+    aspect_ratio: "3:4"
+
+notes:
+  - "Assuming all shadcn UI components exist in @/components/ui based on directory structure"
+  - "Using API hooks from @workspace/api-client-react"

@@ -1,8 +1,8 @@
-# Workspace
+# Camila — SaaS para Emprendedores Locales
 
-## Overview
+## Descripción
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+**Camila** es una plataforma SaaS multi-tenant diseñada para emprendedores locales de San Ramón, Chanchamayo, Perú. Permite a negocios locales (tiendas de ropa, restaurantes, panaderías, tiendas de feria, catálogos) gestionar su negocio digitalmente con un enfoque local pero con tecnología escalable.
 
 ## Stack
 
@@ -10,87 +10,149 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Node.js version**: 24
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
-- **API framework**: Express 5
+- **Frontend**: React + Vite, Wouter (routing), TailwindCSS v4, Shadcn/UI
+- **Backend**: Express 5 API server
 - **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Auth**: Sesiones propias con cookies httpOnly + PBKDF2
+- **Validation**: Zod, drizzle-zod
+- **API codegen**: Orval (desde OpenAPI spec)
+- **Build**: esbuild (ESM bundle)
+- **Estado frontend**: React Query + Context API
 
-## Structure
+## Paleta de Colores
+
+- Verde selva profundo: `#1a5c2e`
+- Verde hoja: `#2d8c4e`
+- Tonos tierra cálidos
+- Acentos dorados
+
+## Estructura del Proyecto
 
 ```text
-artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
-│   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+artifacts/
+├── api-server/       # Express API server (backend)
+│   ├── src/
+│   │   ├── routes/   # auth, stores, admin, categories, products, inventory
+│   │   ├── middlewares/session.ts   # Autenticación de sesión + control de roles
+│   │   └── lib/auth.ts             # Hash PBKDF2 de contraseñas
+├── camila/           # React Vite frontend (raíz /)
+│   ├── src/
+│   │   ├── pages/    # landing, auth/login, auth/register, dashboard/*, admin/*
+│   │   ├── components/layout/dashboard-layout.tsx
+│   │   └── hooks/use-auth.tsx     # Contexto de autenticación global
+lib/
+├── api-spec/         # OpenAPI 3.1 spec + Orval config
+├── api-client-react/ # Hooks React Query generados
+├── api-zod/          # Schemas Zod generados
+└── db/               # Drizzle ORM schema + conexión
+    └── src/schema/
+        ├── stores.ts         # Tabla de tiendas/negocios
+        ├── licenses.ts       # Licencias (trial/active/expired/suspended)
+        ├── users.ts          # Usuarios con roles
+        ├── sessions.ts       # Sesiones de usuario
+        ├── categories.ts     # Categorías de productos
+        ├── products.ts       # Catálogo de productos
+        └── inventory.ts      # Movimientos de inventario
+scripts/
+└── src/seed-superadmin.ts   # Script para crear superadmin
 ```
+
+## Multi-tenancy
+
+- Cada tienda tiene sus propios datos aislados por `store_id`
+- Todos los queries de negocio filtran por `store_id` del usuario autenticado
+- El `superadmin` puede ver y gestionar todas las tiendas
+
+## Roles
+
+| Rol | Acceso |
+|-----|--------|
+| `superadmin` | Panel admin global - todas las tiendas |
+| `store_admin` | Panel completo de su tienda |
+| `store_staff` | Acceso limitado (ver productos, ajustar inventario) |
+| `cashier` | Acceso POS (futuro - Fase 2) |
+
+## Sistema de Licencias
+
+| Estado | Descripción |
+|--------|-------------|
+| `trial` | Período de prueba (30 días por defecto) |
+| `active` | Activa y pagada |
+| `expired` | Vencida |
+| `suspended` | Suspendida por el admin |
+
+## API Endpoints
+
+- `POST /api/auth/register` — Registro de nueva tienda
+- `POST /api/auth/login` — Login de usuario
+- `POST /api/auth/logout` — Cierre de sesión
+- `GET /api/auth/me` — Datos del usuario actual
+- `POST /api/auth/forgot-password` — Solicitar reset de contraseña
+- `POST /api/auth/reset-password` — Resetear contraseña
+- `GET/PATCH /api/stores/me` — Ver/editar tienda actual
+- `GET/POST /api/stores/me/users` — Gestionar equipo de tienda
+- `DELETE /api/stores/me/users/:id` — Eliminar miembro del equipo
+- `GET /api/admin/stores` — [Superadmin] Listar todas las tiendas
+- `GET/PATCH /api/admin/stores/:id` — [Superadmin] Ver/editar tienda
+- `PATCH /api/admin/stores/:id/license` — [Superadmin] Gestionar licencia
+- `GET /api/admin/stats` — [Superadmin] Estadísticas globales
+- `GET/POST /api/categories` — Categorías de la tienda
+- `PATCH/DELETE /api/categories/:id` — Editar/eliminar categoría
+- `GET/POST /api/products` — Catálogo de productos (con paginación, búsqueda, filtros)
+- `GET/PATCH/DELETE /api/products/:id` — Operaciones de producto
+- `POST /api/inventory/adjust` — Ajustar inventario
+- `GET /api/inventory/movements` — Historial de movimientos
+
+## Superadmin
+
+- Email: `admin@camila.pe`
+- Contraseña: `Camila2025!`
+- Se crea con: `pnpm --filter @workspace/scripts run seed-superadmin`
+
+## Rutas del Frontend
+
+- `/` — Landing page (marketing)
+- `/login` — Inicio de sesión
+- `/register` — Registro de nueva tienda
+- `/forgot-password` — Recuperación de contraseña
+- `/dashboard` — Panel principal del negocio
+- `/dashboard/products` — Catálogo de productos
+- `/dashboard/categories` — Categorías
+- `/dashboard/inventory` — Inventario
+- `/dashboard/team` — Equipo de trabajo
+- `/dashboard/settings` — Configuración de la tienda
+- `/admin` — Panel superadmin (solo superadmin)
+- `/admin/stores/:id` — Detalle de tienda (solo superadmin)
 
 ## TypeScript & Composite Projects
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
-
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+- `lib/*` son paquetes composite que emiten declaraciones via `tsc --build`
+- `artifacts/*` son leaf packages chequeados con `tsc --noEmit`
+- Root `tsconfig.json` es un solution file solo para libs
+- Siempre typecheckear desde la raíz: `pnpm run typecheck`
 
 ## Root Scripts
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+- `pnpm run build` — typecheck + build recursivo
+- `pnpm run typecheck` — `tsc --build --emitDeclarationOnly` + checks de artifacts
+- `pnpm --filter @workspace/api-spec run codegen` — regenerar API client desde OpenAPI
 
-## Packages
+## Fase 1 - Completada ✅
 
-### `artifacts/api-server` (`@workspace/api-server`)
+- [x] Arquitectura multi-tenant
+- [x] Autenticación con sesiones seguras
+- [x] Sistema de roles completo
+- [x] Registro de negocios con DNI/RUC
+- [x] Sistema de licencias administrable
+- [x] Panel superadmin
+- [x] Panel de tienda con dashboard, productos, categorías, inventario, equipo, settings
+- [x] Diseño con paleta selva
+- [x] API REST completa y documentada en OpenAPI
+- [x] Base de datos PostgreSQL con Drizzle ORM
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+## Próximas Fases
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
-
-### `lib/db` (`@workspace/db`)
-
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+- **Fase 2**: Módulo POS/ventas, recibos digitales, exportación PDF, envío por WhatsApp
+- **Fase 3**: Módulo restaurante (mesas, comandas), módulo panadería (pedidos recurrentes)
+- **Fase 4**: Módulo de reportes, estadísticas de ventas, personalización visual avanzada de tienda
+- **Fase 5**: Escalado a múltiples ciudades/distritos, app móvil

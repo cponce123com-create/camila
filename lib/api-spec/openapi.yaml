@@ -1,22 +1,35 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Camila SaaS - API para emprendedores locales
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: stores
+    description: Store/tenant management
+  - name: admin
+    description: Superadmin operations
+  - name: users
+    description: User management
+  - name: products
+    description: Product catalog
+  - name: categories
+    description: Product categories
+  - name: inventory
+    description: Inventory management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +37,590 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: registerStore
+      tags: [auth]
+      summary: Register a new store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterStoreRequest"
+      responses:
+        "201":
+          description: Store created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Store already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current user info
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUserResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "200":
+          description: Reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/reset-password:
+    post:
+      operationId: resetPassword
+      tags: [auth]
+      summary: Reset password with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/me:
+    get:
+      operationId: getMyStore
+      tags: [stores]
+      summary: Get current store details
+      responses:
+        "200":
+          description: Store details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateMyStore
+      tags: [stores]
+      summary: Update store profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStoreRequest"
+      responses:
+        "200":
+          description: Store updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/me/users:
+    get:
+      operationId: getStoreUsers
+      tags: [stores]
+      summary: Get users of current store
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: addStoreUser
+      tags: [stores]
+      summary: Add a user to the store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddUserRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/me/users/{userId}:
+    delete:
+      operationId: removeStoreUser
+      tags: [stores]
+      summary: Remove a user from the store
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/stores:
+    get:
+      operationId: adminGetAllStores
+      tags: [admin]
+      summary: Get all stores (superadmin)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [trial, active, expired, suspended]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of stores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedStores"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/stores/{storeId}:
+    get:
+      operationId: adminGetStore
+      tags: [admin]
+      summary: Get a specific store (superadmin)
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Store details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+
+    patch:
+      operationId: adminUpdateStore
+      tags: [admin]
+      summary: Update store (superadmin)
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateStoreRequest"
+      responses:
+        "200":
+          description: Store updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Store"
+
+  /admin/stores/{storeId}/license:
+    patch:
+      operationId: adminUpdateLicense
+      tags: [admin]
+      summary: Update store license (superadmin)
+      parameters:
+        - name: storeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLicenseRequest"
+      responses:
+        "200":
+          description: License updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/License"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Get platform statistics (superadmin)
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [categories]
+      summary: Get product categories for current store
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a new category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{categoryId}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update a category
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoryRequest"
+      responses:
+        "200":
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete a category
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /products:
+    get:
+      operationId: getProducts
+      tags: [products]
+      summary: Get products for current store
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: lowStock
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Paginated products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedProducts"
+
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{productId}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a single product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+    patch:
+      operationId: updateProduct
+      tags: [products]
+      summary: Update a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+    delete:
+      operationId: deleteProduct
+      tags: [products]
+      summary: Delete a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /inventory/adjust:
+    post:
+      operationId: adjustInventory
+      tags: [inventory]
+      summary: Adjust inventory for a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdjustInventoryRequest"
+      responses:
+        "200":
+          description: Inventory adjusted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryMovement"
+
+  /inventory/movements:
+    get:
+      operationId: getInventoryMovements
+      tags: [inventory]
+      summary: Get inventory movement history
+      parameters:
+        - name: productId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Inventory movements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedInventoryMovements"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +631,572 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: object
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        store:
+          $ref: "#/components/schemas/Store"
+        token:
+          type: string
+      required:
+        - user
+        - store
+        - token
+
+    CurrentUserResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        store:
+          $ref: "#/components/schemas/Store"
+        license:
+          $ref: "#/components/schemas/License"
+      required:
+        - user
+        - store
+
+    RegisterStoreRequest:
+      type: object
+      properties:
+        businessName:
+          type: string
+        businessType:
+          type: string
+          enum: [clothing, restaurant, bakery, fair_booth, general_catalog]
+        documentType:
+          type: string
+          enum: [DNI, RUC10, RUC20]
+        documentNumber:
+          type: string
+        ownerName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        address:
+          type: string
+        district:
+          type: string
+        logoUrl:
+          type: string
+      required:
+        - businessName
+        - businessType
+        - documentType
+        - documentNumber
+        - ownerName
+        - phone
+        - email
+        - password
+        - district
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+      required:
+        - token
+        - password
+
+    UpdateStoreRequest:
+      type: object
+      properties:
+        businessName:
+          type: string
+        address:
+          type: string
+        district:
+          type: string
+        phone:
+          type: string
+        logoUrl:
+          type: string
+        bannerUrl:
+          type: string
+        primaryColor:
+          type: string
+        description:
+          type: string
+        whatsapp:
+          type: string
+        socialInstagram:
+          type: string
+        socialFacebook:
+          type: string
+
+    AdminUpdateStoreRequest:
+      type: object
+      properties:
+        businessName:
+          type: string
+        address:
+          type: string
+        district:
+          type: string
+        phone:
+          type: string
+        isActive:
+          type: boolean
+
+    AddUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [store_admin, store_staff, cashier]
+      required:
+        - name
+        - email
+        - password
+        - role
+
+    UpdateLicenseRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [trial, active, expired, suspended]
+        startsAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - status
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [superadmin, store_admin, store_staff, cashier]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - name
+        - email
+        - role
+        - isActive
+        - createdAt
+
+    Store:
+      type: object
+      properties:
+        id:
+          type: string
+        businessName:
+          type: string
+        businessType:
+          type: string
+          enum: [clothing, restaurant, bakery, fair_booth, general_catalog]
+        documentType:
+          type: string
+          enum: [DNI, RUC10, RUC20]
+        documentNumber:
+          type: string
+        ownerName:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        district:
+          type: string
+        logoUrl:
+          type: string
+        bannerUrl:
+          type: string
+        primaryColor:
+          type: string
+        description:
+          type: string
+        whatsapp:
+          type: string
+        socialInstagram:
+          type: string
+        socialFacebook:
+          type: string
+        isActive:
+          type: boolean
+        license:
+          $ref: "#/components/schemas/License"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - businessName
+        - businessType
+        - documentType
+        - documentNumber
+        - ownerName
+        - phone
+        - email
+        - district
+        - isActive
+        - createdAt
+
+    License:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        status:
+          type: string
+          enum: [trial, active, expired, suspended]
+        startsAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - status
+        - updatedAt
+
+    PaginatedStores:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Store"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    AdminStats:
+      type: object
+      properties:
+        totalStores:
+          type: integer
+        activeStores:
+          type: integer
+        trialStores:
+          type: integer
+        expiredStores:
+          type: integer
+        suspendedStores:
+          type: integer
+        newThisMonth:
+          type: integer
+      required:
+        - totalStores
+        - activeStores
+        - trialStores
+        - expiredStores
+        - suspendedStores
+        - newThisMonth
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - name
+        - createdAt
+
+    CreateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        sortOrder:
+          type: integer
+      required:
+        - name
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        categoryId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        costPrice:
+          type: number
+        sku:
+          type: string
+        barcode:
+          type: string
+        imageUrl:
+          type: string
+        stock:
+          type: integer
+        minStock:
+          type: integer
+        unit:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        category:
+          $ref: "#/components/schemas/Category"
+      required:
+        - id
+        - storeId
+        - name
+        - price
+        - stock
+        - isActive
+        - createdAt
+
+    CreateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        costPrice:
+          type: number
+        categoryId:
+          type: string
+        sku:
+          type: string
+        barcode:
+          type: string
+        imageUrl:
+          type: string
+        stock:
+          type: integer
+          default: 0
+        minStock:
+          type: integer
+          default: 0
+        unit:
+          type: string
+        isActive:
+          type: boolean
+          default: true
+      required:
+        - name
+        - price
+
+    PaginatedProducts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
+
+    AdjustInventoryRequest:
+      type: object
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+        type:
+          type: string
+          enum: [in, out, adjustment]
+        reason:
+          type: string
+        notes:
+          type: string
+      required:
+        - productId
+        - quantity
+        - type
+
+    InventoryMovement:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        productId:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [in, out, adjustment]
+        quantity:
+          type: integer
+        previousStock:
+          type: integer
+        newStock:
+          type: integer
+        reason:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - productId
+        - userId
+        - type
+        - quantity
+        - previousStock
+        - newStock
+        - createdAt
+
+    PaginatedInventoryMovements:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryMovement"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - totalPages
