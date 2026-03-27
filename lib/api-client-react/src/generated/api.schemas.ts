@@ -240,15 +240,21 @@ export interface AdminStats {
 export interface Category {
   id: string;
   storeId: string;
+  parentId?: string;
   name: string;
   description?: string;
+  imageUrl?: string;
   sortOrder?: number;
   createdAt: string;
+  updatedAt: string;
+  subcategories?: Category[];
 }
 
 export interface CreateCategoryRequest {
   name: string;
   description?: string;
+  parentId?: string;
+  imageUrl?: string;
   sortOrder?: number;
 }
 
@@ -258,7 +264,11 @@ export interface Product {
   categoryId?: string;
   name: string;
   description?: string;
+  longDescription?: string;
   price: number;
+  salePrice?: number;
+  saleStartDate?: string;
+  saleEndDate?: string;
   costPrice?: number;
   sku?: string;
   barcode?: string;
@@ -267,14 +277,21 @@ export interface Product {
   minStock?: number;
   unit?: string;
   isActive: boolean;
+  isFeatured: boolean;
+  tags?: string[];
   createdAt: string;
+  updatedAt: string;
   category?: Category;
 }
 
 export interface CreateProductRequest {
   name: string;
   description?: string;
+  longDescription?: string;
   price: number;
+  salePrice?: number;
+  saleStartDate?: string;
+  saleEndDate?: string;
   costPrice?: number;
   categoryId?: string;
   sku?: string;
@@ -284,6 +301,8 @@ export interface CreateProductRequest {
   minStock?: number;
   unit?: string;
   isActive?: boolean;
+  isFeatured?: boolean;
+  tags?: string[];
 }
 
 export interface PaginatedProducts {
@@ -491,6 +510,90 @@ export interface UpdateProductImageRequest {
   isPrimary?: boolean;
 }
 
+export type StoreStatsProductsByCategoryItem = {
+  categoryId?: string;
+  categoryName: string;
+  productCount: number;
+  stockValue?: number;
+};
+
+export interface StoreStats {
+  totalProducts: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  featuredProducts: number;
+  totalCategories: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  stockValue: number;
+  inventoryIn: number;
+  inventoryOut: number;
+  inventoryMovements: number;
+  productsByCategory: StoreStatsProductsByCategoryItem[];
+  lowStockProducts: Product[];
+  period: string;
+}
+
+export interface ProductKardex {
+  product: Product;
+  movements: InventoryMovement[];
+  openingStock: number;
+  closingStock: number;
+  totalIn: number;
+  totalOut: number;
+  totalAdjustments: number;
+}
+
+export interface ProductExportRow {
+  id: string;
+  sku?: string;
+  name: string;
+  description?: string;
+  category?: string;
+  price: number;
+  salePrice?: number;
+  costPrice?: number;
+  stock: number;
+  minStock?: number;
+  unit?: string;
+  isActive: boolean;
+  isFeatured?: boolean;
+  tags?: string;
+  imageUrl?: string;
+}
+
+export type ImportProductsRequestProductsItem = {
+  name: string;
+  sku?: string;
+  description?: string;
+  categoryName?: string;
+  price: number;
+  costPrice?: number;
+  salePrice?: number;
+  stock?: number;
+  minStock?: number;
+  unit?: string;
+  isActive?: boolean;
+  tags?: string;
+};
+
+export interface ImportProductsRequest {
+  products: ImportProductsRequestProductsItem[];
+  updateExisting?: boolean;
+}
+
+export type ImportResultErrorsItem = {
+  row?: number;
+  message?: string;
+};
+
+export interface ImportResult {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: ImportResultErrorsItem[];
+}
+
 export type AdminGetAllStoresParams = {
   page?: number;
   limit?: number;
@@ -514,9 +617,71 @@ export type GetProductsParams = {
   categoryId?: string;
   search?: string;
   lowStock?: boolean;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  /**
+   * Comma-separated list of tags to filter by
+   */
+  tags?: string;
+  sortBy?: GetProductsSortBy;
+  sortDir?: GetProductsSortDir;
 };
+
+export type GetProductsSortBy =
+  (typeof GetProductsSortBy)[keyof typeof GetProductsSortBy];
+
+export const GetProductsSortBy = {
+  name: "name",
+  price: "price",
+  stock: "stock",
+  createdAt: "createdAt",
+} as const;
+
+export type GetProductsSortDir =
+  (typeof GetProductsSortDir)[keyof typeof GetProductsSortDir];
+
+export const GetProductsSortDir = {
+  asc: "asc",
+  desc: "desc",
+} as const;
 
 export type GetInventoryMovementsParams = {
   productId?: string;
   page?: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  type?: GetInventoryMovementsType;
+};
+
+export type GetInventoryMovementsType =
+  (typeof GetInventoryMovementsType)[keyof typeof GetInventoryMovementsType];
+
+export const GetInventoryMovementsType = {
+  in: "in",
+  out: "out",
+  adjustment: "adjustment",
+} as const;
+
+export type GetProductKardexParams = {
+  dateFrom?: string;
+  dateTo?: string;
+};
+
+export type GetStoreStatsParams = {
+  period?: GetStoreStatsPeriod;
+};
+
+export type GetStoreStatsPeriod =
+  (typeof GetStoreStatsPeriod)[keyof typeof GetStoreStatsPeriod];
+
+export const GetStoreStatsPeriod = {
+  today: "today",
+  week: "week",
+  month: "month",
+} as const;
+
+export type ExportProductsParams = {
+  categoryId?: string;
+  isActive?: boolean;
 };

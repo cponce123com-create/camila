@@ -5,8 +5,13 @@
  * Camila SaaS - API para emprendedores locales
  * OpenAPI spec version: 0.1.0
  */
+import type { GetInventoryMovementsType } from "./getInventoryMovementsType";
 
 export type GetInventoryMovementsParams = {
   productId?: string;
   page?: number;
+  limit?: number;
+  dateFrom?: Date;
+  dateTo?: Date;
+  type?: GetInventoryMovementsType;
 };

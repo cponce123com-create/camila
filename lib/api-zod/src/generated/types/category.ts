@@ -9,8 +9,12 @@
 export interface Category {
   id: string;
   storeId: string;
+  parentId?: string;
   name: string;
   description?: string;
+  imageUrl?: string;
   sortOrder?: number;
   createdAt: Date;
+  updatedAt: Date;
+  subcategories?: Category[];
 }

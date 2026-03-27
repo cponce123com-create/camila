@@ -5,11 +5,8 @@
  * Camila SaaS - API para emprendedores locales
  * OpenAPI spec version: 0.1.0
  */
+import type { GetStoreStatsPeriod } from "./getStoreStatsPeriod";
 
-export interface CreateCategoryRequest {
-  name: string;
-  description?: string;
-  parentId?: string;
-  imageUrl?: string;
-  sortOrder?: number;
-}
+export type GetStoreStatsParams = {
+  period?: GetStoreStatsPeriod;
+};

@@ -8,6 +8,7 @@ import productsRouter from "./products";
 import inventoryRouter from "./inventory";
 import customizationRouter from "./customization";
 import productImagesRouter from "./product_images";
+import statsRouter from "./stats";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use("/categories", categoriesRouter);
 router.use("/products", productsRouter);
 router.use("/products", productImagesRouter);
 router.use("/inventory", inventoryRouter);
+router.use("/stats", statsRouter);
 
 export default router;

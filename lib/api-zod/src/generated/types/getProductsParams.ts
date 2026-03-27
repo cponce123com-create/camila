@@ -5,6 +5,8 @@
  * Camila SaaS - API para emprendedores locales
  * OpenAPI spec version: 0.1.0
  */
+import type { GetProductsSortBy } from "./getProductsSortBy";
+import type { GetProductsSortDir } from "./getProductsSortDir";
 
 export type GetProductsParams = {
   page?: number;
@@ -12,4 +14,12 @@ export type GetProductsParams = {
   categoryId?: string;
   search?: string;
   lowStock?: boolean;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  /**
+   * Comma-separated list of tags to filter by
+   */
+  tags?: string;
+  sortBy?: GetProductsSortBy;
+  sortDir?: GetProductsSortDir;
 };

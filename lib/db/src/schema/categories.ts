@@ -13,8 +13,10 @@ export const categoriesTable = pgTable("categories", {
   storeId: text("store_id")
     .notNull()
     .references(() => storesTable.id, { onDelete: "cascade" }),
+  parentId: text("parent_id"),
   name: text("name").notNull(),
   description: text("description"),
+  imageUrl: text("image_url"),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

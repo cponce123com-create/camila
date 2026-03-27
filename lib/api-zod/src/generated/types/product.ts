@@ -13,7 +13,11 @@ export interface Product {
   categoryId?: string;
   name: string;
   description?: string;
+  longDescription?: string;
   price: number;
+  salePrice?: number;
+  saleStartDate?: Date;
+  saleEndDate?: Date;
   costPrice?: number;
   sku?: string;
   barcode?: string;
@@ -22,6 +26,9 @@ export interface Product {
   minStock?: number;
   unit?: string;
   isActive: boolean;
+  isFeatured: boolean;
+  tags?: string[];
   createdAt: Date;
+  updatedAt: Date;
   category?: Category;
 }

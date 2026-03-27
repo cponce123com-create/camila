@@ -113,12 +113,25 @@ scripts/
 - `GET/PATCH /api/admin/stores/:id` — [Superadmin] Ver/editar tienda
 - `PATCH /api/admin/stores/:id/license` — [Superadmin] Gestionar licencia
 - `GET /api/admin/stats` — [Superadmin] Estadísticas globales
-- `GET/POST /api/categories` — Categorías de la tienda
+- `GET/POST /api/categories` — Categorías (árbol con subcategorías, parentId, imageUrl)
+- `PATCH /api/categories/reorder` — Reordenar categorías
 - `PATCH/DELETE /api/categories/:id` — Editar/eliminar categoría
-- `GET/POST /api/products` — Catálogo de productos (con paginación, búsqueda, filtros)
+- `GET/POST /api/products` — Catálogo (paginación, búsqueda, filtros: isActive, isFeatured, tags, sortBy, sortDir)
 - `GET/PATCH/DELETE /api/products/:id` — Operaciones de producto
+- `GET /api/products/export` — Exportar productos como CSV (JSON array)
+- `POST /api/products/import` — Importar productos desde datos estructurados
+- `GET /api/stats` — Estadísticas de la tienda (productos, inventario, stock, categorías)
 - `POST /api/inventory/adjust` — Ajustar inventario
-- `GET /api/inventory/movements` — Historial de movimientos
+- `GET /api/inventory/movements` — Historial de movimientos (con filtros: dateFrom, dateTo, type)
+- `GET /api/inventory/low-stock` — Productos con stock bajo o sin stock
+- `GET /api/inventory/kardex/:productId` — Kárdex de un producto con resumen
+- `GET/PATCH /api/stores/me/settings` — Personalización de tienda
+- `GET/POST /api/stores/me/banners` — Banners promocionales
+- `PATCH /api/stores/me/banners/reorder` — Reordenar banners
+- `PATCH/DELETE /api/stores/me/banners/:id` — Editar/eliminar banner
+- `GET/POST /api/products/:id/images` — Imágenes múltiples del producto
+- `PATCH /api/products/:id/images/reorder` — Reordenar imágenes
+- `PATCH/DELETE /api/products/:id/images/:imageId` — Editar/eliminar imagen
 
 ## Superadmin
 
@@ -156,20 +169,43 @@ scripts/
 
 ## Fase 1 - Completada ✅
 
-- [x] Arquitectura multi-tenant
-- [x] Autenticación con sesiones seguras
-- [x] Sistema de roles completo
+- [x] Arquitectura multi-tenant con aislamiento por storeId
+- [x] Autenticación con sesiones seguras (PBKDF2, cookie httpOnly)
+- [x] Sistema de roles completo (superadmin/store_admin/store_staff/cashier)
 - [x] Registro de negocios con DNI/RUC
-- [x] Sistema de licencias administrable
-- [x] Panel superadmin
+- [x] Sistema de licencias administrable (trial/active/expired/suspended)
+- [x] Panel superadmin con gestión de todas las tiendas
 - [x] Panel de tienda con dashboard, productos, categorías, inventario, equipo, settings
-- [x] Diseño con paleta selva
-- [x] API REST completa y documentada en OpenAPI
+- [x] Diseño con paleta selva profunda (#1a5c2e)
+- [x] API REST completa y documentada en OpenAPI 3.1
 - [x] Base de datos PostgreSQL con Drizzle ORM
+
+## Fase 2 - Completada ✅
+
+- [x] store_settings: template, fuente, feature flags, horarios de atención
+- [x] store_banners: banners promocionales con reordenamiento (max 5)
+- [x] product_images: imágenes múltiples por producto con reordenamiento (max 10)
+- [x] Página /dashboard/customize con 4 tabs (Apariencia, Banners, Funcionalidades, Horarios)
+- [x] ProductImagesManager component integrado en la UI de productos
+
+## Fase 3 - Completada ✅
+
+- [x] Subcategorías: categories.parentId (árbol padre/hijo), categories.imageUrl
+- [x] Productos extendidos: salePrice, saleStartDate, saleEndDate, isFeatured, longDescription, tags (text[])
+- [x] GET /api/stats — dashboard con KPIs (stock value, low stock, inventario por período, productos por categoría)
+- [x] GET /api/products con filtros avanzados: isActive, isFeatured, tags, sortBy, sortDir
+- [x] GET/POST /api/products/export y /api/products/import (CSV roundtrip)
+- [x] GET /api/inventory/low-stock — alertas automáticas
+- [x] GET /api/inventory/kardex/:productId — stock card con resumen y movimientos
+- [x] GET /api/inventory/movements mejorado con dateFrom, dateTo, type filters
+- [x] PATCH /api/categories/reorder — reordenamiento manual
+- [x] Dashboard renovado: gráfico de categorías, KPI cards, período Hoy/Semana/Mes
+- [x] Productos mejorado: filtros avanzados, exportar/importar CSV, star icon, sale price display
+- [x] Categorías mejorado: árbol expandible con subcategorías, formulario con parentId
+- [x] Inventario mejorado: 3 tabs (Movimientos, Stock Bajo, Kárdex)
 
 ## Próximas Fases
 
-- **Fase 2**: Módulo POS/ventas, recibos digitales, exportación PDF, envío por WhatsApp
-- **Fase 3**: Módulo restaurante (mesas, comandas), módulo panadería (pedidos recurrentes)
-- **Fase 4**: Módulo de reportes, estadísticas de ventas, personalización visual avanzada de tienda
-- **Fase 5**: Escalado a múltiples ciudades/distritos, app móvil
+- **Fase 4**: Módulo POS/ventas, recibos digitales, WhatsApp integration
+- **Fase 5**: Módulo restaurante (mesas, comandas), módulo panadería (pedidos recurrentes)
+- **Fase 6**: Reportes avanzados con gráficas de ventas, app móvil

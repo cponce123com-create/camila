@@ -6,23 +6,20 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateProductRequest {
+export interface ProductExportRow {
+  id: string;
+  sku?: string;
   name: string;
   description?: string;
-  longDescription?: string;
+  category?: string;
   price: number;
   salePrice?: number;
-  saleStartDate?: Date;
-  saleEndDate?: Date;
   costPrice?: number;
-  categoryId?: string;
-  sku?: string;
-  barcode?: string;
-  imageUrl?: string;
-  stock?: number;
+  stock: number;
   minStock?: number;
   unit?: string;
-  isActive?: boolean;
+  isActive: boolean;
   isFeatured?: boolean;
-  tags?: string[];
+  tags?: string;
+  imageUrl?: string;
 }

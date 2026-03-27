@@ -6,23 +6,17 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateProductRequest {
+export type ImportProductsRequestProductsItem = {
   name: string;
-  description?: string;
-  longDescription?: string;
-  price: number;
-  salePrice?: number;
-  saleStartDate?: Date;
-  saleEndDate?: Date;
-  costPrice?: number;
-  categoryId?: string;
   sku?: string;
-  barcode?: string;
-  imageUrl?: string;
+  description?: string;
+  categoryName?: string;
+  price: number;
+  costPrice?: number;
+  salePrice?: number;
   stock?: number;
   minStock?: number;
   unit?: string;
   isActive?: boolean;
-  isFeatured?: boolean;
-  tags?: string[];
-}
+  tags?: string;
+};

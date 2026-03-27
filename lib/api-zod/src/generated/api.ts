@@ -535,10 +535,14 @@ export const AdminGetStatsResponse = zod.object({
 export const GetCategoriesResponseItem = zod.object({
   id: zod.string(),
   storeId: zod.string(),
+  parentId: zod.string().optional(),
   name: zod.string(),
   description: zod.string().optional(),
+  imageUrl: zod.string().optional(),
   sortOrder: zod.number().optional(),
   createdAt: zod.date(),
+  updatedAt: zod.date(),
+  subcategories: zod.array(zod.unknown()).optional(),
 });
 export const GetCategoriesResponse = zod.array(GetCategoriesResponseItem);
 
@@ -548,6 +552,8 @@ export const GetCategoriesResponse = zod.array(GetCategoriesResponseItem);
 export const CreateCategoryBody = zod.object({
   name: zod.string(),
   description: zod.string().optional(),
+  parentId: zod.string().optional(),
+  imageUrl: zod.string().optional(),
   sortOrder: zod.number().optional(),
 });
 
@@ -561,16 +567,22 @@ export const UpdateCategoryParams = zod.object({
 export const UpdateCategoryBody = zod.object({
   name: zod.string(),
   description: zod.string().optional(),
+  parentId: zod.string().optional(),
+  imageUrl: zod.string().optional(),
   sortOrder: zod.number().optional(),
 });
 
 export const UpdateCategoryResponse = zod.object({
   id: zod.string(),
   storeId: zod.string(),
+  parentId: zod.string().optional(),
   name: zod.string(),
   description: zod.string().optional(),
+  imageUrl: zod.string().optional(),
   sortOrder: zod.number().optional(),
   createdAt: zod.date(),
+  updatedAt: zod.date(),
+  subcategories: zod.array(zod.unknown()).optional(),
 });
 
 /**
@@ -590,6 +602,8 @@ export const DeleteCategoryResponse = zod.object({
  */
 export const getProductsQueryPageDefault = 1;
 export const getProductsQueryLimitDefault = 20;
+export const getProductsQuerySortByDefault = `name`;
+export const getProductsQuerySortDirDefault = `asc`;
 
 export const GetProductsQueryParams = zod.object({
   page: zod.coerce.number().default(getProductsQueryPageDefault),
@@ -597,6 +611,16 @@ export const GetProductsQueryParams = zod.object({
   categoryId: zod.coerce.string().optional(),
   search: zod.coerce.string().optional(),
   lowStock: zod.coerce.boolean().optional(),
+  isActive: zod.coerce.boolean().optional(),
+  isFeatured: zod.coerce.boolean().optional(),
+  tags: zod.coerce
+    .string()
+    .optional()
+    .describe("Comma-separated list of tags to filter by"),
+  sortBy: zod
+    .enum(["name", "price", "stock", "createdAt"])
+    .default(getProductsQuerySortByDefault),
+  sortDir: zod.enum(["asc", "desc"]).default(getProductsQuerySortDirDefault),
 });
 
 export const GetProductsResponse = zod.object({
@@ -607,7 +631,11 @@ export const GetProductsResponse = zod.object({
       categoryId: zod.string().optional(),
       name: zod.string(),
       description: zod.string().optional(),
+      longDescription: zod.string().optional(),
       price: zod.number(),
+      salePrice: zod.number().optional(),
+      saleStartDate: zod.date().optional(),
+      saleEndDate: zod.date().optional(),
       costPrice: zod.number().optional(),
       sku: zod.string().optional(),
       barcode: zod.string().optional(),
@@ -616,15 +644,22 @@ export const GetProductsResponse = zod.object({
       minStock: zod.number().optional(),
       unit: zod.string().optional(),
       isActive: zod.boolean(),
+      isFeatured: zod.boolean(),
+      tags: zod.array(zod.string()).optional(),
       createdAt: zod.date(),
+      updatedAt: zod.date(),
       category: zod
         .object({
           id: zod.string(),
           storeId: zod.string(),
+          parentId: zod.string().optional(),
           name: zod.string(),
           description: zod.string().optional(),
+          imageUrl: zod.string().optional(),
           sortOrder: zod.number().optional(),
           createdAt: zod.date(),
+          updatedAt: zod.date(),
+          subcategories: zod.array(zod.unknown()).optional(),
         })
         .optional(),
     }),
@@ -641,11 +676,16 @@ export const GetProductsResponse = zod.object({
 export const createProductBodyStockDefault = 0;
 export const createProductBodyMinStockDefault = 0;
 export const createProductBodyIsActiveDefault = true;
+export const createProductBodyIsFeaturedDefault = false;
 
 export const CreateProductBody = zod.object({
   name: zod.string(),
   description: zod.string().optional(),
+  longDescription: zod.string().optional(),
   price: zod.number(),
+  salePrice: zod.number().optional(),
+  saleStartDate: zod.date().optional(),
+  saleEndDate: zod.date().optional(),
   costPrice: zod.number().optional(),
   categoryId: zod.string().optional(),
   sku: zod.string().optional(),
@@ -655,6 +695,8 @@ export const CreateProductBody = zod.object({
   minStock: zod.number().default(createProductBodyMinStockDefault),
   unit: zod.string().optional(),
   isActive: zod.boolean().default(createProductBodyIsActiveDefault),
+  isFeatured: zod.boolean().default(createProductBodyIsFeaturedDefault),
+  tags: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -670,7 +712,11 @@ export const GetProductResponse = zod.object({
   categoryId: zod.string().optional(),
   name: zod.string(),
   description: zod.string().optional(),
+  longDescription: zod.string().optional(),
   price: zod.number(),
+  salePrice: zod.number().optional(),
+  saleStartDate: zod.date().optional(),
+  saleEndDate: zod.date().optional(),
   costPrice: zod.number().optional(),
   sku: zod.string().optional(),
   barcode: zod.string().optional(),
@@ -679,15 +725,22 @@ export const GetProductResponse = zod.object({
   minStock: zod.number().optional(),
   unit: zod.string().optional(),
   isActive: zod.boolean(),
+  isFeatured: zod.boolean(),
+  tags: zod.array(zod.string()).optional(),
   createdAt: zod.date(),
+  updatedAt: zod.date(),
   category: zod
     .object({
       id: zod.string(),
       storeId: zod.string(),
+      parentId: zod.string().optional(),
       name: zod.string(),
       description: zod.string().optional(),
+      imageUrl: zod.string().optional(),
       sortOrder: zod.number().optional(),
       createdAt: zod.date(),
+      updatedAt: zod.date(),
+      subcategories: zod.array(zod.unknown()).optional(),
     })
     .optional(),
 });
@@ -702,11 +755,16 @@ export const UpdateProductParams = zod.object({
 export const updateProductBodyStockDefault = 0;
 export const updateProductBodyMinStockDefault = 0;
 export const updateProductBodyIsActiveDefault = true;
+export const updateProductBodyIsFeaturedDefault = false;
 
 export const UpdateProductBody = zod.object({
   name: zod.string(),
   description: zod.string().optional(),
+  longDescription: zod.string().optional(),
   price: zod.number(),
+  salePrice: zod.number().optional(),
+  saleStartDate: zod.date().optional(),
+  saleEndDate: zod.date().optional(),
   costPrice: zod.number().optional(),
   categoryId: zod.string().optional(),
   sku: zod.string().optional(),
@@ -716,6 +774,8 @@ export const UpdateProductBody = zod.object({
   minStock: zod.number().default(updateProductBodyMinStockDefault),
   unit: zod.string().optional(),
   isActive: zod.boolean().default(updateProductBodyIsActiveDefault),
+  isFeatured: zod.boolean().default(updateProductBodyIsFeaturedDefault),
+  tags: zod.array(zod.string()).optional(),
 });
 
 export const UpdateProductResponse = zod.object({
@@ -724,7 +784,11 @@ export const UpdateProductResponse = zod.object({
   categoryId: zod.string().optional(),
   name: zod.string(),
   description: zod.string().optional(),
+  longDescription: zod.string().optional(),
   price: zod.number(),
+  salePrice: zod.number().optional(),
+  saleStartDate: zod.date().optional(),
+  saleEndDate: zod.date().optional(),
   costPrice: zod.number().optional(),
   sku: zod.string().optional(),
   barcode: zod.string().optional(),
@@ -733,15 +797,22 @@ export const UpdateProductResponse = zod.object({
   minStock: zod.number().optional(),
   unit: zod.string().optional(),
   isActive: zod.boolean(),
+  isFeatured: zod.boolean(),
+  tags: zod.array(zod.string()).optional(),
   createdAt: zod.date(),
+  updatedAt: zod.date(),
   category: zod
     .object({
       id: zod.string(),
       storeId: zod.string(),
+      parentId: zod.string().optional(),
       name: zod.string(),
       description: zod.string().optional(),
+      imageUrl: zod.string().optional(),
       sortOrder: zod.number().optional(),
       createdAt: zod.date(),
+      updatedAt: zod.date(),
+      subcategories: zod.array(zod.unknown()).optional(),
     })
     .optional(),
 });
@@ -784,13 +855,18 @@ export const AdjustInventoryResponse = zod.object({
 });
 
 /**
- * @summary Get inventory movement history
+ * @summary Get inventory movement history with optional date and product filters
  */
 export const getInventoryMovementsQueryPageDefault = 1;
+export const getInventoryMovementsQueryLimitDefault = 20;
 
 export const GetInventoryMovementsQueryParams = zod.object({
   productId: zod.coerce.string().optional(),
   page: zod.coerce.number().default(getInventoryMovementsQueryPageDefault),
+  limit: zod.coerce.number().default(getInventoryMovementsQueryLimitDefault),
+  dateFrom: zod.date().optional(),
+  dateTo: zod.date().optional(),
+  type: zod.enum(["in", "out", "adjustment"]).optional(),
 });
 
 export const GetInventoryMovementsResponse = zod.object({
@@ -813,6 +889,276 @@ export const GetInventoryMovementsResponse = zod.object({
   page: zod.number(),
   limit: zod.number(),
   totalPages: zod.number(),
+});
+
+/**
+ * @summary Get products with stock at or below minimum
+ */
+export const GetLowStockProductsResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  categoryId: zod.string().optional(),
+  name: zod.string(),
+  description: zod.string().optional(),
+  longDescription: zod.string().optional(),
+  price: zod.number(),
+  salePrice: zod.number().optional(),
+  saleStartDate: zod.date().optional(),
+  saleEndDate: zod.date().optional(),
+  costPrice: zod.number().optional(),
+  sku: zod.string().optional(),
+  barcode: zod.string().optional(),
+  imageUrl: zod.string().optional(),
+  stock: zod.number(),
+  minStock: zod.number().optional(),
+  unit: zod.string().optional(),
+  isActive: zod.boolean(),
+  isFeatured: zod.boolean(),
+  tags: zod.array(zod.string()).optional(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+  category: zod
+    .object({
+      id: zod.string(),
+      storeId: zod.string(),
+      parentId: zod.string().optional(),
+      name: zod.string(),
+      description: zod.string().optional(),
+      imageUrl: zod.string().optional(),
+      sortOrder: zod.number().optional(),
+      createdAt: zod.date(),
+      updatedAt: zod.date(),
+      subcategories: zod.array(zod.unknown()).optional(),
+    })
+    .optional(),
+});
+export const GetLowStockProductsResponse = zod.array(
+  GetLowStockProductsResponseItem,
+);
+
+/**
+ * @summary Get kardex (stock card) for a specific product
+ */
+export const GetProductKardexParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const GetProductKardexQueryParams = zod.object({
+  dateFrom: zod.date().optional(),
+  dateTo: zod.date().optional(),
+});
+
+export const GetProductKardexResponse = zod.object({
+  product: zod.object({
+    id: zod.string(),
+    storeId: zod.string(),
+    categoryId: zod.string().optional(),
+    name: zod.string(),
+    description: zod.string().optional(),
+    longDescription: zod.string().optional(),
+    price: zod.number(),
+    salePrice: zod.number().optional(),
+    saleStartDate: zod.date().optional(),
+    saleEndDate: zod.date().optional(),
+    costPrice: zod.number().optional(),
+    sku: zod.string().optional(),
+    barcode: zod.string().optional(),
+    imageUrl: zod.string().optional(),
+    stock: zod.number(),
+    minStock: zod.number().optional(),
+    unit: zod.string().optional(),
+    isActive: zod.boolean(),
+    isFeatured: zod.boolean(),
+    tags: zod.array(zod.string()).optional(),
+    createdAt: zod.date(),
+    updatedAt: zod.date(),
+    category: zod
+      .object({
+        id: zod.string(),
+        storeId: zod.string(),
+        parentId: zod.string().optional(),
+        name: zod.string(),
+        description: zod.string().optional(),
+        imageUrl: zod.string().optional(),
+        sortOrder: zod.number().optional(),
+        createdAt: zod.date(),
+        updatedAt: zod.date(),
+        subcategories: zod.array(zod.unknown()).optional(),
+      })
+      .optional(),
+  }),
+  movements: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      productId: zod.string(),
+      userId: zod.string(),
+      type: zod.enum(["in", "out", "adjustment"]),
+      quantity: zod.number(),
+      previousStock: zod.number(),
+      newStock: zod.number(),
+      reason: zod.string().optional(),
+      notes: zod.string().optional(),
+      createdAt: zod.date(),
+    }),
+  ),
+  openingStock: zod.number(),
+  closingStock: zod.number(),
+  totalIn: zod.number(),
+  totalOut: zod.number(),
+  totalAdjustments: zod.number(),
+});
+
+/**
+ * @summary Get store dashboard statistics
+ */
+export const getStoreStatsQueryPeriodDefault = `month`;
+
+export const GetStoreStatsQueryParams = zod.object({
+  period: zod
+    .enum(["today", "week", "month"])
+    .default(getStoreStatsQueryPeriodDefault),
+});
+
+export const GetStoreStatsResponse = zod.object({
+  totalProducts: zod.number(),
+  activeProducts: zod.number(),
+  inactiveProducts: zod.number(),
+  featuredProducts: zod.number(),
+  totalCategories: zod.number(),
+  lowStockCount: zod.number(),
+  outOfStockCount: zod.number(),
+  stockValue: zod.number(),
+  inventoryIn: zod.number(),
+  inventoryOut: zod.number(),
+  inventoryMovements: zod.number(),
+  productsByCategory: zod.array(
+    zod.object({
+      categoryId: zod.string().optional(),
+      categoryName: zod.string(),
+      productCount: zod.number(),
+      stockValue: zod.number().optional(),
+    }),
+  ),
+  lowStockProducts: zod.array(
+    zod.object({
+      id: zod.string(),
+      storeId: zod.string(),
+      categoryId: zod.string().optional(),
+      name: zod.string(),
+      description: zod.string().optional(),
+      longDescription: zod.string().optional(),
+      price: zod.number(),
+      salePrice: zod.number().optional(),
+      saleStartDate: zod.date().optional(),
+      saleEndDate: zod.date().optional(),
+      costPrice: zod.number().optional(),
+      sku: zod.string().optional(),
+      barcode: zod.string().optional(),
+      imageUrl: zod.string().optional(),
+      stock: zod.number(),
+      minStock: zod.number().optional(),
+      unit: zod.string().optional(),
+      isActive: zod.boolean(),
+      isFeatured: zod.boolean(),
+      tags: zod.array(zod.string()).optional(),
+      createdAt: zod.date(),
+      updatedAt: zod.date(),
+      category: zod
+        .object({
+          id: zod.string(),
+          storeId: zod.string(),
+          parentId: zod.string().optional(),
+          name: zod.string(),
+          description: zod.string().optional(),
+          imageUrl: zod.string().optional(),
+          sortOrder: zod.number().optional(),
+          createdAt: zod.date(),
+          updatedAt: zod.date(),
+          subcategories: zod.array(zod.unknown()).optional(),
+        })
+        .optional(),
+    }),
+  ),
+  period: zod.string(),
+});
+
+/**
+ * @summary Export all products as CSV data
+ */
+export const ExportProductsQueryParams = zod.object({
+  categoryId: zod.coerce.string().optional(),
+  isActive: zod.coerce.boolean().optional(),
+});
+
+export const ExportProductsResponseItem = zod.object({
+  id: zod.string(),
+  sku: zod.string().optional(),
+  name: zod.string(),
+  description: zod.string().optional(),
+  category: zod.string().optional(),
+  price: zod.number(),
+  salePrice: zod.number().optional(),
+  costPrice: zod.number().optional(),
+  stock: zod.number(),
+  minStock: zod.number().optional(),
+  unit: zod.string().optional(),
+  isActive: zod.boolean(),
+  isFeatured: zod.boolean().optional(),
+  tags: zod.string().optional(),
+  imageUrl: zod.string().optional(),
+});
+export const ExportProductsResponse = zod.array(ExportProductsResponseItem);
+
+/**
+ * @summary Import products from structured data
+ */
+export const importProductsBodyUpdateExistingDefault = false;
+
+export const ImportProductsBody = zod.object({
+  products: zod.array(
+    zod.object({
+      name: zod.string(),
+      sku: zod.string().optional(),
+      description: zod.string().optional(),
+      categoryName: zod.string().optional(),
+      price: zod.number(),
+      costPrice: zod.number().optional(),
+      salePrice: zod.number().optional(),
+      stock: zod.number().optional(),
+      minStock: zod.number().optional(),
+      unit: zod.string().optional(),
+      isActive: zod.boolean().optional(),
+      tags: zod.string().optional(),
+    }),
+  ),
+  updateExisting: zod
+    .boolean()
+    .default(importProductsBodyUpdateExistingDefault),
+});
+
+export const ImportProductsResponse = zod.object({
+  created: zod.number(),
+  updated: zod.number(),
+  skipped: zod.number(),
+  errors: zod.array(
+    zod.object({
+      row: zod.number().optional(),
+      message: zod.string().optional(),
+    }),
+  ),
+});
+
+/**
+ * @summary Reorder categories manually
+ */
+export const ReorderCategoriesBody = zod.object({
+  orderedIds: zod.array(zod.string()),
+});
+
+export const ReorderCategoriesResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
 });
 
 /**

@@ -496,6 +496,31 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+        - name: isFeatured
+          in: query
+          schema:
+            type: boolean
+        - name: tags
+          in: query
+          schema:
+            type: string
+          description: Comma-separated list of tags to filter by
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, price, stock, createdAt]
+            default: name
+        - name: sortDir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
       responses:
         "200":
           description: Paginated products
@@ -606,7 +631,7 @@ paths:
     get:
       operationId: getInventoryMovements
       tags: [inventory]
-      summary: Get inventory movement history
+      summary: Get inventory movement history with optional date and product filters
       parameters:
         - name: productId
           in: query
@@ -617,6 +642,26 @@ paths:
           schema:
             type: integer
             default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [in, out, adjustment]
       responses:
         "200":
           description: Inventory movements
@@ -624,6 +669,132 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedInventoryMovements"
+
+  /inventory/low-stock:
+    get:
+      operationId: getLowStockProducts
+      tags: [inventory]
+      summary: Get products with stock at or below minimum
+      responses:
+        "200":
+          description: Low stock products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+  /inventory/kardex/{productId}:
+    get:
+      operationId: getProductKardex
+      tags: [inventory]
+      summary: Get kardex (stock card) for a specific product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Product kardex
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductKardex"
+
+  /stats:
+    get:
+      operationId: getStoreStats
+      tags: [stats]
+      summary: Get store dashboard statistics
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month]
+            default: month
+      responses:
+        "200":
+          description: Store statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreStats"
+
+  /products/export:
+    get:
+      operationId: exportProducts
+      tags: [products]
+      summary: Export all products as CSV data
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Products CSV data as JSON array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductExportRow"
+
+  /products/import:
+    post:
+      operationId: importProducts
+      tags: [products]
+      summary: Import products from structured data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportProductsRequest"
+      responses:
+        "200":
+          description: Import results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+
+  /categories/reorder:
+    patch:
+      operationId: reorderCategories
+      tags: [categories]
+      summary: Reorder categories manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderRequest"
+      responses:
+        "200":
+          description: Categories reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
 
   /stores/me/settings:
     get:
@@ -1266,20 +1437,32 @@ components:
           type: string
         storeId:
           type: string
+        parentId:
+          type: string
         name:
           type: string
         description:
+          type: string
+        imageUrl:
           type: string
         sortOrder:
           type: integer
         createdAt:
           type: string
           format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        subcategories:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
       required:
         - id
         - storeId
         - name
         - createdAt
+        - updatedAt
 
     CreateCategoryRequest:
       type: object
@@ -1287,6 +1470,10 @@ components:
         name:
           type: string
         description:
+          type: string
+        parentId:
+          type: string
+        imageUrl:
           type: string
         sortOrder:
           type: integer
@@ -1306,8 +1493,18 @@ components:
           type: string
         description:
           type: string
+        longDescription:
+          type: string
         price:
           type: number
+        salePrice:
+          type: number
+        saleStartDate:
+          type: string
+          format: date-time
+        saleEndDate:
+          type: string
+          format: date-time
         costPrice:
           type: number
         sku:
@@ -1324,7 +1521,16 @@ components:
           type: string
         isActive:
           type: boolean
+        isFeatured:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
         createdAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
         category:
@@ -1336,7 +1542,9 @@ components:
         - price
         - stock
         - isActive
+        - isFeatured
         - createdAt
+        - updatedAt
 
     CreateProductRequest:
       type: object
@@ -1345,8 +1553,18 @@ components:
           type: string
         description:
           type: string
+        longDescription:
+          type: string
         price:
           type: number
+        salePrice:
+          type: number
+        saleStartDate:
+          type: string
+          format: date-time
+        saleEndDate:
+          type: string
+          format: date-time
         costPrice:
           type: number
         categoryId:
@@ -1368,6 +1586,13 @@ components:
         isActive:
           type: boolean
           default: true
+        isFeatured:
+          type: boolean
+          default: false
+        tags:
+          type: array
+          items:
+            type: string
       required:
         - name
         - price
@@ -1674,3 +1899,199 @@ components:
           type: integer
         isPrimary:
           type: boolean
+
+    StoreStats:
+      type: object
+      properties:
+        totalProducts:
+          type: integer
+        activeProducts:
+          type: integer
+        inactiveProducts:
+          type: integer
+        featuredProducts:
+          type: integer
+        totalCategories:
+          type: integer
+        lowStockCount:
+          type: integer
+        outOfStockCount:
+          type: integer
+        stockValue:
+          type: number
+        inventoryIn:
+          type: integer
+        inventoryOut:
+          type: integer
+        inventoryMovements:
+          type: integer
+        productsByCategory:
+          type: array
+          items:
+            type: object
+            properties:
+              categoryId:
+                type: string
+              categoryName:
+                type: string
+              productCount:
+                type: integer
+              stockValue:
+                type: number
+            required:
+              - categoryName
+              - productCount
+        lowStockProducts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        period:
+          type: string
+      required:
+        - totalProducts
+        - activeProducts
+        - inactiveProducts
+        - featuredProducts
+        - totalCategories
+        - lowStockCount
+        - outOfStockCount
+        - stockValue
+        - inventoryIn
+        - inventoryOut
+        - inventoryMovements
+        - productsByCategory
+        - lowStockProducts
+        - period
+
+    ProductKardex:
+      type: object
+      properties:
+        product:
+          $ref: "#/components/schemas/Product"
+        movements:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryMovement"
+        openingStock:
+          type: integer
+        closingStock:
+          type: integer
+        totalIn:
+          type: integer
+        totalOut:
+          type: integer
+        totalAdjustments:
+          type: integer
+      required:
+        - product
+        - movements
+        - openingStock
+        - closingStock
+        - totalIn
+        - totalOut
+        - totalAdjustments
+
+    ProductExportRow:
+      type: object
+      properties:
+        id:
+          type: string
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        salePrice:
+          type: number
+        costPrice:
+          type: number
+        stock:
+          type: integer
+        minStock:
+          type: integer
+        unit:
+          type: string
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean
+        tags:
+          type: string
+        imageUrl:
+          type: string
+      required:
+        - id
+        - name
+        - price
+        - stock
+        - isActive
+
+    ImportProductsRequest:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              sku:
+                type: string
+              description:
+                type: string
+              categoryName:
+                type: string
+              price:
+                type: number
+              costPrice:
+                type: number
+              salePrice:
+                type: number
+              stock:
+                type: integer
+              minStock:
+                type: integer
+              unit:
+                type: string
+              isActive:
+                type: boolean
+              tags:
+                type: string
+            required:
+              - name
+              - price
+        updateExisting:
+          type: boolean
+          default: false
+      required:
+        - products
+
+    ImportResult:
+      type: object
+      properties:
+        created:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              message:
+                type: string
+      required:
+        - created
+        - updated
+        - skipped
+        - errors

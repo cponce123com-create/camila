@@ -6,10 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateCategoryRequest {
-  name: string;
-  description?: string;
-  parentId?: string;
-  imageUrl?: string;
-  sortOrder?: number;
-}
+export type StoreStatsProductsByCategoryItem = {
+  categoryId?: string;
+  categoryName: string;
+  productCount: number;
+  stockValue?: number;
+};
