@@ -342,6 +342,155 @@ export interface PaginatedInventoryMovements {
   totalPages: number;
 }
 
+export type StoreSettingsCatalogView =
+  (typeof StoreSettingsCatalogView)[keyof typeof StoreSettingsCatalogView];
+
+export const StoreSettingsCatalogView = {
+  grid: "grid",
+  list: "list",
+  featured: "featured",
+} as const;
+
+export type StoreSettingsFont =
+  (typeof StoreSettingsFont)[keyof typeof StoreSettingsFont];
+
+export const StoreSettingsFont = {
+  inter: "inter",
+  poppins: "poppins",
+  roboto: "roboto",
+  playfair: "playfair",
+  montserrat: "montserrat",
+  nunito: "nunito",
+} as const;
+
+export type StoreSettingsTemplate =
+  (typeof StoreSettingsTemplate)[keyof typeof StoreSettingsTemplate];
+
+export const StoreSettingsTemplate = {
+  moderna: "moderna",
+  clasica: "clasica",
+  minimalista: "minimalista",
+  vibrante: "vibrante",
+  elegante: "elegante",
+} as const;
+
+export interface StoreSettings {
+  id: string;
+  storeId: string;
+  catalogView: StoreSettingsCatalogView;
+  font: StoreSettingsFont;
+  template: StoreSettingsTemplate;
+  secondaryColor?: string;
+  showOffers: boolean;
+  showComments: boolean;
+  showStock: boolean;
+  showMenuOfDay: boolean;
+  restaurantModule: boolean;
+  showWhatsappButton: boolean;
+  showYapeQr: boolean;
+  yapeQrUrl?: string;
+  businessHours?: string;
+  updatedAt: string;
+}
+
+export type UpdateStoreSettingsRequestCatalogView =
+  (typeof UpdateStoreSettingsRequestCatalogView)[keyof typeof UpdateStoreSettingsRequestCatalogView];
+
+export const UpdateStoreSettingsRequestCatalogView = {
+  grid: "grid",
+  list: "list",
+  featured: "featured",
+} as const;
+
+export type UpdateStoreSettingsRequestFont =
+  (typeof UpdateStoreSettingsRequestFont)[keyof typeof UpdateStoreSettingsRequestFont];
+
+export const UpdateStoreSettingsRequestFont = {
+  inter: "inter",
+  poppins: "poppins",
+  roboto: "roboto",
+  playfair: "playfair",
+  montserrat: "montserrat",
+  nunito: "nunito",
+} as const;
+
+export type UpdateStoreSettingsRequestTemplate =
+  (typeof UpdateStoreSettingsRequestTemplate)[keyof typeof UpdateStoreSettingsRequestTemplate];
+
+export const UpdateStoreSettingsRequestTemplate = {
+  moderna: "moderna",
+  clasica: "clasica",
+  minimalista: "minimalista",
+  vibrante: "vibrante",
+  elegante: "elegante",
+} as const;
+
+export interface UpdateStoreSettingsRequest {
+  catalogView?: UpdateStoreSettingsRequestCatalogView;
+  font?: UpdateStoreSettingsRequestFont;
+  template?: UpdateStoreSettingsRequestTemplate;
+  secondaryColor?: string;
+  showOffers?: boolean;
+  showComments?: boolean;
+  showStock?: boolean;
+  showMenuOfDay?: boolean;
+  restaurantModule?: boolean;
+  showWhatsappButton?: boolean;
+  showYapeQr?: boolean;
+  yapeQrUrl?: string;
+  businessHours?: string;
+}
+
+export interface StoreBanner {
+  id: string;
+  storeId: string;
+  imageUrl: string;
+  title?: string;
+  subtitle?: string;
+  linkUrl?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateStoreBannerRequest {
+  imageUrl: string;
+  title?: string;
+  subtitle?: string;
+  linkUrl?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+}
+
+export interface ReorderRequest {
+  orderedIds: string[];
+}
+
+export interface ProductImage {
+  id: string;
+  storeId: string;
+  productId: string;
+  imageUrl: string;
+  altText?: string;
+  sortOrder: number;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
+export interface AddProductImageRequest {
+  imageUrl: string;
+  altText?: string;
+  sortOrder?: number;
+  isPrimary?: boolean;
+}
+
+export interface UpdateProductImageRequest {
+  altText?: string;
+  sortOrder?: number;
+  isPrimary?: boolean;
+}
+
 export type AdminGetAllStoresParams = {
   page?: number;
   limit?: number;

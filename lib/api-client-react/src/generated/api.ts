@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AddProductImageRequest,
   AddUserRequest,
   AdjustInventoryRequest,
   AdminGetAllStoresParams,
@@ -26,6 +27,7 @@ import type {
   Category,
   CreateCategoryRequest,
   CreateProductRequest,
+  CreateStoreBannerRequest,
   CurrentUserResponse,
   ErrorResponse,
   ForgotPasswordRequest,
@@ -39,12 +41,18 @@ import type {
   PaginatedProducts,
   PaginatedStores,
   Product,
+  ProductImage,
   RegisterStoreRequest,
+  ReorderRequest,
   ResetPasswordRequest,
   Store,
+  StoreBanner,
+  StoreSettings,
   SuccessResponse,
   UpdateLicenseRequest,
+  UpdateProductImageRequest,
   UpdateStoreRequest,
+  UpdateStoreSettingsRequest,
   User,
 } from "./api.schemas";
 
@@ -2425,3 +2433,1052 @@ export function useGetInventoryMovements<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get store customization settings
+ */
+export const getGetStoreSettingsUrl = () => {
+  return `/api/stores/me/settings`;
+};
+
+export const getStoreSettings = async (
+  options?: RequestInit,
+): Promise<StoreSettings> => {
+  return customFetch<StoreSettings>(getGetStoreSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStoreSettingsQueryKey = () => {
+  return [`/api/stores/me/settings`] as const;
+};
+
+export const getGetStoreSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStoreSettings>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStoreSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStoreSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getStoreSettings>>
+  > = ({ signal }) => getStoreSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStoreSettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStoreSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStoreSettings>>
+>;
+export type GetStoreSettingsQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get store customization settings
+ */
+
+export function useGetStoreSettings<
+  TData = Awaited<ReturnType<typeof getStoreSettings>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStoreSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStoreSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update store customization settings
+ */
+export const getUpdateStoreSettingsUrl = () => {
+  return `/api/stores/me/settings`;
+};
+
+export const updateStoreSettings = async (
+  updateStoreSettingsRequest: UpdateStoreSettingsRequest,
+  options?: RequestInit,
+): Promise<StoreSettings> => {
+  return customFetch<StoreSettings>(getUpdateStoreSettingsUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateStoreSettingsRequest),
+  });
+};
+
+export const getUpdateStoreSettingsMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateStoreSettings>>,
+    TError,
+    { data: BodyType<UpdateStoreSettingsRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateStoreSettings>>,
+  TError,
+  { data: BodyType<UpdateStoreSettingsRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateStoreSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateStoreSettings>>,
+    { data: BodyType<UpdateStoreSettingsRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateStoreSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateStoreSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateStoreSettings>>
+>;
+export type UpdateStoreSettingsMutationBody =
+  BodyType<UpdateStoreSettingsRequest>;
+export type UpdateStoreSettingsMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update store customization settings
+ */
+export const useUpdateStoreSettings = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateStoreSettings>>,
+    TError,
+    { data: BodyType<UpdateStoreSettingsRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateStoreSettings>>,
+  TError,
+  { data: BodyType<UpdateStoreSettingsRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateStoreSettingsMutationOptions(options));
+};
+
+/**
+ * @summary Get all promotional banners for the store
+ */
+export const getGetStoreBannersUrl = () => {
+  return `/api/stores/me/banners`;
+};
+
+export const getStoreBanners = async (
+  options?: RequestInit,
+): Promise<StoreBanner[]> => {
+  return customFetch<StoreBanner[]>(getGetStoreBannersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetStoreBannersQueryKey = () => {
+  return [`/api/stores/me/banners`] as const;
+};
+
+export const getGetStoreBannersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStoreBanners>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStoreBanners>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetStoreBannersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStoreBanners>>> = ({
+    signal,
+  }) => getStoreBanners({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStoreBanners>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetStoreBannersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStoreBanners>>
+>;
+export type GetStoreBannersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all promotional banners for the store
+ */
+
+export function useGetStoreBanners<
+  TData = Awaited<ReturnType<typeof getStoreBanners>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStoreBanners>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStoreBannersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add a new promotional banner
+ */
+export const getCreateStoreBannerUrl = () => {
+  return `/api/stores/me/banners`;
+};
+
+export const createStoreBanner = async (
+  createStoreBannerRequest: CreateStoreBannerRequest,
+  options?: RequestInit,
+): Promise<StoreBanner> => {
+  return customFetch<StoreBanner>(getCreateStoreBannerUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createStoreBannerRequest),
+  });
+};
+
+export const getCreateStoreBannerMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStoreBanner>>,
+    TError,
+    { data: BodyType<CreateStoreBannerRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createStoreBanner>>,
+  TError,
+  { data: BodyType<CreateStoreBannerRequest> },
+  TContext
+> => {
+  const mutationKey = ["createStoreBanner"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createStoreBanner>>,
+    { data: BodyType<CreateStoreBannerRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createStoreBanner(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateStoreBannerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createStoreBanner>>
+>;
+export type CreateStoreBannerMutationBody = BodyType<CreateStoreBannerRequest>;
+export type CreateStoreBannerMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Add a new promotional banner
+ */
+export const useCreateStoreBanner = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStoreBanner>>,
+    TError,
+    { data: BodyType<CreateStoreBannerRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createStoreBanner>>,
+  TError,
+  { data: BodyType<CreateStoreBannerRequest> },
+  TContext
+> => {
+  return useMutation(getCreateStoreBannerMutationOptions(options));
+};
+
+/**
+ * @summary Reorder banners
+ */
+export const getReorderStoreBannersUrl = () => {
+  return `/api/stores/me/banners/reorder`;
+};
+
+export const reorderStoreBanners = async (
+  reorderRequest: ReorderRequest,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getReorderStoreBannersUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reorderRequest),
+  });
+};
+
+export const getReorderStoreBannersMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderStoreBanners>>,
+    TError,
+    { data: BodyType<ReorderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reorderStoreBanners>>,
+  TError,
+  { data: BodyType<ReorderRequest> },
+  TContext
+> => {
+  const mutationKey = ["reorderStoreBanners"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reorderStoreBanners>>,
+    { data: BodyType<ReorderRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return reorderStoreBanners(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReorderStoreBannersMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reorderStoreBanners>>
+>;
+export type ReorderStoreBannersMutationBody = BodyType<ReorderRequest>;
+export type ReorderStoreBannersMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Reorder banners
+ */
+export const useReorderStoreBanners = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderStoreBanners>>,
+    TError,
+    { data: BodyType<ReorderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reorderStoreBanners>>,
+  TError,
+  { data: BodyType<ReorderRequest> },
+  TContext
+> => {
+  return useMutation(getReorderStoreBannersMutationOptions(options));
+};
+
+/**
+ * @summary Update a promotional banner
+ */
+export const getUpdateStoreBannerUrl = (bannerId: string) => {
+  return `/api/stores/me/banners/${bannerId}`;
+};
+
+export const updateStoreBanner = async (
+  bannerId: string,
+  createStoreBannerRequest: CreateStoreBannerRequest,
+  options?: RequestInit,
+): Promise<StoreBanner> => {
+  return customFetch<StoreBanner>(getUpdateStoreBannerUrl(bannerId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createStoreBannerRequest),
+  });
+};
+
+export const getUpdateStoreBannerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateStoreBanner>>,
+    TError,
+    { bannerId: string; data: BodyType<CreateStoreBannerRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateStoreBanner>>,
+  TError,
+  { bannerId: string; data: BodyType<CreateStoreBannerRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateStoreBanner"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateStoreBanner>>,
+    { bannerId: string; data: BodyType<CreateStoreBannerRequest> }
+  > = (props) => {
+    const { bannerId, data } = props ?? {};
+
+    return updateStoreBanner(bannerId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateStoreBannerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateStoreBanner>>
+>;
+export type UpdateStoreBannerMutationBody = BodyType<CreateStoreBannerRequest>;
+export type UpdateStoreBannerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a promotional banner
+ */
+export const useUpdateStoreBanner = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateStoreBanner>>,
+    TError,
+    { bannerId: string; data: BodyType<CreateStoreBannerRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateStoreBanner>>,
+  TError,
+  { bannerId: string; data: BodyType<CreateStoreBannerRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateStoreBannerMutationOptions(options));
+};
+
+/**
+ * @summary Delete a promotional banner
+ */
+export const getDeleteStoreBannerUrl = (bannerId: string) => {
+  return `/api/stores/me/banners/${bannerId}`;
+};
+
+export const deleteStoreBanner = async (
+  bannerId: string,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getDeleteStoreBannerUrl(bannerId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteStoreBannerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteStoreBanner>>,
+    TError,
+    { bannerId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteStoreBanner>>,
+  TError,
+  { bannerId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteStoreBanner"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteStoreBanner>>,
+    { bannerId: string }
+  > = (props) => {
+    const { bannerId } = props ?? {};
+
+    return deleteStoreBanner(bannerId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteStoreBannerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteStoreBanner>>
+>;
+
+export type DeleteStoreBannerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a promotional banner
+ */
+export const useDeleteStoreBanner = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteStoreBanner>>,
+    TError,
+    { bannerId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteStoreBanner>>,
+  TError,
+  { bannerId: string },
+  TContext
+> => {
+  return useMutation(getDeleteStoreBannerMutationOptions(options));
+};
+
+/**
+ * @summary Get all images for a product
+ */
+export const getGetProductImagesUrl = (productId: string) => {
+  return `/api/products/${productId}/images`;
+};
+
+export const getProductImages = async (
+  productId: string,
+  options?: RequestInit,
+): Promise<ProductImage[]> => {
+  return customFetch<ProductImage[]>(getGetProductImagesUrl(productId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetProductImagesQueryKey = (productId: string) => {
+  return [`/api/products/${productId}/images`] as const;
+};
+
+export const getGetProductImagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getProductImages>>,
+  TError = ErrorType<unknown>,
+>(
+  productId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProductImages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetProductImagesQueryKey(productId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getProductImages>>
+  > = ({ signal }) =>
+    getProductImages(productId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!productId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getProductImages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetProductImagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getProductImages>>
+>;
+export type GetProductImagesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all images for a product
+ */
+
+export function useGetProductImages<
+  TData = Awaited<ReturnType<typeof getProductImages>>,
+  TError = ErrorType<unknown>,
+>(
+  productId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getProductImages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetProductImagesQueryOptions(productId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Add image to a product (max 10)
+ */
+export const getAddProductImageUrl = (productId: string) => {
+  return `/api/products/${productId}/images`;
+};
+
+export const addProductImage = async (
+  productId: string,
+  addProductImageRequest: AddProductImageRequest,
+  options?: RequestInit,
+): Promise<ProductImage> => {
+  return customFetch<ProductImage>(getAddProductImageUrl(productId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(addProductImageRequest),
+  });
+};
+
+export const getAddProductImageMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addProductImage>>,
+    TError,
+    { productId: string; data: BodyType<AddProductImageRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof addProductImage>>,
+  TError,
+  { productId: string; data: BodyType<AddProductImageRequest> },
+  TContext
+> => {
+  const mutationKey = ["addProductImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof addProductImage>>,
+    { productId: string; data: BodyType<AddProductImageRequest> }
+  > = (props) => {
+    const { productId, data } = props ?? {};
+
+    return addProductImage(productId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AddProductImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof addProductImage>>
+>;
+export type AddProductImageMutationBody = BodyType<AddProductImageRequest>;
+export type AddProductImageMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Add image to a product (max 10)
+ */
+export const useAddProductImage = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof addProductImage>>,
+    TError,
+    { productId: string; data: BodyType<AddProductImageRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof addProductImage>>,
+  TError,
+  { productId: string; data: BodyType<AddProductImageRequest> },
+  TContext
+> => {
+  return useMutation(getAddProductImageMutationOptions(options));
+};
+
+/**
+ * @summary Reorder product images
+ */
+export const getReorderProductImagesUrl = (productId: string) => {
+  return `/api/products/${productId}/images/reorder`;
+};
+
+export const reorderProductImages = async (
+  productId: string,
+  reorderRequest: ReorderRequest,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getReorderProductImagesUrl(productId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reorderRequest),
+  });
+};
+
+export const getReorderProductImagesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderProductImages>>,
+    TError,
+    { productId: string; data: BodyType<ReorderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reorderProductImages>>,
+  TError,
+  { productId: string; data: BodyType<ReorderRequest> },
+  TContext
+> => {
+  const mutationKey = ["reorderProductImages"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reorderProductImages>>,
+    { productId: string; data: BodyType<ReorderRequest> }
+  > = (props) => {
+    const { productId, data } = props ?? {};
+
+    return reorderProductImages(productId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReorderProductImagesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reorderProductImages>>
+>;
+export type ReorderProductImagesMutationBody = BodyType<ReorderRequest>;
+export type ReorderProductImagesMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Reorder product images
+ */
+export const useReorderProductImages = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderProductImages>>,
+    TError,
+    { productId: string; data: BodyType<ReorderRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reorderProductImages>>,
+  TError,
+  { productId: string; data: BodyType<ReorderRequest> },
+  TContext
+> => {
+  return useMutation(getReorderProductImagesMutationOptions(options));
+};
+
+/**
+ * @summary Update a product image
+ */
+export const getUpdateProductImageUrl = (
+  productId: string,
+  imageId: string,
+) => {
+  return `/api/products/${productId}/images/${imageId}`;
+};
+
+export const updateProductImage = async (
+  productId: string,
+  imageId: string,
+  updateProductImageRequest: UpdateProductImageRequest,
+  options?: RequestInit,
+): Promise<ProductImage> => {
+  return customFetch<ProductImage>(
+    getUpdateProductImageUrl(productId, imageId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(updateProductImageRequest),
+    },
+  );
+};
+
+export const getUpdateProductImageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProductImage>>,
+    TError,
+    {
+      productId: string;
+      imageId: string;
+      data: BodyType<UpdateProductImageRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateProductImage>>,
+  TError,
+  {
+    productId: string;
+    imageId: string;
+    data: BodyType<UpdateProductImageRequest>;
+  },
+  TContext
+> => {
+  const mutationKey = ["updateProductImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateProductImage>>,
+    {
+      productId: string;
+      imageId: string;
+      data: BodyType<UpdateProductImageRequest>;
+    }
+  > = (props) => {
+    const { productId, imageId, data } = props ?? {};
+
+    return updateProductImage(productId, imageId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateProductImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateProductImage>>
+>;
+export type UpdateProductImageMutationBody =
+  BodyType<UpdateProductImageRequest>;
+export type UpdateProductImageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a product image
+ */
+export const useUpdateProductImage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateProductImage>>,
+    TError,
+    {
+      productId: string;
+      imageId: string;
+      data: BodyType<UpdateProductImageRequest>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateProductImage>>,
+  TError,
+  {
+    productId: string;
+    imageId: string;
+    data: BodyType<UpdateProductImageRequest>;
+  },
+  TContext
+> => {
+  return useMutation(getUpdateProductImageMutationOptions(options));
+};
+
+/**
+ * @summary Delete a product image
+ */
+export const getDeleteProductImageUrl = (
+  productId: string,
+  imageId: string,
+) => {
+  return `/api/products/${productId}/images/${imageId}`;
+};
+
+export const deleteProductImage = async (
+  productId: string,
+  imageId: string,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(
+    getDeleteProductImageUrl(productId, imageId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteProductImageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProductImage>>,
+    TError,
+    { productId: string; imageId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteProductImage>>,
+  TError,
+  { productId: string; imageId: string },
+  TContext
+> => {
+  const mutationKey = ["deleteProductImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteProductImage>>,
+    { productId: string; imageId: string }
+  > = (props) => {
+    const { productId, imageId } = props ?? {};
+
+    return deleteProductImage(productId, imageId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteProductImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteProductImage>>
+>;
+
+export type DeleteProductImageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a product image
+ */
+export const useDeleteProductImage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteProductImage>>,
+    TError,
+    { productId: string; imageId: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteProductImage>>,
+  TError,
+  { productId: string; imageId: string },
+  TContext
+> => {
+  return useMutation(getDeleteProductImageMutationOptions(options));
+};

@@ -14,6 +14,7 @@ import CategoriesPage from "@/pages/dashboard/categories";
 import InventoryPage from "@/pages/dashboard/inventory";
 import TeamPage from "@/pages/dashboard/team";
 import SettingsPage from "@/pages/dashboard/settings";
+import CustomizePage from "@/pages/dashboard/customize";
 import AdminPage from "@/pages/admin";
 import AdminStoreDetailPage from "@/pages/admin/store-detail";
 import NotFound from "@/pages/not-found";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/dashboard/categories" component={CategoriesPage} />
       <Route path="/dashboard/inventory" component={InventoryPage} />
       <Route path="/dashboard/team" component={TeamPage} />
+      <Route path="/dashboard/customize" component={CustomizePage} />
       <Route path="/dashboard/settings" component={SettingsPage} />
 
       {/* Protected Superadmin */}

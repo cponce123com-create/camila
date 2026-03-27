@@ -814,3 +814,262 @@ export const GetInventoryMovementsResponse = zod.object({
   limit: zod.number(),
   totalPages: zod.number(),
 });
+
+/**
+ * @summary Get store customization settings
+ */
+export const GetStoreSettingsResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  catalogView: zod.enum(["grid", "list", "featured"]),
+  font: zod.enum([
+    "inter",
+    "poppins",
+    "roboto",
+    "playfair",
+    "montserrat",
+    "nunito",
+  ]),
+  template: zod.enum([
+    "moderna",
+    "clasica",
+    "minimalista",
+    "vibrante",
+    "elegante",
+  ]),
+  secondaryColor: zod.string().optional(),
+  showOffers: zod.boolean(),
+  showComments: zod.boolean(),
+  showStock: zod.boolean(),
+  showMenuOfDay: zod.boolean(),
+  restaurantModule: zod.boolean(),
+  showWhatsappButton: zod.boolean(),
+  showYapeQr: zod.boolean(),
+  yapeQrUrl: zod.string().optional(),
+  businessHours: zod.string().optional(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Update store customization settings
+ */
+export const UpdateStoreSettingsBody = zod.object({
+  catalogView: zod.enum(["grid", "list", "featured"]).optional(),
+  font: zod
+    .enum(["inter", "poppins", "roboto", "playfair", "montserrat", "nunito"])
+    .optional(),
+  template: zod
+    .enum(["moderna", "clasica", "minimalista", "vibrante", "elegante"])
+    .optional(),
+  secondaryColor: zod.string().optional(),
+  showOffers: zod.boolean().optional(),
+  showComments: zod.boolean().optional(),
+  showStock: zod.boolean().optional(),
+  showMenuOfDay: zod.boolean().optional(),
+  restaurantModule: zod.boolean().optional(),
+  showWhatsappButton: zod.boolean().optional(),
+  showYapeQr: zod.boolean().optional(),
+  yapeQrUrl: zod.string().optional(),
+  businessHours: zod.string().optional(),
+});
+
+export const UpdateStoreSettingsResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  catalogView: zod.enum(["grid", "list", "featured"]),
+  font: zod.enum([
+    "inter",
+    "poppins",
+    "roboto",
+    "playfair",
+    "montserrat",
+    "nunito",
+  ]),
+  template: zod.enum([
+    "moderna",
+    "clasica",
+    "minimalista",
+    "vibrante",
+    "elegante",
+  ]),
+  secondaryColor: zod.string().optional(),
+  showOffers: zod.boolean(),
+  showComments: zod.boolean(),
+  showStock: zod.boolean(),
+  showMenuOfDay: zod.boolean(),
+  restaurantModule: zod.boolean(),
+  showWhatsappButton: zod.boolean(),
+  showYapeQr: zod.boolean(),
+  yapeQrUrl: zod.string().optional(),
+  businessHours: zod.string().optional(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Get all promotional banners for the store
+ */
+export const GetStoreBannersResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  imageUrl: zod.string(),
+  title: zod.string().optional(),
+  subtitle: zod.string().optional(),
+  linkUrl: zod.string().optional(),
+  sortOrder: zod.number(),
+  isActive: zod.boolean(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+export const GetStoreBannersResponse = zod.array(GetStoreBannersResponseItem);
+
+/**
+ * @summary Add a new promotional banner
+ */
+export const CreateStoreBannerBody = zod.object({
+  imageUrl: zod.string(),
+  title: zod.string().optional(),
+  subtitle: zod.string().optional(),
+  linkUrl: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+  isActive: zod.boolean().optional(),
+});
+
+/**
+ * @summary Reorder banners
+ */
+export const ReorderStoreBannersBody = zod.object({
+  orderedIds: zod.array(zod.string()),
+});
+
+export const ReorderStoreBannersResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Update a promotional banner
+ */
+export const UpdateStoreBannerParams = zod.object({
+  bannerId: zod.coerce.string(),
+});
+
+export const UpdateStoreBannerBody = zod.object({
+  imageUrl: zod.string(),
+  title: zod.string().optional(),
+  subtitle: zod.string().optional(),
+  linkUrl: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+  isActive: zod.boolean().optional(),
+});
+
+export const UpdateStoreBannerResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  imageUrl: zod.string(),
+  title: zod.string().optional(),
+  subtitle: zod.string().optional(),
+  linkUrl: zod.string().optional(),
+  sortOrder: zod.number(),
+  isActive: zod.boolean(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Delete a promotional banner
+ */
+export const DeleteStoreBannerParams = zod.object({
+  bannerId: zod.coerce.string(),
+});
+
+export const DeleteStoreBannerResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Get all images for a product
+ */
+export const GetProductImagesParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const GetProductImagesResponseItem = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string(),
+  imageUrl: zod.string(),
+  altText: zod.string().optional(),
+  sortOrder: zod.number(),
+  isPrimary: zod.boolean(),
+  createdAt: zod.date(),
+});
+export const GetProductImagesResponse = zod.array(GetProductImagesResponseItem);
+
+/**
+ * @summary Add image to a product (max 10)
+ */
+export const AddProductImageParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const AddProductImageBody = zod.object({
+  imageUrl: zod.string(),
+  altText: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+  isPrimary: zod.boolean().optional(),
+});
+
+/**
+ * @summary Reorder product images
+ */
+export const ReorderProductImagesParams = zod.object({
+  productId: zod.coerce.string(),
+});
+
+export const ReorderProductImagesBody = zod.object({
+  orderedIds: zod.array(zod.string()),
+});
+
+export const ReorderProductImagesResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});
+
+/**
+ * @summary Update a product image
+ */
+export const UpdateProductImageParams = zod.object({
+  productId: zod.coerce.string(),
+  imageId: zod.coerce.string(),
+});
+
+export const UpdateProductImageBody = zod.object({
+  altText: zod.string().optional(),
+  sortOrder: zod.number().optional(),
+  isPrimary: zod.boolean().optional(),
+});
+
+export const UpdateProductImageResponse = zod.object({
+  id: zod.string(),
+  storeId: zod.string(),
+  productId: zod.string(),
+  imageUrl: zod.string(),
+  altText: zod.string().optional(),
+  sortOrder: zod.number(),
+  isPrimary: zod.boolean(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Delete a product image
+ */
+export const DeleteProductImageParams = zod.object({
+  productId: zod.coerce.string(),
+  imageId: zod.coerce.string(),
+});
+
+export const DeleteProductImageResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string().optional(),
+});

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./addProductImageRequest";
 export * from "./addUserRequest";
 export * from "./addUserRequestRole";
 export * from "./adjustInventoryRequest";
@@ -18,6 +19,7 @@ export * from "./authResponse";
 export * from "./category";
 export * from "./createCategoryRequest";
 export * from "./createProductRequest";
+export * from "./createStoreBannerRequest";
 export * from "./currentUserResponse";
 export * from "./errorResponse";
 export * from "./errorResponseDetails";
@@ -34,16 +36,28 @@ export * from "./paginatedInventoryMovements";
 export * from "./paginatedProducts";
 export * from "./paginatedStores";
 export * from "./product";
+export * from "./productImage";
 export * from "./registerStoreRequest";
 export * from "./registerStoreRequestBusinessType";
 export * from "./registerStoreRequestDocumentType";
+export * from "./reorderRequest";
 export * from "./resetPasswordRequest";
 export * from "./store";
+export * from "./storeBanner";
 export * from "./storeBusinessType";
 export * from "./storeDocumentType";
+export * from "./storeSettings";
+export * from "./storeSettingsCatalogView";
+export * from "./storeSettingsFont";
+export * from "./storeSettingsTemplate";
 export * from "./successResponse";
 export * from "./updateLicenseRequest";
 export * from "./updateLicenseRequestStatus";
+export * from "./updateProductImageRequest";
 export * from "./updateStoreRequest";
+export * from "./updateStoreSettingsRequest";
+export * from "./updateStoreSettingsRequestCatalogView";
+export * from "./updateStoreSettingsRequestFont";
+export * from "./updateStoreSettingsRequestTemplate";
 export * from "./user";
 export * from "./userRole";

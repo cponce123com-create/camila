@@ -23,6 +23,10 @@ tags:
     description: Product categories
   - name: inventory
     description: Inventory management
+  - name: customization
+    description: Store customization and branding
+  - name: product-images
+    description: Product image management
 
 paths:
   /healthz:
@@ -621,6 +625,274 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedInventoryMovements"
 
+  /stores/me/settings:
+    get:
+      operationId: getStoreSettings
+      tags: [customization]
+      summary: Get store customization settings
+      responses:
+        "200":
+          description: Store settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreSettings"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateStoreSettings
+      tags: [customization]
+      summary: Update store customization settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStoreSettingsRequest"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreSettings"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/me/banners:
+    get:
+      operationId: getStoreBanners
+      tags: [customization]
+      summary: Get all promotional banners for the store
+      responses:
+        "200":
+          description: List of banners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoreBanner"
+    post:
+      operationId: createStoreBanner
+      tags: [customization]
+      summary: Add a new promotional banner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStoreBannerRequest"
+      responses:
+        "201":
+          description: Banner created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreBanner"
+        "400":
+          description: Validation error or limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stores/me/banners/reorder:
+    patch:
+      operationId: reorderStoreBanners
+      tags: [customization]
+      summary: Reorder banners
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderRequest"
+      responses:
+        "200":
+          description: Banners reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /stores/me/banners/{bannerId}:
+    patch:
+      operationId: updateStoreBanner
+      tags: [customization]
+      summary: Update a promotional banner
+      parameters:
+        - name: bannerId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStoreBannerRequest"
+      responses:
+        "200":
+          description: Banner updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreBanner"
+    delete:
+      operationId: deleteStoreBanner
+      tags: [customization]
+      summary: Delete a promotional banner
+      parameters:
+        - name: bannerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Banner deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /products/{productId}/images:
+    get:
+      operationId: getProductImages
+      tags: [product-images]
+      summary: Get all images for a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of product images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductImage"
+    post:
+      operationId: addProductImage
+      tags: [product-images]
+      summary: Add image to a product (max 10)
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddProductImageRequest"
+      responses:
+        "201":
+          description: Image added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductImage"
+        "400":
+          description: Limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /products/{productId}/images/reorder:
+    patch:
+      operationId: reorderProductImages
+      tags: [product-images]
+      summary: Reorder product images
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderRequest"
+      responses:
+        "200":
+          description: Images reordered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /products/{productId}/images/{imageId}:
+    patch:
+      operationId: updateProductImage
+      tags: [product-images]
+      summary: Update a product image
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductImageRequest"
+      responses:
+        "200":
+          description: Image updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductImage"
+    delete:
+      operationId: deleteProductImage
+      tags: [product-images]
+      summary: Delete a product image
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Image deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -1200,3 +1472,205 @@ components:
         - page
         - limit
         - totalPages
+
+    StoreSettings:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        catalogView:
+          type: string
+          enum: [grid, list, featured]
+        font:
+          type: string
+          enum: [inter, poppins, roboto, playfair, montserrat, nunito]
+        template:
+          type: string
+          enum: [moderna, clasica, minimalista, vibrante, elegante]
+        secondaryColor:
+          type: string
+        showOffers:
+          type: boolean
+        showComments:
+          type: boolean
+        showStock:
+          type: boolean
+        showMenuOfDay:
+          type: boolean
+        restaurantModule:
+          type: boolean
+        showWhatsappButton:
+          type: boolean
+        showYapeQr:
+          type: boolean
+        yapeQrUrl:
+          type: string
+        businessHours:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - catalogView
+        - font
+        - template
+        - showOffers
+        - showComments
+        - showStock
+        - showMenuOfDay
+        - restaurantModule
+        - showWhatsappButton
+        - showYapeQr
+        - updatedAt
+
+    UpdateStoreSettingsRequest:
+      type: object
+      properties:
+        catalogView:
+          type: string
+          enum: [grid, list, featured]
+        font:
+          type: string
+          enum: [inter, poppins, roboto, playfair, montserrat, nunito]
+        template:
+          type: string
+          enum: [moderna, clasica, minimalista, vibrante, elegante]
+        secondaryColor:
+          type: string
+        showOffers:
+          type: boolean
+        showComments:
+          type: boolean
+        showStock:
+          type: boolean
+        showMenuOfDay:
+          type: boolean
+        restaurantModule:
+          type: boolean
+        showWhatsappButton:
+          type: boolean
+        showYapeQr:
+          type: boolean
+        yapeQrUrl:
+          type: string
+        businessHours:
+          type: string
+
+    StoreBanner:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        imageUrl:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        linkUrl:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - imageUrl
+        - sortOrder
+        - isActive
+        - createdAt
+        - updatedAt
+
+    CreateStoreBannerRequest:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        linkUrl:
+          type: string
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - imageUrl
+
+    ReorderRequest:
+      type: object
+      properties:
+        orderedIds:
+          type: array
+          items:
+            type: string
+      required:
+        - orderedIds
+
+    ProductImage:
+      type: object
+      properties:
+        id:
+          type: string
+        storeId:
+          type: string
+        productId:
+          type: string
+        imageUrl:
+          type: string
+        altText:
+          type: string
+        sortOrder:
+          type: integer
+        isPrimary:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - storeId
+        - productId
+        - imageUrl
+        - sortOrder
+        - isPrimary
+        - createdAt
+
+    AddProductImageRequest:
+      type: object
+      properties:
+        imageUrl:
+          type: string
+        altText:
+          type: string
+        sortOrder:
+          type: integer
+        isPrimary:
+          type: boolean
+      required:
+        - imageUrl
+
+    UpdateProductImageRequest:
+      type: object
+      properties:
+        altText:
+          type: string
+        sortOrder:
+          type: integer
+        isPrimary:
+          type: boolean

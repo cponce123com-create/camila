@@ -32,27 +32,44 @@
 artifacts/
 ├── api-server/       # Express API server (backend)
 │   ├── src/
-│   │   ├── routes/   # auth, stores, admin, categories, products, inventory
+│   │   ├── routes/
+│   │   │   ├── auth.ts           # Login, logout, /me, register
+│   │   │   ├── stores.ts         # /stores/me CRUD + team management
+│   │   │   ├── customization.ts  # /stores/me/settings + /stores/me/banners
+│   │   │   ├── product_images.ts # /products/:id/images CRUD + reorder
+│   │   │   ├── categories.ts
+│   │   │   ├── products.ts
+│   │   │   ├── inventory.ts
+│   │   │   └── admin.ts
 │   │   ├── middlewares/session.ts   # Autenticación de sesión + control de roles
 │   │   └── lib/auth.ts             # Hash PBKDF2 de contraseñas
 ├── camila/           # React Vite frontend (raíz /)
 │   ├── src/
-│   │   ├── pages/    # landing, auth/login, auth/register, dashboard/*, admin/*
-│   │   ├── components/layout/dashboard-layout.tsx
-│   │   └── hooks/use-auth.tsx     # Contexto de autenticación global
+│   │   ├── pages/
+│   │   │   ├── landing.tsx
+│   │   │   ├── auth/login.tsx, register.tsx
+│   │   │   ├── dashboard/ (index, products, categories, inventory, team, settings, customize)
+│   │   │   └── admin/ (index, store-detail)
+│   │   ├── components/
+│   │   │   ├── layout/dashboard-layout.tsx
+│   │   │   └── products/product-images.tsx   # Product multi-image manager
+│   │   └── hooks/use-auth.tsx
 lib/
 ├── api-spec/         # OpenAPI 3.1 spec + Orval config
 ├── api-client-react/ # Hooks React Query generados
 ├── api-zod/          # Schemas Zod generados
 └── db/               # Drizzle ORM schema + conexión
     └── src/schema/
-        ├── stores.ts         # Tabla de tiendas/negocios
-        ├── licenses.ts       # Licencias (trial/active/expired/suspended)
-        ├── users.ts          # Usuarios con roles
-        ├── sessions.ts       # Sesiones de usuario
-        ├── categories.ts     # Categorías de productos
-        ├── products.ts       # Catálogo de productos
-        └── inventory.ts      # Movimientos de inventario
+        ├── stores.ts           # Tabla de tiendas/negocios
+        ├── licenses.ts         # Licencias (trial/active/expired/suspended)
+        ├── users.ts            # Usuarios con roles
+        ├── sessions.ts         # Sesiones de usuario
+        ├── categories.ts       # Categorías de productos
+        ├── products.ts         # Catálogo de productos
+        ├── inventory.ts        # Movimientos de inventario
+        ├── store_settings.ts   # Personalización: template, font, feature flags
+        ├── store_banners.ts    # Banners promocionales (max 5)
+        └── product_images.ts   # Imágenes múltiples por producto (max 10)
 scripts/
 └── src/seed-superadmin.ts   # Script para crear superadmin
 ```

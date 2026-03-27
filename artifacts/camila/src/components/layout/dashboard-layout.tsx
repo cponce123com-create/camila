@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { 
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
-  Users, Settings, LogOut, Menu, X, ShieldCheck
+  Users, Settings, LogOut, Menu, X, ShieldCheck, Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,6 +33,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { icon: Package, label: 'Productos', path: '/dashboard/products' },
     { icon: Tags, label: 'Categorías', path: '/dashboard/categories' },
     { icon: ArrowLeftRight, label: 'Inventario', path: '/dashboard/inventory' },
+    { icon: Palette, label: 'Personalización', path: '/dashboard/customize' },
     { icon: Users, label: 'Equipo', path: '/dashboard/team' },
     { icon: Settings, label: 'Configuración', path: '/dashboard/settings' },
   ];
