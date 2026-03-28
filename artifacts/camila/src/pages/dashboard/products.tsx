@@ -4,8 +4,10 @@ import {
   useGetProducts, useCreateProduct, useDeleteProduct, useGetCategories,
   useUpdateProduct, useExportProducts, useImportProducts,
   useGetProductVariants, useCreateProductVariant, useUpdateProductVariant, useDeleteProductVariant,
+  useGetProductImages, useAddProductImage, useDeleteProductImage, useUpdateProductImage,
 } from "@workspace/api-client-react";
 import type { Product, ProductVariant } from "@workspace/api-client-react";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +68,7 @@ export default function ProductsPage() {
   const [dialogMode, setDialogMode] = useState<"create" | "edit" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
-  const [activeTab, setActiveTab] = useState<"datos" | "variantes">("datos");
+  const [activeTab, setActiveTab] = useState<"datos" | "variantes" | "galeria">("datos");
 
   // Variant state
   const [variantDialogOpen, setVariantDialogOpen] = useState(false);
@@ -615,6 +617,10 @@ export default function ProductsPage() {
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mt-2">
               <TabsList className="rounded-xl mb-4">
                 <TabsTrigger value="datos" className="rounded-lg">Datos</TabsTrigger>
+                <TabsTrigger value="galeria" className="rounded-lg">
+                  <Star className="h-4 w-4 mr-1.5" />
+                  Galería
+                </TabsTrigger>
                 <TabsTrigger value="variantes" className="rounded-lg">
                   <Layers className="h-4 w-4 mr-1.5" />
                   Variantes
@@ -630,6 +636,10 @@ export default function ProductsPage() {
                   onSubmit={handleSubmit}
                   mode="edit"
                 />
+              </TabsContent>
+
+              <TabsContent value="galeria">
+                <ProductGalleryManager productId={editingId!} />
               </TabsContent>
 
               <TabsContent value="variantes">
@@ -994,14 +1004,14 @@ function ProductForm({ formData, setFormData, categories, isPending, onSubmit, m
           />
         </div>
 
-        <div className="col-span-2 space-y-2">
-          <Label>URL de imagen</Label>
-          <Input
-            type="url"
+        <div className="col-span-2">
+          <ImageUpload
+            label="Imagen principal"
+            hint="JPG o PNG. Máx 10 MB."
+            folder="product"
+            aspectRatio="square"
             value={formData.imageUrl}
-            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-            className="rounded-xl"
-            placeholder="https://..."
+            onChange={(url) => setFormData({ ...formData, imageUrl: url })}
           />
         </div>
 
@@ -1056,6 +1066,193 @@ interface VariantManagerProps {
   onAdd: () => void;
   onEdit: (v: ProductVariant) => void;
   onDelete: (id: string) => void;
+}
+
+// ─── ProductGalleryManager ─────────────────────────────────────────────────
+
+function ProductGalleryManager({ productId }: { productId: string }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: images, isLoading } = useGetProductImages(productId);
+  const addImageMutation = useAddProductImage();
+  const deleteImageMutation = useDeleteProductImage();
+  const updateImageMutation = useUpdateProductImage();
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: [`/api/products/${productId}/images`] });
+
+  async function handleFiles(files: FileList) {
+    const MAX = 5;
+    const current = images?.length ?? 0;
+    const remaining = MAX - current;
+    if (remaining <= 0) {
+      setUploadError("Límite de 5 imágenes alcanzado");
+      return;
+    }
+    const toUpload = Array.from(files).slice(0, remaining);
+    setUploadError(null);
+    setUploading(true);
+
+    try {
+      const signRes = await fetch("/api/uploads/sign", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder: "product" }),
+      });
+      if (!signRes.ok) throw new Error("No se pudo obtener firma de subida");
+      const sign = await signRes.json();
+
+      for (const file of toUpload) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("api_key", sign.apiKey);
+        form.append("timestamp", String(sign.timestamp));
+        form.append("signature", sign.signature);
+        form.append("folder", sign.folder);
+
+        const uploadRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${sign.cloudName}/image/upload`,
+          { method: "POST", body: form }
+        );
+        if (!uploadRes.ok) throw new Error("Error al subir imagen");
+        const data = await uploadRes.json();
+
+        await addImageMutation.mutateAsync({
+          productId,
+          data: { imageUrl: data.secure_url, isPrimary: current === 0 && images?.length === 0 },
+        });
+      }
+      invalidate();
+      toast({ title: "Imágenes subidas correctamente" });
+    } catch (err: any) {
+      setUploadError(err.message || "Error al subir");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleDelete(imageId: string) {
+    await deleteImageMutation.mutateAsync({ productId, imageId });
+    invalidate();
+    toast({ title: "Imagen eliminada" });
+  }
+
+  async function handleSetPrimary(imageId: string) {
+    await updateImageMutation.mutateAsync({ productId, imageId, data: { isPrimary: true } });
+    invalidate();
+    queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    toast({ title: "Imagen principal actualizada" });
+  }
+
+  if (isLoading) {
+    return <div className="flex justify-center py-8"><Loader2 className="animate-spin h-6 w-6 text-muted-foreground" /></div>;
+  }
+
+  const canAdd = (images?.length ?? 0) < 5;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {images?.length ?? 0}/5 imágenes · La imagen con{" "}
+          <Star className="inline h-3 w-3 text-amber-500 fill-amber-500" /> es la principal
+        </p>
+        {canAdd && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="rounded-xl"
+            disabled={uploading}
+            onClick={() => {
+              const el = document.getElementById(`gallery-input-${productId}`) as HTMLInputElement;
+              el?.click();
+            }}
+          >
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Plus className="h-4 w-4 mr-1.5" />}
+            Agregar foto
+          </Button>
+        )}
+      </div>
+
+      <input
+        id={`gallery-input-${productId}`}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => { if (e.target.files?.length) handleFiles(e.target.files); e.target.value = ""; }}
+        disabled={uploading}
+      />
+
+      {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+
+      {!images?.length ? (
+        <div
+          className="border-2 border-dashed border-border/60 rounded-2xl p-12 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+          onClick={() => {
+            const el = document.getElementById(`gallery-input-${productId}`) as HTMLInputElement;
+            el?.click();
+          }}
+        >
+          <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
+            <Upload className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium">Sin imágenes en la galería</p>
+          <p className="text-sm text-muted-foreground mt-1">Haz clic para subir hasta 5 fotos del producto</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+          {images.map((img) => (
+            <div key={img.id} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-border/50">
+              <img src={img.imageUrl} alt={img.altText || "Imagen"} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleSetPrimary(img.id)}
+                  className={`h-7 w-7 rounded-full flex items-center justify-center transition-colors ${img.isPrimary ? "bg-amber-500 text-white" : "bg-white/20 hover:bg-amber-500 text-white"}`}
+                  title="Imagen principal"
+                >
+                  <Star className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(img.id)}
+                  className="h-7 w-7 rounded-full bg-destructive/80 hover:bg-destructive flex items-center justify-center text-white"
+                  title="Eliminar"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              {img.isPrimary && (
+                <div className="absolute top-1 left-1 bg-amber-500 rounded-full p-0.5">
+                  <Star className="h-3 w-3 text-white fill-white" />
+                </div>
+              )}
+            </div>
+          ))}
+          {canAdd && (
+            <button
+              type="button"
+              disabled={uploading}
+              className="aspect-square rounded-xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-colors"
+              onClick={() => {
+                const el = document.getElementById(`gallery-input-${productId}`) as HTMLInputElement;
+                el?.click();
+              }}
+            >
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
+              <span className="text-xs font-medium">Agregar</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function VariantManager({ variants, isLoading, onAdd, onEdit, onDelete }: VariantManagerProps) {

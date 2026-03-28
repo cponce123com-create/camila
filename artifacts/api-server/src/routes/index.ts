@@ -22,6 +22,7 @@ import activeAnnouncementsRouter from "./announcements";
 import analyticsRouter from "./analytics";
 import restaurantAnalyticsRouter from "./restaurant/analytics";
 import publicRouter from "./public";
+import uploadsRouter from "./uploads";
 
 const router: IRouter = Router();
 
@@ -49,5 +50,6 @@ router.use("/active-announcements", activeAnnouncementsRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/restaurant/analytics", restaurantAnalyticsRouter);
 router.use("/public", publicRouter);
+router.use("/uploads", uploadsRouter);
 
 export default router;

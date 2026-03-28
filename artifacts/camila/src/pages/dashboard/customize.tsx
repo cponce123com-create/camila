@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Check, LayoutGrid, List, Star, Image as ImageIcon, Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function CustomizePage() {
   const { toast } = useToast();
@@ -58,6 +59,10 @@ export default function CustomizePage() {
 
   const handleCreateBanner = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!bannerForm.imageUrl) {
+      toast({ title: "Debes subir una imagen para el banner", variant: "destructive" });
+      return;
+    }
     try {
       await createBannerMutation.mutateAsync({ data: bannerForm });
       queryClient.invalidateQueries({ queryKey: ["/api/stores/me/banners"] });
@@ -256,10 +261,14 @@ export default function CustomizePage() {
                   <DialogTitle className="font-display text-2xl">Nuevo Banner</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateBanner} className="space-y-4 mt-4">
-                  <div className="space-y-2">
-                    <Label>URL de Imagen *</Label>
-                    <Input required value={bannerForm.imageUrl} onChange={e => setBannerForm({...bannerForm, imageUrl: e.target.value})} className="rounded-xl" placeholder="https://..." />
-                  </div>
+                  <ImageUpload
+                    label="Imagen del banner *"
+                    hint="Recomendado: 1200×400px. JPG o PNG."
+                    folder="banner-promo"
+                    aspectRatio="banner"
+                    value={bannerForm.imageUrl}
+                    onChange={(url) => setBannerForm({ ...bannerForm, imageUrl: url })}
+                  />
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Título (Opcional)</Label>

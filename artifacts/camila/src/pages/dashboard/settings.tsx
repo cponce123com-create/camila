@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 export default function SettingsPage() {
   const { store } = useAuth();
@@ -22,7 +23,9 @@ export default function SettingsPage() {
     address: "",
     whatsapp: "",
     socialInstagram: "",
-    socialFacebook: ""
+    socialFacebook: "",
+    logoUrl: "",
+    bannerUrl: "",
   });
 
   useEffect(() => {
@@ -33,7 +36,9 @@ export default function SettingsPage() {
         address: store.address || "",
         whatsapp: store.whatsapp || "",
         socialInstagram: store.socialInstagram || "",
-        socialFacebook: store.socialFacebook || ""
+        socialFacebook: store.socialFacebook || "",
+        logoUrl: (store as any).logoUrl || "",
+        bannerUrl: (store as any).bannerUrl || "",
       });
     }
   }, [store]);
@@ -57,7 +62,36 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">Actualiza los datos de tu negocio.</p>
       </div>
 
-      <div className="max-w-3xl">
+      <div className="max-w-3xl space-y-6">
+        <Card className="border-border/50 shadow-sm rounded-2xl">
+          <CardHeader>
+            <CardTitle className="font-display">Imágenes del Negocio</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ImageUpload
+                label="Logo del negocio"
+                hint="Recomendado: 400×400px. PNG o JPG."
+                folder="logo"
+                aspectRatio="square"
+                value={formData.logoUrl}
+                onChange={(url) => setFormData({ ...formData, logoUrl: url })}
+              />
+              <ImageUpload
+                label="Banner principal"
+                hint="Recomendado: 1200×400px. JPG."
+                folder="banner"
+                aspectRatio="banner"
+                value={formData.bannerUrl}
+                onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Las imágenes se actualizan al guardar los cambios.
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="border-border/50 shadow-sm rounded-2xl">
           <CardHeader>
             <CardTitle className="font-display">Perfil del Negocio</CardTitle>

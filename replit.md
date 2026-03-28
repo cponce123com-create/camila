@@ -1,5 +1,14 @@
 # Camila — SaaS para Emprendedores Locales
 
+## Phase 11 — Cloudinary Image Uploads (Complete)
+- **Upload signing endpoint**: `POST /api/uploads/sign` — generates a Cloudinary signed upload (timestamp + SHA-256 signature). Accepts folder: `logo | banner | product | banner-promo`. Requires auth.
+- **`ImageUpload` component** (`artifacts/camila/src/components/ui/image-upload.tsx`): Reusable single-image uploader with drag & drop, preview, and remove button. Supports `square`, `banner`, and `free` aspect ratios.
+- **`ProductGalleryUpload` component** (`artifacts/camila/src/components/ui/product-gallery-upload.tsx`): Multi-image gallery (up to 5). Standalone state component (unused currently — gallery is managed directly via API in `ProductGalleryManager`).
+- **Settings page** (`/dashboard/settings`): Added "Imágenes del Negocio" card at top with logo (square) and banner (3:1) upload fields. Both saved via `useUpdateMyStore`.
+- **Customize page** (`/dashboard/customize`): Banner creation dialog uses `ImageUpload` instead of a URL text field. Client-side validation ensures an image is uploaded before submit.
+- **Products page** (`/dashboard/products`): `imageUrl` text input replaced with `ImageUpload`. Edit dialog has a new "Galería" tab with `ProductGalleryManager` — fetches images via `useGetProductImages`, adds via `useAddProductImage`, deletes via `useDeleteProductImage`, sets primary via `useUpdateProductImage`. Up to 5 images per product.
+- Cloudinary credentials: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` in Replit Secrets.
+
 ## Phase 10 — Public Store Pages (Complete)
 - `stores` table has a `slug` (nullable, unique) column — auto-generated on registration
 - Public API at `/api/public/stores/:slug` (GET store, categories, products, reviews; POST review)
