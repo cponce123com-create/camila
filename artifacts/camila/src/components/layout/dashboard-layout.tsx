@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInDays, parseISO, format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -103,33 +104,65 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   let banner = null;
   if (!isSuperAdmin && license) {
-    if (license.status === "trial") {
-      const daysLeft = license.expiresAt
-        ? differenceInDays(parseISO(license.expiresAt), new Date())
-        : 0;
+    const now = new Date();
+    const expiresAt = license.expiresAt ? parseISO(license.expiresAt) : null;
+    const daysLeft = expiresAt ? differenceInDays(expiresAt, now) : null;
+    const supportWa = import.meta.env.VITE_SUPPORT_WHATSAPP as string | undefined;
+
+    if (license.status === "expired") {
       banner = (
-        <div className="bg-amber-50 border-b border-amber-200 text-amber-800 px-4 py-2 text-center text-sm font-medium">
-          ⏳ Período de prueba —{" "}
-          {daysLeft > 0 ? `${daysLeft} días restantes` : "Último día"}
-        </div>
-      );
-    } else if (license.status === "expired") {
-      banner = (
-        <div className="bg-red-50 border-b border-red-200 text-red-700 px-4 py-2 text-center text-sm font-medium">
-          Tu licencia ha vencido.{" "}
-          <Link href="/dashboard/billing" className="underline font-semibold hover:text-red-800">
-            Renueva aquí →
+        <div className="flex items-center justify-center gap-3 bg-red-600 text-white px-4 py-2.5 text-sm font-medium flex-wrap">
+          <span>🚫 Tu licencia ha vencido. Tu tienda está pausada.</span>
+          <Link href="/dashboard/billing">
+            <Button size="sm" variant="secondary" className="h-7 px-3 text-xs font-semibold shrink-0">
+              Renovar ahora
+            </Button>
           </Link>
         </div>
       );
     } else if (license.status === "suspended") {
+      const waLink = supportWa
+        ? `https://wa.me/${supportWa.replace(/\D/g, "")}?text=${encodeURIComponent("Hola, necesito ayuda con mi cuenta en Camila.")}`
+        : null;
       banner = (
-        <div className="bg-orange-50 border-b border-orange-200 text-orange-700 px-4 py-2 text-center text-sm font-medium">
-          Cuenta suspendida —{" "}
-          <Link href="/dashboard/billing" className="underline font-semibold hover:text-orange-800">
-            revisa tu facturación
-          </Link>{" "}
-          o contacta soporte
+        <div className="flex items-center justify-center gap-3 bg-red-900 text-red-100 px-4 py-2.5 text-sm font-medium flex-wrap">
+          <span>⛔ Tu cuenta ha sido suspendida. Contacta a soporte.</span>
+          {waLink && (
+            <a href={waLink} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="secondary" className="h-7 px-3 text-xs font-semibold shrink-0">
+                Contactar soporte
+              </Button>
+            </a>
+          )}
+        </div>
+      );
+    } else if (
+      (license.status === "active" || license.status === "trial") &&
+      daysLeft !== null &&
+      daysLeft <= 3 &&
+      daysLeft >= 0
+    ) {
+      const dateStr = expiresAt
+        ? format(expiresAt, "d 'de' MMMM", { locale: es })
+        : "";
+      banner = (
+        <div className="flex items-center justify-center gap-3 bg-amber-400 text-amber-950 px-4 py-2.5 text-sm font-medium flex-wrap">
+          <span>
+            ⚠️ Tu licencia vence el <strong>{dateStr}</strong>.
+            {daysLeft === 0 ? " ¡Hoy es el último día!" : ` (${daysLeft} día${daysLeft !== 1 ? "s" : ""})`}
+          </span>
+          <Link href="/dashboard/billing">
+            <Button size="sm" className="h-7 px-3 text-xs font-semibold shrink-0 bg-amber-950 hover:bg-amber-900 text-white">
+              Renovar
+            </Button>
+          </Link>
+        </div>
+      );
+    } else if (license.status === "trial") {
+      banner = (
+        <div className="bg-blue-50 border-b border-blue-200 text-blue-800 px-4 py-2 text-center text-sm font-medium">
+          🧪 Período de prueba —{" "}
+          {daysLeft !== null && daysLeft > 0 ? `${daysLeft} días restantes` : "Último día"}
         </div>
       );
     }
