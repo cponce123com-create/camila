@@ -245,8 +245,8 @@ export default function CustomizePage() {
             <div>
               <h3 className="text-xl font-bold font-display">Banners Promocionales</h3>
               <p className="text-muted-foreground text-sm mt-1">
-                Destaca ofertas o anuncios importantes en el inicio de tu tienda. 
-                <span className="font-medium text-foreground ml-1">({banners?.length || 0}/5)</span>
+                El banner 1 es fijo (muestra tu logo y nombre). Puedes agregar hasta 5 banners personalizados del 2 al 6.
+                <span className="font-medium text-foreground ml-1">({banners?.length || 0}/5 personalizados)</span>
               </p>
             </div>
             <Button

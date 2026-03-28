@@ -158,7 +158,8 @@ function ReviewModal({ open, onClose, storeSlug, products, preselectedProductId 
 function BannerCarousel({ banners, store, primaryColor }: { banners: StoreBanner[]; store: StoreData; primaryColor: string }) {
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const total = banners.length;
+  // Slide 0 is always the default store hero; slides 1+ are user-created banners
+  const total = 1 + banners.length;
 
   const next = useCallback(() => setCurrent((c) => (c + 1) % total), [total]);
   const prev = () => setCurrent((c) => (c - 1 + total) % total);
@@ -174,10 +175,14 @@ function BannerCarousel({ banners, store, primaryColor }: { banners: StoreBanner
     timerRef.current = setInterval(next, 5000);
   };
 
-  if (total === 0) {
-    return (
+  const activeBanner = current > 0 ? banners[current - 1] : null;
+
+  return (
+    <div className="relative w-full h-64 md:h-[420px] overflow-hidden bg-gray-900 group">
+
+      {/* Slide 0 — Default store hero (always first) */}
       <div
-        className="w-full h-64 md:h-96 flex flex-col items-center justify-center text-white relative overflow-hidden"
+        className={cn("absolute inset-0 transition-opacity duration-700 flex flex-col items-center justify-center text-white", current === 0 ? "opacity-100" : "opacity-0")}
         style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}cc 100%)` }}
       >
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
@@ -193,31 +198,29 @@ function BannerCarousel({ banners, store, primaryColor }: { banners: StoreBanner
           {store.description && <p className="mt-2 text-white/80 text-sm md:text-base max-w-lg mx-auto">{store.description}</p>}
         </div>
       </div>
-    );
-  }
 
-  const banner = banners[current];
-  return (
-    <div className="relative w-full h-64 md:h-[420px] overflow-hidden bg-gray-900 group">
+      {/* Slides 1+ — User-created banners */}
       {banners.map((b, i) => (
-        <div key={b.id} className={cn("absolute inset-0 transition-opacity duration-700", i === current ? "opacity-100" : "opacity-0")}>
+        <div key={b.id} className={cn("absolute inset-0 transition-opacity duration-700", (i + 1) === current ? "opacity-100" : "opacity-0")}>
           <img src={b.imageUrl} alt={b.title || "Banner"} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
         </div>
       ))}
 
-      {(banner.title || banner.subtitle) && (
-        <div className="absolute bottom-0 left-0 p-6 md:p-12 text-white max-w-xl">
-          {banner.title && <h2 className="text-2xl md:text-4xl font-extrabold drop-shadow-lg leading-tight">{banner.title}</h2>}
-          {banner.subtitle && <p className="mt-2 text-white/85 text-sm md:text-lg drop-shadow">{banner.subtitle}</p>}
-          {banner.linkUrl && (
-            <a href={banner.linkUrl} className="mt-4 inline-flex items-center px-5 py-2.5 rounded-xl bg-white text-gray-900 font-semibold text-sm hover:bg-gray-100 transition-colors">
+      {/* Text overlay for active user banner */}
+      {activeBanner && (activeBanner.title || activeBanner.subtitle) && (
+        <div className="absolute bottom-0 left-0 p-6 md:p-12 text-white max-w-xl" style={{ zIndex: 10 }}>
+          {activeBanner.title && <h2 className="text-2xl md:text-4xl font-extrabold drop-shadow-lg leading-tight">{activeBanner.title}</h2>}
+          {activeBanner.subtitle && <p className="mt-2 text-white/85 text-sm md:text-lg drop-shadow">{activeBanner.subtitle}</p>}
+          {activeBanner.linkUrl && (
+            <a href={activeBanner.linkUrl} className="mt-4 inline-flex items-center px-5 py-2.5 rounded-xl bg-white text-gray-900 font-semibold text-sm hover:bg-gray-100 transition-colors">
               Ver más <ChevronRight className="w-4 h-4 ml-1" />
             </a>
           )}
         </div>
       )}
 
+      {/* Nav arrows + dots — always shown since total >= 1 */}
       {total > 1 && (
         <>
           <button onClick={() => { prev(); reset(); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-all opacity-0 group-hover:opacity-100">
@@ -227,7 +230,7 @@ function BannerCarousel({ banners, store, primaryColor }: { banners: StoreBanner
             <ChevronRight className="w-5 h-5" />
           </button>
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {banners.map((_, i) => (
+            {Array.from({ length: total }).map((_, i) => (
               <button key={i} onClick={() => { setCurrent(i); reset(); }}
                 className={cn("rounded-full transition-all", i === current ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/50 hover:bg-white/80")} />
             ))}
