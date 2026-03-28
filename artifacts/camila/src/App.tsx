@@ -37,6 +37,7 @@ import TableOrderPage from "@/pages/dashboard/restaurant/table-order";
 import SalesPage from "@/pages/dashboard/sales";
 import NewSalePage from "@/pages/dashboard/sales/new";
 import SaleDetailPage from "@/pages/dashboard/sales/detail";
+import BillingPage from "@/pages/dashboard/billing";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ function Router() {
       <Route path="/dashboard/sales" component={SalesPage} />
       <Route path="/dashboard/sales/new" component={NewSalePage} />
       <Route path="/dashboard/sales/:id" component={SaleDetailPage} />
+      <Route path="/dashboard/billing" component={BillingPage} />
 
       {/* Protected Superadmin */}
       <Route path="/dashboard/analytics" component={StoreAnalyticsPage} />

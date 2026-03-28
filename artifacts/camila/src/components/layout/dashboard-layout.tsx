@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
   Users, Settings, LogOut, Menu, X, ShieldCheck, Palette,
   MessageSquare, UtensilsCrossed, ShoppingBag, BarChart2, ChevronRight,
-  ExternalLink, Share2,
+  ExternalLink, Share2, CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,10 +80,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!user) return null;
 
   const isSuperAdmin = user.role === "superadmin";
+  const isStoreAdmin = user.role === "store_admin";
   const isRestaurant = (store as any)?.businessType === "restaurant";
-  const MENU_GROUPS = isRestaurant
+  const baseGroups = isRestaurant
     ? [...BASE_MENU_GROUPS.slice(0, 3), RESTAURANT_GROUP, BASE_MENU_GROUPS[3]]
     : BASE_MENU_GROUPS;
+
+  // Inject "Facturación" into the Ajustes group for store_admin only
+  const MENU_GROUPS = isStoreAdmin
+    ? baseGroups.map((g) =>
+        g.label === "Ajustes"
+          ? { ...g, items: [...g.items, { icon: CreditCard, label: "Facturación", path: "/dashboard/billing" }] }
+          : g
+      )
+    : baseGroups;
 
   const isActive = (path: string) =>
     path === "/dashboard" ? location === path : location.startsWith(path);
@@ -103,13 +113,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     } else if (license.status === "expired") {
       banner = (
         <div className="bg-red-50 border-b border-red-200 text-red-700 px-4 py-2 text-center text-sm font-medium">
-          Licencia vencida — contacta al administrador para renovar
+          Tu licencia ha vencido.{" "}
+          <Link href="/dashboard/billing" className="underline font-semibold hover:text-red-800">
+            Renueva aquí →
+          </Link>
         </div>
       );
     } else if (license.status === "suspended") {
       banner = (
         <div className="bg-orange-50 border-b border-orange-200 text-orange-700 px-4 py-2 text-center text-sm font-medium">
-          Cuenta suspendida — contacta soporte
+          Cuenta suspendida —{" "}
+          <Link href="/dashboard/billing" className="underline font-semibold hover:text-orange-800">
+            revisa tu facturación
+          </Link>{" "}
+          o contacta soporte
         </div>
       );
     }

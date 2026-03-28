@@ -1,0 +1,66 @@
+Integra Culqi como procesador de pagos para la renovación de licencias.
+
+BACKEND (`artifacts/api-server/`):
+
+Instalar: `culqi-node` o usar fetch directo a la API de Culqi (https://api.culqi.com/v2). Las credenciales vienen de las variables de entorno `CULQI_PUBLIC_KEY` y `CULQI_SECRET_KEY`.
+
+Crear `artifacts/api-server/src/routes/payments.ts` con estas rutas:
+
+1. POST /api/payments/create-charge
+   - Requiere auth (requireAuth + requireStoreAdmin)
+   - Recibe: { token: string, plan: "monthly" | "quarterly" | "semi_annual" | "annual" }
+   - Precios en céntimos (soles):
+     - monthly: 4900 (S/49)
+     - quarterly: 12900 (S/129)
+     - semi_annual: 22900 (S/229)
+     - annual: 39900 (S/399)
+   - Hace el cobro a Culqi con el token del cliente
+   - Si el cobro es exitoso:
+     - Actualiza la licencia del store a status "active" y plan correspondiente
+     - Calcula y guarda la nueva fecha de expiración (30/90/180/365 días desde hoy)
+     - Registra en license_history con el actorId del usuario
+     - Registra en audit_logs la acción "payment_success"
+   - Si falla, retorna 402 con el mensaje de error de Culqi
+   - Responde con { success: true, license: {...} }
+
+2. GET /api/payments/plans
+   - Público (sin auth)
+   - Retorna el listado de planes con nombre, precio, duración y descripción
+
+Agregar la ruta en `artifacts/api-server/src/routes/index.ts`.
+
+Agregar `CULQI_PUBLIC_KEY` y `CULQI_SECRET_KEY` al .env.example.
+
+---
+
+FRONTEND (`artifacts/camila/src/`):
+
+Instalar: `@culqi/culqi-js` o cargar el script de Culqi via CDN en el HTML (`https://checkout.culqi.com/js/v4`).
+
+Crear página `/dashboard/billing` con:
+
+1. Sección "Plan actual" — mostrar el plan activo, fecha de vencimiento, y estado de la licencia con un badge de color (trial=azul, active=verde, expired=rojo, suspended=gris).
+
+2. Sección "Planes disponibles" — 4 cards con los planes:
+   - Mensual: S/49/mes
+   - Trimestral: S/129 (ahorra 15%)
+   - Semestral: S/229 (ahorra 22%)
+   - Anual: S/399 (ahorra 32%)
+   Cada card tiene botón "Elegir plan". Resaltar visualmente el plan anual como "Más popular".
+
+3. Al hacer clic en "Elegir plan":
+   - Abrir el checkout de Culqi con la CULQI_PUBLIC_KEY (variable de entorno VITE_CULQI_PUBLIC_KEY)
+   - Configurar el checkout con: amount, currency "PEN", description "Camila - Plan {nombre}", email del usuario
+   - Al recibir el token de Culqi, llamar a POST /api/payments/create-charge
+   - Si es exitoso: mostrar toast de éxito, actualizar el estado de la licencia en el contexto global, redirigir al dashboard
+   - Si falla: mostrar el mensaje de error de Culqi en un toast
+
+4. Agregar enlace "Facturación" en el sidebar del dashboard (solo visible para store_admin), entre "Configuración" y el logout.
+
+Crear los hooks React Query necesarios: `useGetPlans` y `useCreateCharge`.
+
+Agregar `VITE_CULQI_PUBLIC_KEY` al .env.example.
+
+---
+
+Si la licencia está "expired" o "suspended", mostrar un banner en la parte superior del dashboard con el mensaje "Tu licencia ha vencido. Renueva aquí." con link a /dashboard/billing. No bloquear completamente el acceso, solo mostrar el banner.

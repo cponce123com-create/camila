@@ -23,6 +23,7 @@ import analyticsRouter from "./analytics";
 import restaurantAnalyticsRouter from "./restaurant/analytics";
 import publicRouter from "./public";
 import uploadsRouter from "./uploads";
+import paymentsRouter from "./payments";
 import { requireActiveLicense } from "../middlewares/session";
 
 const router: IRouter = Router();
@@ -34,6 +35,7 @@ router.use("/admin", adminRouter);
 router.use("/public", publicRouter);
 router.use("/active-announcements", activeAnnouncementsRouter);
 router.use("/support-tickets", supportTicketsRouter);
+router.use("/payments", paymentsRouter);
 
 // ─── Business routes — require an active license ──────────────────────────────
 router.use("/stores/me", requireActiveLicense, customizationRouter);
