@@ -1,0 +1,167 @@
+Quiero mejorar la experiencia visual de cada tienda dentro de Camila.
+
+Actualmente no quiero que cada tienda solo muestre productos en simples recuadros. Necesito que cada tienda se vea como una **tienda online moderna**, inspirada en experiencias tipo **Amazon, AliExpress, Falabella o Ripley**, adaptada al tamaño de negocios locales.
+
+### Objetivo
+
+Cada negocio debe poder tener una tienda visualmente atractiva, editable y moderna, no solo un listado básico de productos.
+
+### Quiero que agregues esto a cada tienda:
+
+## 1. Navbar moderna de tienda
+
+Cada tienda debe tener su propia **navbar o encabezado moderno**, editable por el dueño del negocio.
+
+La navbar debe incluir:
+
+* logo de la tienda
+* nombre comercial
+* barra de búsqueda de productos
+* menú de categorías
+* acceso rápido a ofertas
+* acceso rápido a productos más vendidos
+* botón de contacto por WhatsApp
+* ícono o acceso al perfil de la tienda
+* opción de mostrar QR de Yape
+* en móvil debe convertirse en menú responsive bien diseñado
+
+La búsqueda debe permitir:
+
+* buscar por nombre de producto
+* buscar por categoría
+* filtrar resultados rápidamente
+* mostrar sugerencias mientras escriben si es posible
+
+## 2. Portada principal tipo carrusel
+
+Cada tienda debe tener una **sección principal tipo hero/carrusel**, como portada comercial.
+
+Esta portada debe ser editable por la tienda y permitir:
+
+* subir varios banners
+* definir orden de aparición
+* colocar título
+* colocar subtítulo
+* colocar botón de acción
+* enlazar cada banner a una categoría, producto o promoción
+* activar o desactivar banners
+* vista previa antes de guardar
+
+Quiero que se vea profesional y moderna, como portada de ecommerce real.
+
+## 3. Secciones comerciales dentro de la tienda
+
+Debajo de la portada, quiero que la tienda tenga secciones visuales bien organizadas, por ejemplo:
+
+* productos destacados
+* productos más vendidos
+* ofertas del día
+* novedades
+* categorías principales
+* productos recomendados
+* productos con descuento
+
+Estas secciones deben ser **editables por la tienda**.
+
+Cada tienda debe poder decidir:
+
+* qué secciones mostrar
+* en qué orden mostrarlas
+* qué productos poner manualmente
+* o si quiere que algunos bloques se llenen automáticamente según ventas o promociones
+
+## 4. Sección de “Más vendidos”
+
+Debe existir una sección de **Más vendidos**, tipo ecommerce moderno.
+
+Opciones:
+
+* automática: basada en productos con más ventas
+* manual: la tienda puede marcar qué productos quiere mostrar ahí
+* permitir límite de cantidad visible
+* mostrar foto, nombre, precio, precio oferta y etiqueta visual
+
+## 5. Sección de Ofertas
+
+Debe existir una sección de **Ofertas**, también editable.
+
+Opciones:
+
+* mostrar productos con precio oferta activo
+* permitir destacar manualmente ciertos productos en oferta
+* mostrar porcentaje de descuento si aplica
+* permitir poner un banner adicional de campañas de oferta
+
+## 6. Vista moderna del catálogo
+
+El catálogo no debe sentirse antiguo ni plano.
+
+Quiero:
+
+* tarjetas modernas de producto
+* foto principal grande
+* hover elegante en desktop
+* botones claros
+* precio normal tachado cuando haya oferta
+* precio promocional resaltado
+* etiquetas como “Oferta”, “Nuevo”, “Más vendido”, “Agotado”
+* diseño responsivo y limpio
+
+## 7. Experiencia tipo ecommerce real
+
+La tienda debe sentirse como una mini web comercial profesional.
+
+Quiero que el flujo visual sea parecido a:
+
+* portada atractiva
+* búsqueda rápida
+* navegación por categorías
+* bloques comerciales
+* productos destacados
+* ofertas visibles
+* productos más vendidos
+* contacto rápido por WhatsApp
+
+## 8. Panel de edición para la tienda
+
+Cada tienda debe tener en su panel una sección donde pueda editar fácilmente:
+
+* navbar
+* banners del carrusel
+* bloques de portada
+* más vendidos
+* ofertas
+* productos destacados
+* orden de secciones
+* textos promocionales
+
+Debe ser fácil de usar por personas no técnicas.
+
+## 9. Diseño
+
+Quiero un diseño:
+
+* moderno
+* elegante
+* comercial
+* limpio
+* rápido
+* responsive
+* con sensación de tienda online real
+
+No quiero una simple grilla genérica.
+Quiero que la tienda parezca una mezcla entre ecommerce moderno y catálogo comercial profesional.
+
+## 10. Entregable esperado
+
+Quiero que implementes una versión visual premium de la tienda pública/visible de cada negocio, incluyendo:
+
+* navbar moderna
+* carrusel editable
+* bloques comerciales
+* más vendidos
+* ofertas
+* mejor catálogo visual
+* editor sencillo desde panel
+
+Hazlo con buena arquitectura, no hardcodeado, y respetando que cada tienda tenga su propia configuración independiente.

@@ -6,8 +6,10 @@ import {
   categoriesTable,
   productReviewsTable,
   productVariantsTable,
+  storeBannersTable,
+  storeSettingsTable,
 } from "@workspace/db";
-import { eq, and, avg, count, desc, asc, ilike, sql } from "drizzle-orm";
+import { eq, and, avg, count, desc, asc, ilike, sql, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
 const router: IRouter = Router();
@@ -109,14 +111,22 @@ router.get("/stores/:slug/products", async (req, res) => {
     search ? ilike(productsTable.name, `%${search}%`) : undefined,
   ].filter(Boolean) as Parameters<typeof and>[];
 
+  const isFeatured = typeof req.query.isFeatured === "string" ? req.query.isFeatured === "true" : undefined;
+  const hasOffer = typeof req.query.hasOffer === "string" ? req.query.hasOffer === "true" : undefined;
+
+  if (isFeatured) filters.push(eq(productsTable.isFeatured, true) as any);
+  if (hasOffer) filters.push(isNotNull(productsTable.salePrice) as any);
+
   const products = await db
     .select({
       id: productsTable.id,
       name: productsTable.name,
       description: productsTable.description,
       price: productsTable.price,
+      salePrice: productsTable.salePrice,
       imageUrl: productsTable.imageUrl,
       stock: productsTable.stock,
+      isFeatured: productsTable.isFeatured,
       categoryId: productsTable.categoryId,
       categoryName: categoriesTable.name,
       avgRating: avg(productReviewsTable.rating),
@@ -233,6 +243,63 @@ router.get("/stores/:slug/products/:productId", async (req, res) => {
     reviews,
     avgRating: stats.avgRating ? parseFloat(Number(stats.avgRating).toFixed(1)) : null,
     reviewCount: Number(stats.reviewCount),
+  });
+});
+
+// ─── GET /api/public/stores/:slug/banners ────────────────────────────────────
+router.get("/stores/:slug/banners", async (req, res) => {
+  const store = await getStoreBySlug(req.params.slug);
+  if (!store) { res.status(404).json({ error: "Tienda no encontrada" }); return; }
+
+  const banners = await db
+    .select({
+      id: storeBannersTable.id,
+      imageUrl: storeBannersTable.imageUrl,
+      title: storeBannersTable.title,
+      subtitle: storeBannersTable.subtitle,
+      linkUrl: storeBannersTable.linkUrl,
+      sortOrder: storeBannersTable.sortOrder,
+    })
+    .from(storeBannersTable)
+    .where(and(eq(storeBannersTable.storeId, store.id), eq(storeBannersTable.isActive, true)))
+    .orderBy(asc(storeBannersTable.sortOrder));
+
+  res.json(banners);
+});
+
+// ─── GET /api/public/stores/:slug/config ─────────────────────────────────────
+router.get("/stores/:slug/config", async (req, res) => {
+  const store = await getStoreBySlug(req.params.slug);
+  if (!store) { res.status(404).json({ error: "Tienda no encontrada" }); return; }
+
+  const [settings] = await db
+    .select({
+      showWhatsappButton: storeSettingsTable.showWhatsappButton,
+      showYapeQr: storeSettingsTable.showYapeQr,
+      yapeQrUrl: storeSettingsTable.yapeQrUrl,
+      showComments: storeSettingsTable.showComments,
+      showOffers: storeSettingsTable.showOffers,
+      catalogView: storeSettingsTable.catalogView,
+      template: storeSettingsTable.template,
+      font: storeSettingsTable.font,
+      secondaryColor: storeSettingsTable.secondaryColor,
+      businessHours: storeSettingsTable.businessHours,
+    })
+    .from(storeSettingsTable)
+    .where(eq(storeSettingsTable.storeId, store.id))
+    .limit(1);
+
+  res.json(settings ?? {
+    showWhatsappButton: true,
+    showYapeQr: false,
+    yapeQrUrl: null,
+    showComments: true,
+    showOffers: true,
+    catalogView: "grid",
+    template: "moderna",
+    font: "inter",
+    secondaryColor: null,
+    businessHours: null,
   });
 });
 
