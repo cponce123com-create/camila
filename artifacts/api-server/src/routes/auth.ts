@@ -25,7 +25,9 @@ const registerSchema = z.object({
   ownerName: z.string().min(2),
   phone: z.string().min(9),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8)
+    .regex(/[A-Z]/, "Debe tener al menos una mayúscula")
+    .regex(/[0-9]/, "Debe tener al menos un número"),
   address: z.string().optional(),
   district: z.string().min(2),
   logoUrl: z.string().url().optional(),
@@ -118,6 +120,7 @@ router.post("/register", async (req, res) => {
       userId: user.id,
       token,
       expiresAt,
+      userAgent: (req.headers["user-agent"] as string) || null,
     });
 
     // Seed default categories for the new store (fire-and-forget, non-blocking)
@@ -213,6 +216,7 @@ router.post("/login", async (req, res) => {
       userId: user.id,
       token,
       expiresAt,
+      userAgent: (req.headers["user-agent"] as string) || null,
     });
 
     res.cookie("camila_session", token, {
@@ -336,7 +340,9 @@ router.post("/forgot-password", async (req, res) => {
 router.post("/reset-password", async (req, res) => {
   const schema = z.object({
     token: z.string(),
-    password: z.string().min(8),
+    password: z.string().min(8)
+      .regex(/[A-Z]/, "Debe tener al menos una mayúscula")
+      .regex(/[0-9]/, "Debe tener al menos un número"),
   });
   const result = schema.safeParse(req.body);
   if (!result.success) {

@@ -35,7 +35,7 @@ export async function sessionMiddleware(
 
   try {
     const [session] = await db
-      .select()
+      .select({ id: sessionsTable.id, userId: sessionsTable.userId, userAgent: sessionsTable.userAgent })
       .from(sessionsTable)
       .where(
         and(
@@ -46,6 +46,14 @@ export async function sessionMiddleware(
       .limit(1);
 
     if (!session) {
+      res.clearCookie("camila_session");
+      next();
+      return;
+    }
+
+    const requestUA = req.headers["user-agent"] || null;
+    if (session.userAgent && requestUA !== session.userAgent) {
+      await db.delete(sessionsTable).where(eq(sessionsTable.id, session.id));
       res.clearCookie("camila_session");
       next();
       return;
