@@ -505,14 +505,20 @@ router.delete("/:productId", requireAuth, requireStoreAdmin, async (req, res) =>
   const { productId } = req.params;
 
   try {
-    await db
+    const deleted = await db
       .delete(productsTable)
       .where(
         and(
           eq(productsTable.id, productId),
           eq(productsTable.storeId, user.storeId!)
         )
-      );
+      )
+      .returning({ id: productsTable.id });
+
+    if (deleted.length === 0) {
+      res.status(404).json({ error: "Producto no encontrado" });
+      return;
+    }
 
     res.json({ success: true, message: "Producto eliminado" });
   } catch (err) {
