@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { ImageUpload } from "@/components/ui/image-upload";
@@ -120,12 +120,31 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label>WhatsApp (Para pedidos)</Label>
-                    <Input 
-                      placeholder="Ej: 51987654321"
-                      value={formData.whatsapp} 
-                      onChange={e => setFormData({...formData, whatsapp: e.target.value})} 
-                      className="rounded-xl"
-                    />
+                    <div className="flex rounded-xl border border-input overflow-hidden focus-within:ring-1 focus-within:ring-ring">
+                      <span className="flex items-center px-3 bg-muted text-muted-foreground text-sm font-medium border-r border-input shrink-0">
+                        +51
+                      </span>
+                      <Input
+                        placeholder="987654321"
+                        value={formData.whatsapp}
+                        onChange={e => {
+                          const v = e.target.value.replace(/\D/g, "").slice(0, 9);
+                          setFormData({ ...formData, whatsapp: v });
+                        }}
+                        maxLength={9}
+                        inputMode="numeric"
+                        className="rounded-none border-0 shadow-none focus-visible:ring-0"
+                      />
+                    </div>
+                    {formData.whatsapp && !/^9\d{8}$/.test(formData.whatsapp) && (
+                      <p className="flex items-center gap-1 text-xs text-amber-600">
+                        <AlertCircle className="w-3 h-3" />
+                        Debe tener 9 dígitos y empezar en 9
+                      </p>
+                    )}
+                    {!formData.whatsapp && (
+                      <p className="text-xs text-muted-foreground">9 dígitos, empieza en 9. Ej: 987654321</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Instagram (@usuario)</Label>

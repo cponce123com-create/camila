@@ -1079,10 +1079,15 @@ export default function TiendaPage() {
 
         {/* WhatsApp float */}
         {store.whatsapp && cfg.showWhatsappButton && (
-          <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, te contacto desde tu tienda ${store.businessName}`)}`}
-            target="_blank" rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
-            <span className="w-7 h-7">{WHATSAPP_SVG}</span>
+          <a
+            href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola, me contacto desde tu tienda ${store.businessName}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="fixed bottom-6 right-4 z-50 flex items-center gap-2 bg-[#25D366] text-white rounded-full pl-3 pr-4 py-3 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-150"
+            aria-label="Escribir por WhatsApp"
+          >
+            <span className="w-5 h-5 shrink-0">{WHATSAPP_SVG}</span>
+            <span className="text-sm font-semibold whitespace-nowrap">Escribir por WhatsApp</span>
           </a>
         )}
 

@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
   Users, Settings, LogOut, Menu, X, ShieldCheck, Palette,
   MessageSquare, UtensilsCrossed, ShoppingBag, BarChart2, ChevronRight,
-  ExternalLink,
+  ExternalLink, Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -163,6 +163,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <ExternalLink className="w-3 h-3 flex-shrink-0" />
                 <span className="truncate">Ver tienda pública</span>
               </a>
+            )}
+            {(store as unknown as { slug?: string; whatsapp?: string }).slug &&
+              (store as unknown as { whatsapp?: string }).whatsapp && (
+              <button
+                onClick={() => {
+                  const s = store as unknown as { slug: string; whatsapp: string; businessName?: string };
+                  const wa = s.whatsapp.replace(/^51/, "").replace(/\D/g, "");
+                  const text = encodeURIComponent(
+                    `Hola, visita mi tienda en camila.pe/tienda/${s.slug}`
+                  );
+                  window.open(`https://wa.me/51${wa}?text=${text}`, "_blank");
+                }}
+                className="mt-1.5 flex items-center gap-1 text-xs transition-colors hover:opacity-80 w-full text-left"
+                style={{ color: "#25D366" }}
+              >
+                <Share2 className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">Compartir mi tienda</span>
+              </button>
             )}
           </div>
         )}
