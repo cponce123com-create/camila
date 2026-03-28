@@ -1,0 +1,55 @@
+Implementar un sistema de códigos de licencia canjeables.
+
+BASE DE DATOS:
+Crear tabla `license_codes` en `lib/db/src/schema/license_codes.ts`:
+- id: text primaryKey (UUID)
+- code: text notNull unique (ej. CAMILA-2026-XKQT)
+- plan: licensePlanEnum notNull
+- durationDays: integer notNull
+- maxUses: integer default 1
+- usedCount: integer default 0
+- usedByStoreId: text references stores (nullable)
+- usedAt: timestamp (nullable)
+- createdByAdminId: text references users
+- notes: text (nullable)
+- expiresAt: timestamp (nullable, el código en sí vence)
+- createdAt: timestamp defaultNow
+
+Generar la migración con drizzle-kit.
+
+BACKEND:
+En `artifacts/api-server/src/routes/admin.ts`, agregar:
+
+1. GET /api/admin/license-codes (superadmin) — lista todos los códigos con paginación, filtro por usado/no usado.
+
+2. POST /api/admin/license-codes (superadmin) — crea un código:
+   - Body: { plan, durationDays, maxUses?, notes?, expiresAt? }
+   - Genera el código automáticamente con formato CAMILA-{AÑO}-{4 chars aleatorios en mayúsculas}
+   - Registra en audit_logs
+
+3. DELETE /api/admin/license-codes/:id (superadmin) — elimina un código no usado.
+
+En `artifacts/api-server/src/routes/payments.ts`, agregar:
+
+4. POST /api/payments/redeem-code (requireAuth + requireStoreAdmin):
+   - Body: { code: string }
+   - Busca el código, valida que exista, no haya expirado, tenga usos disponibles, y que el store no haya canjeado ya este código
+   - Si válido: actualiza la licencia del store (status "active", calcula nueva expiresAt sumando durationDays desde hoy o desde la expiresAt actual si aún no venció — lo que sea mayor), incrementa usedCount, guarda usedByStoreId y usedAt
+   - Registra en license_history y audit_logs con action "code_redeemed"
+   - Responde con { success: true, license: {...}, message: "Licencia activada por X días" }
+
+FRONTEND (panel superadmin):
+En `artifacts/camila/src/pages/admin/`, crear `license-codes.tsx`:
+- Tabla con todos los códigos: código, plan, días, usos disponibles/usados, vencimiento, estado (disponible/agotado/vencido)
+- Botón "Nuevo código" abre un Dialog con formulario: plan (select), días (number), máx usos (default 1), notas, fecha de vencimiento opcional
+- Al crear, mostrar el código generado en un modal con botón copiar
+- Botón eliminar en cada fila (solo si usedCount = 0)
+
+Agregar link "Códigos de licencia" en el sidebar del admin entre "Tiendas" y "Analytics".
+
+FRONTEND (dashboard tenant):
+En `artifacts/camila/src/pages/dashboard/billing.tsx`, agregar debajo de los planes una sección "¿Tienes un código?":
+- Input de texto para el código + botón "Canjear"
+- Llama a POST /api/payments/redeem-code
+- Si éxito: toast verde "¡Licencia activada! Tu plan está activo por X días.", actualiza el estado de licencia en el contexto global
+- Si error: toast rojo con el mensaje de error (código inválido, ya usado, vencido, etc.)
