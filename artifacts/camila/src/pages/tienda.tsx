@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "wouter";
+import { Download } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import {
   MapPin, Phone, MessageCircle, Instagram, Facebook, Star, ShoppingBag,
@@ -750,6 +751,38 @@ export default function TiendaPage() {
   const [yapeOpen, setYapeOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
 
+  // ── PWA install banner ────────────────────────────────────────────────────
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem("camila-pwa-dismissed");
+    if (dismissed) return;
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+      // Only show on mobile-sized screens
+      if (window.innerWidth < 768) setShowInstallBanner(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    (installPrompt as any).prompt();
+    const { outcome } = await (installPrompt as any).userChoice;
+    if (outcome === "accepted") setShowInstallBanner(false);
+    setInstallPrompt(null);
+  };
+
+  const handleDismissInstall = () => {
+    setShowInstallBanner(false);
+    localStorage.setItem("camila-pwa-dismissed", "1");
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   const primaryColor = store?.primaryColor || "#1a5c2e";
 
   const fetchProducts = useCallback(async (catId: string | null, pg: number, q: string, storeSlug: string) => {
@@ -833,6 +866,32 @@ export default function TiendaPage() {
         <meta name="description" content={store.description || `Tienda de ${store.businessName} en ${store.district}`} />
         {store.logoUrl && <meta property="og:image" content={store.logoUrl} />}
       </Helmet>
+
+      {/* PWA install banner — mobile only, dismissed via localStorage */}
+      {showInstallBanner && (
+        <div className="fixed bottom-0 inset-x-0 z-50 flex items-center gap-3 bg-white border-t border-gray-200 shadow-lg px-4 py-3 md:hidden">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-green-50 shrink-0">
+            <Download className="w-5 h-5 text-green-700" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 leading-tight">Instalar app</p>
+            <p className="text-xs text-gray-500 truncate">Accede rápido sin abrir el navegador</p>
+          </div>
+          <button
+            onClick={handleInstall}
+            className="shrink-0 rounded-lg bg-green-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-800 active:scale-95 transition-transform"
+          >
+            Instalar
+          </button>
+          <button
+            onClick={handleDismissInstall}
+            aria-label="Cerrar"
+            className="shrink-0 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       <div className="min-h-screen bg-gray-50 font-sans">
         <StoreNavbar
