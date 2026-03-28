@@ -850,6 +850,86 @@ router.delete("/license-codes/:id", requireSuperAdmin, async (req, res) => {
   }
 });
 
+// ─── MRR & Business metrics ───────────────────────────────────────────────────
+
+const PLAN_MONTHLY_SOLES: Record<string, number> = {
+  monthly:     49,
+  quarterly:   43,
+  semi_annual: 38.17,
+  annual:      33.25,
+  trial:       0,
+  free:        0,
+};
+
+router.get("/mrr", requireSuperAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Current active licenses (for MRR & ARPU)
+    const activeLicenses = await db
+      .select({ plan: licensesTable.plan, status: licensesTable.status })
+      .from(licensesTable)
+      .where(inArray(licensesTable.status, ["active", "trial"]));
+
+    const totalClientes   = activeLicenses.filter((l) => l.status === "active").length;
+    const clientesTrial   = activeLicenses.filter((l) => l.status === "trial").length;
+    const mrrActual       = activeLicenses.reduce((sum, l) => sum + (PLAN_MONTHLY_SOLES[l.plan] ?? 0), 0);
+    const arpu            = totalClientes > 0 ? parseFloat((mrrActual / totalClientes).toFixed(2)) : 0;
+
+    // Churn this month: licenses that transitioned to "expired" this calendar month
+    const churnRows = await db
+      .select({ id: licenseHistoryTable.id })
+      .from(licenseHistoryTable)
+      .where(
+        and(
+          eq(licenseHistoryTable.newStatus, "expired"),
+          gte(licenseHistoryTable.createdAt, startOfMonth),
+          sql`${licenseHistoryTable.createdAt} <= ${endOfMonth}`,
+        ),
+      );
+    const churnMes = churnRows.length;
+
+    // MRR last 12 months: for each month, sum plan values of licenses that were
+    // live in that window (starts_at < end-of-month AND expires_at > start-of-month)
+    const mrrMesRows = await db.execute(sql`
+      SELECT
+        to_char(m.month, 'YYYY-MM') AS mes,
+        COALESCE(SUM(
+          CASE ${licensesTable.plan}
+            WHEN 'monthly'     THEN 49
+            WHEN 'quarterly'   THEN 43
+            WHEN 'semi_annual' THEN 38.17
+            WHEN 'annual'      THEN 33.25
+            ELSE 0
+          END
+        ), 0)::float AS mrr
+      FROM generate_series(
+        date_trunc('month', NOW() - INTERVAL '11 months'),
+        date_trunc('month', NOW()),
+        INTERVAL '1 month'
+      ) AS m(month)
+      LEFT JOIN ${licensesTable}
+        ON ${licensesTable.startsAt} < m.month + INTERVAL '1 month'
+       AND (${licensesTable.expiresAt} IS NULL OR ${licensesTable.expiresAt} > m.month)
+       AND ${licensesTable.plan} IN ('monthly','quarterly','semi_annual','annual')
+      GROUP BY m.month
+      ORDER BY m.month
+    `);
+
+    const mrrMes = (mrrMesRows.rows as { mes: string; mrr: number }[]).map((r) => ({
+      mes: r.mes,
+      mrr: parseFloat(Number(r.mrr).toFixed(2)),
+    }));
+
+    res.json({ mrrActual, mrrMes, totalClientes, clientesTrial, churnMes, arpu });
+  } catch (err) {
+    req.log.error({ err }, "Admin MRR error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
 // ─── Notify expiring licenses ─────────────────────────────────────────────────
 router.post("/notify-expiring", requireSuperAdmin, async (req, res) => {
   try {

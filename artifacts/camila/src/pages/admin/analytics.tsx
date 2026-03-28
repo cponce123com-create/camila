@@ -1,11 +1,12 @@
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { useGetAdminAnalytics } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  PieChart, Pie, Cell, Legend, LineChart, Line,
+  PieChart, Pie, Cell, Legend, LineChart, Line, Area, AreaChart,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, AlertTriangle, TrendingUp, Store, BarChart2 } from "lucide-react";
+import { Loader2, Download, AlertTriangle, TrendingUp, Store, BarChart2, DollarSign, Users, UserCheck, TrendingDown } from "lucide-react";
 import { downloadPDF, downloadCSV, formatCurrency } from "@/lib/export-utils";
 
 const COLORS = ["#4F46E5", "#7C3AED", "#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
@@ -32,9 +33,30 @@ const BUSINESS_LABELS: Record<string, string> = {
   both: "Tienda + Rest.",
 };
 
+interface MrrData {
+  mrrActual: number;
+  mrrMes: { mes: string; mrr: number }[];
+  totalClientes: number;
+  clientesTrial: number;
+  churnMes: number;
+  arpu: number;
+}
+
 export default function AdminAnalyticsPage() {
   const query = useGetAdminAnalytics();
   const data = query.data;
+
+  const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
+  const mrrQuery = useQuery<MrrData>({
+    queryKey: ["admin-mrr"],
+    queryFn: async () => {
+      const res = await fetch(`${base}/api/admin/mrr`, { credentials: "include" });
+      if (!res.ok) throw new Error("mrr error");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const mrr = mrrQuery.data;
 
   const handleExportCSV = () => {
     if (!data) return;
@@ -125,6 +147,117 @@ export default function AdminAnalyticsPage() {
             <p className="font-medium">No se pudo cargar la analítica</p>
           </div>
         )}
+
+        {/* ── Negocio / MRR section ──────────────────────────────────── */}
+        {(mrr || mrrQuery.isLoading) && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-green-600" />
+              <h2 className="text-lg font-bold text-gray-900">Negocio</h2>
+              <span className="text-xs text-gray-400 font-normal ml-1">MRR y métricas de suscripción</span>
+            </div>
+
+            {mrrQuery.isLoading && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1,2,3,4].map((i) => (
+                  <div key={i} className="h-24 rounded-xl bg-gray-100 animate-pulse" />
+                ))}
+              </div>
+            )}
+
+            {mrr && (
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <KPICard
+                    label="MRR actual"
+                    value={`S/${mrr.mrrActual.toLocaleString("es-PE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+                    icon={<DollarSign className="h-5 w-5 text-green-600" />}
+                    color="green"
+                  />
+                  <KPICard
+                    label="Clientes activos"
+                    value={mrr.totalClientes.toString()}
+                    icon={<UserCheck className="h-5 w-5 text-indigo-500" />}
+                    color="indigo"
+                  />
+                  <KPICard
+                    label="En período de prueba"
+                    value={mrr.clientesTrial.toString()}
+                    icon={<Users className="h-5 w-5 text-blue-500" />}
+                    color="blue"
+                  />
+                  <KPICard
+                    label="ARPU"
+                    value={`S/${mrr.arpu.toFixed(2)}`}
+                    icon={<TrendingUp className="h-5 w-5 text-amber-500" />}
+                    color="amber"
+                    sub={`Churn este mes: ${mrr.churnMes}`}
+                  />
+                </div>
+
+                <div className="bg-white border rounded-xl p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900">MRR — últimos 12 meses</h3>
+                    {mrr.churnMes > 0 && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-red-500 bg-red-50 border border-red-100 rounded-full px-2.5 py-1">
+                        <TrendingDown className="h-3 w-3" />
+                        {mrr.churnMes} baja{mrr.churnMes !== 1 ? "s" : ""} este mes
+                      </span>
+                    )}
+                  </div>
+                  {mrr.mrrMes.every((m) => m.mrr === 0) ? (
+                    <EmptyChart />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <AreaChart data={mrr.mrrMes} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+                        <defs>
+                          <linearGradient id="mrrGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%"  stopColor="#1a5c2e" stopOpacity={0.18} />
+                            <stop offset="95%" stopColor="#1a5c2e" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis
+                          dataKey="mes"
+                          tick={{ fontSize: 11 }}
+                          tickFormatter={(v: string) => {
+                            const [y, m] = v.split("-");
+                            const d = new Date(Number(y), Number(m) - 1, 1);
+                            return d.toLocaleDateString("es-PE", { month: "short" });
+                          }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11 }}
+                          tickFormatter={(v: number) => `S/${v}`}
+                          width={58}
+                        />
+                        <Tooltip
+                          formatter={(v: number) => [`S/${v.toFixed(0)}`, "MRR"]}
+                          labelFormatter={(l: string) => {
+                            const [y, m] = l.split("-");
+                            const d = new Date(Number(y), Number(m) - 1, 1);
+                            return d.toLocaleDateString("es-PE", { month: "long", year: "numeric" });
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="mrr"
+                          stroke="#1a5c2e"
+                          strokeWidth={2.5}
+                          fill="url(#mrrGradient)"
+                          dot={{ r: 4, fill: "#1a5c2e", strokeWidth: 0 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        <hr className="border-gray-200" />
 
         {data && (
           <div className="space-y-6">
@@ -289,7 +422,7 @@ export default function AdminAnalyticsPage() {
   );
 }
 
-function KPICard({ label, value, icon, color }: { label: string; value: string; icon: React.ReactNode; color: string }) {
+function KPICard({ label, value, icon, color, sub }: { label: string; value: string; icon: React.ReactNode; color: string; sub?: string }) {
   const colorMap: Record<string, string> = {
     indigo: "border-indigo-100 bg-indigo-50",
     green: "border-green-100 bg-green-50",
@@ -301,6 +434,7 @@ function KPICard({ label, value, icon, color }: { label: string; value: string; 
       <div className="mb-1">{icon}</div>
       <div className="text-xl font-bold text-gray-900 truncate">{value}</div>
       <div className="text-xs text-gray-500 mt-0.5">{label}</div>
+      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
     </div>
   );
 }
