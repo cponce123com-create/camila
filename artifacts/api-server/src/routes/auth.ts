@@ -152,7 +152,6 @@ router.post("/register", async (req, res) => {
           updatedAt: license.updatedAt,
         },
       },
-      token,
     });
   } catch (err) {
     req.log.error({ err }, "Register error");
@@ -236,7 +235,6 @@ router.post("/login", async (req, res) => {
       store: store
         ? { ...store, license }
         : null,
-      token,
     });
   } catch (err) {
     req.log.error({ err }, "Login error");
@@ -325,7 +323,7 @@ router.post("/forgot-password", async (req, res) => {
         })
         .where(eq(usersTable.id, user.id));
 
-      req.log.info({ email, resetToken }, "Password reset token generated");
+      req.log.info({ email }, "Password reset token generated");
     }
 
     res.json({ success: true, message: "Si el correo existe, recibirás instrucciones." });

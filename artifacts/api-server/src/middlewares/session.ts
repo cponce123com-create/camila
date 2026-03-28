@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { db } from "@workspace/db";
-import { sessionsTable, usersTable, storesTable } from "@workspace/db";
+import { sessionsTable, usersTable, storesTable, licensesTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
 
 export interface AuthUser {
@@ -109,4 +109,35 @@ export function requireStoreAdmin(req: Request, res: Response, next: NextFunctio
     return;
   }
   next();
+}
+
+export async function requireActiveLicense(req: Request, res: Response, next: NextFunction): Promise<void> {
+  if (!req.user) {
+    res.status(401).json({ error: "No autorizado" });
+    return;
+  }
+  if (req.user.role === "superadmin") {
+    next();
+    return;
+  }
+  const storeId = req.user.storeId;
+  if (!storeId) {
+    res.status(403).json({ error: "Sin tienda asociada" });
+    return;
+  }
+  try {
+    const [license] = await db
+      .select({ status: licensesTable.status })
+      .from(licensesTable)
+      .where(eq(licensesTable.storeId, storeId))
+      .limit(1);
+    if (!license || license.status === "expired" || license.status === "suspended") {
+      res.status(403).json({ error: "Licencia inactiva. Contacta a soporte para renovar tu plan." });
+      return;
+    }
+    next();
+  } catch (err) {
+    req.log?.error({ err }, "requireActiveLicense error");
+    next();
+  }
 }

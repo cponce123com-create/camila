@@ -23,33 +23,36 @@ import analyticsRouter from "./analytics";
 import restaurantAnalyticsRouter from "./restaurant/analytics";
 import publicRouter from "./public";
 import uploadsRouter from "./uploads";
+import { requireActiveLicense } from "../middlewares/session";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use("/auth", authRouter);
 router.use("/stores", storesRouter);
-router.use("/stores/me", customizationRouter);
 router.use("/admin", adminRouter);
-router.use("/categories", categoriesRouter);
-router.use("/products", productsRouter);
-router.use("/products", productImagesRouter);
-router.use("/products/:productId/variants", variantsRouter);
-router.use("/products/:productId/reviews", reviewsPerProductRouter);
-router.use("/reviews", allReviewsRouter);
-router.use("/inventory", inventoryRouter);
-router.use("/stats", statsRouter);
-router.use("/restaurant/tables", restaurantTablesRouter);
-router.use("/restaurant/orders", restaurantOrdersRouter);
-router.use("/restaurant/daily-menu", restaurantDailyMenuRouter);
-router.use("/restaurant/stats", restaurantStatsRouter);
-router.use("/sales", salesRouter);
-router.use("/clients", clientsRouter);
-router.use("/support-tickets", supportTicketsRouter);
-router.use("/active-announcements", activeAnnouncementsRouter);
-router.use("/analytics", analyticsRouter);
-router.use("/restaurant/analytics", restaurantAnalyticsRouter);
 router.use("/public", publicRouter);
-router.use("/uploads", uploadsRouter);
+router.use("/active-announcements", activeAnnouncementsRouter);
+router.use("/support-tickets", supportTicketsRouter);
+
+// ─── Business routes — require an active license ──────────────────────────────
+router.use("/stores/me", requireActiveLicense, customizationRouter);
+router.use("/categories", requireActiveLicense, categoriesRouter);
+router.use("/products", requireActiveLicense, productsRouter);
+router.use("/products", requireActiveLicense, productImagesRouter);
+router.use("/products/:productId/variants", requireActiveLicense, variantsRouter);
+router.use("/products/:productId/reviews", requireActiveLicense, reviewsPerProductRouter);
+router.use("/reviews", requireActiveLicense, allReviewsRouter);
+router.use("/inventory", requireActiveLicense, inventoryRouter);
+router.use("/stats", requireActiveLicense, statsRouter);
+router.use("/restaurant/tables", requireActiveLicense, restaurantTablesRouter);
+router.use("/restaurant/orders", requireActiveLicense, restaurantOrdersRouter);
+router.use("/restaurant/daily-menu", requireActiveLicense, restaurantDailyMenuRouter);
+router.use("/restaurant/stats", requireActiveLicense, restaurantStatsRouter);
+router.use("/sales", requireActiveLicense, salesRouter);
+router.use("/clients", requireActiveLicense, clientsRouter);
+router.use("/analytics", requireActiveLicense, analyticsRouter);
+router.use("/restaurant/analytics", requireActiveLicense, restaurantAnalyticsRouter);
+router.use("/uploads", requireActiveLicense, uploadsRouter);
 
 export default router;
