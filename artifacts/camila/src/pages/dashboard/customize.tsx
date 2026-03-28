@@ -256,7 +256,7 @@ export default function CustomizePage() {
                   <Plus className="h-4 w-4 mr-2" /> Agregar Banner
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] rounded-2xl">
+              <DialogContent className="sm:max-w-[500px] rounded-2xl" onInteractOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
                   <DialogTitle className="font-display text-2xl">Nuevo Banner</DialogTitle>
                 </DialogHeader>
@@ -371,16 +371,18 @@ export default function CustomizePage() {
               
               {settings?.showYapeQr && (
                 <div className="p-6 bg-secondary/20">
-                  <Label className="text-base font-semibold block mb-3">URL del QR de Yape</Label>
-                  <div className="flex gap-3">
-                    <Input 
-                      value={settings.yapeQrUrl || ""} 
-                      onChange={e => handleUpdateSettings({ yapeQrUrl: e.target.value })}
-                      placeholder="https://link-a-tu-imagen-qr.com/qr.png"
-                      className="rounded-xl flex-1 bg-background"
+                  <p className="text-base font-semibold mb-3">Imagen QR de Yape</p>
+                  <div className="max-w-[220px]">
+                    <ImageUpload
+                      label=""
+                      hint="Sube la captura de tu QR de Yape. Recomendado: imagen cuadrada."
+                      folder="qr"
+                      aspectRatio="square"
+                      value={settings.yapeQrUrl || ""}
+                      onChange={(url) => handleUpdateSettings({ yapeQrUrl: url })}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Pega aquí el enlace público a la imagen de tu código QR.</p>
+                  <p className="text-xs text-muted-foreground mt-2">Este QR aparecerá en tu tienda cuando los clientes quieran pagar con Yape.</p>
                 </div>
               )}
             </div>
