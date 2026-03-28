@@ -44,7 +44,7 @@ export function OnboardingWizard({ store }: OnboardingWizardProps) {
   const createProductMutation = useCreateProduct();
 
   const { data: productsData } = useGetProducts({ limit: 1 });
-  const hasProducts = (productsData?.items?.length ?? 0) > 0;
+  const hasProducts = (productsData?.data?.length ?? 0) > 0;
   const hasLogo = Boolean((store as any).logoUrl);
   const hasSlug = Boolean((store as any).slug);
 

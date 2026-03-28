@@ -106,7 +106,7 @@ export async function sendLicenseExpiringEmail(
     <p style="margin:0 0 8px;color:#4b5563;font-size:15px;line-height:1.6;">
       Para continuar usando Camila sin interrupciones, renueva tu suscripción antes de esa fecha.
     </p>
-    ${btn("Renovar mi plan", `${FRONTEND_URL}/dashboard`)}
+    ${btn("Renovar ahora", `${FRONTEND_URL}/dashboard/billing`)}
     <p style="margin:32px 0 0;color:#9ca3af;font-size:13px;">
       Si ya realizaste el pago, ignora este mensaje. Cualquier consulta escríbenos.
     </p>

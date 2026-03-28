@@ -35,6 +35,7 @@ export const licensesTable = pgTable("licenses", {
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   plan: licensePlanEnum("plan").default("trial").notNull(),
   notes: text("notes"),
+  lastExpiryNoticeSentAt: timestamp("last_expiry_notice_sent_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
