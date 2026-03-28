@@ -182,20 +182,60 @@ function BannerCarousel({ banners, store, primaryColor }: { banners: StoreBanner
 
       {/* Slide 0 — Default store hero (always first) */}
       <div
-        className={cn("absolute inset-0 transition-opacity duration-700 flex flex-col items-center justify-center text-white", current === 0 ? "opacity-100" : "opacity-0")}
-        style={{ background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}cc 100%)` }}
+        className={cn("absolute inset-0 transition-opacity duration-700", current === 0 ? "opacity-100" : "opacity-0")}
+        style={{ background: `linear-gradient(145deg, ${primaryColor} 0%, ${primaryColor}bb 60%, ${primaryColor}88 100%)` }}
       >
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-        <div className="relative text-center px-6">
+        {/* Decorative background shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/5" />
+          <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-white/5" />
+          <div className="absolute top-1/3 right-1/3 w-40 h-40 rounded-full bg-white/5" />
+          <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle, white 1.5px, transparent 1.5px)", backgroundSize: "28px 28px" }} />
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/20 to-transparent" />
+        </div>
+
+        {/* Content */}
+        <div className="relative h-full flex flex-col items-center justify-center text-white px-6 py-8 gap-3">
+          {/* Logo */}
           {store.logoUrl ? (
-            <img src={store.logoUrl} alt={store.businessName} className="w-20 h-20 rounded-2xl object-cover mx-auto mb-4 border-4 border-white/30 shadow-xl" />
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-4 border-white/25 shadow-2xl ring-4 ring-white/10">
+              <img src={store.logoUrl} alt={store.businessName} className="w-full h-full object-cover" />
+            </div>
           ) : (
-            <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4 text-3xl font-bold border-4 border-white/30">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl md:text-4xl font-extrabold border-4 border-white/25 shadow-2xl ring-4 ring-white/10">
               {store.businessName.charAt(0)}
             </div>
           )}
-          <h1 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg">{store.businessName}</h1>
-          {store.description && <p className="mt-2 text-white/80 text-sm md:text-base max-w-lg mx-auto">{store.description}</p>}
+
+          {/* Welcome badge */}
+          <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1">
+            <Sparkles className="w-3 h-3" />
+            <span className="text-xs font-semibold uppercase tracking-widest">Bienvenidos</span>
+          </div>
+
+          {/* Store name */}
+          <h1 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg text-center leading-tight">
+            {store.businessName}
+          </h1>
+
+          {/* Description */}
+          {store.description && (
+            <p className="text-white/80 text-sm md:text-base max-w-md text-center leading-relaxed -mt-1">
+              {store.description}
+            </p>
+          )}
+
+          {/* Info badges */}
+          <div className="flex items-center gap-2 flex-wrap justify-center mt-1">
+            <span className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium">
+              <MapPin className="w-3 h-3" /> {store.district}
+            </span>
+            {store.avgRating != null && store.reviewCount > 0 && (
+              <span className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium">
+                <Star className="w-3 h-3 fill-white" /> {Number(store.avgRating).toFixed(1)} · {store.reviewCount} reseñas
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -735,7 +775,7 @@ export default function TiendaPage() {
     ]).then(async ([sR, cR, rR, bR, cfR]) => {
       if (sR.status === 404) { setNotFound(true); setLoading(false); return; }
       const [s, c, r, b, cf] = await Promise.all([sR.json(), cR.json(), rR.json(), bR.json(), cfR.json()]);
-      setStore(s); setCategories(c); setReviews(r.data || []); setBanners(b); setConfig(cf);
+      setStore(s); setCategories((c as Category[]).filter(cat => cat.productCount > 0)); setReviews(r.data || []); setBanners(b); setConfig(cf);
 
       await Promise.all([
         fetchProducts(null, 1, "", slug),
