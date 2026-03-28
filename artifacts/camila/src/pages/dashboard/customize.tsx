@@ -18,7 +18,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Check, LayoutGrid, List, Star, Image as ImageIcon, Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
@@ -250,17 +249,34 @@ export default function CustomizePage() {
                 <span className="font-medium text-foreground ml-1">({banners?.length || 0}/5)</span>
               </p>
             </div>
-            <Dialog open={isBannerDialogOpen} onOpenChange={setIsBannerDialogOpen}>
-              <DialogTrigger asChild>
-                <Button disabled={(banners?.length || 0) >= 5} className="rounded-xl shadow-md">
-                  <Plus className="h-4 w-4 mr-2" /> Agregar Banner
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] rounded-2xl" onInteractOutside={(e) => e.preventDefault()}>
-                <DialogHeader>
-                  <DialogTitle className="font-display text-2xl">Nuevo Banner</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleCreateBanner} className="space-y-4 mt-4">
+            <Button
+              disabled={(banners?.length || 0) >= 5 || isBannerDialogOpen}
+              className="rounded-xl shadow-md"
+              onClick={() => {
+                setBannerForm({ imageUrl: "", title: "", subtitle: "", linkUrl: "", isActive: true });
+                setIsBannerDialogOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Agregar Banner
+            </Button>
+          </div>
+
+          {isBannerDialogOpen && (
+            <Card className="rounded-2xl border-primary/30 shadow-md overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h4 className="font-bold text-lg font-display">Nuevo Banner</h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-foreground rounded-xl"
+                    onClick={() => setIsBannerDialogOpen(false)}
+                    type="button"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+                <form onSubmit={handleCreateBanner} className="space-y-4">
                   <ImageUpload
                     label="Imagen del banner *"
                     hint="Recomendado: 1200×400px. JPG o PNG."
@@ -284,16 +300,16 @@ export default function CustomizePage() {
                     <Input value={bannerForm.linkUrl} onChange={e => setBannerForm({...bannerForm, linkUrl: e.target.value})} className="rounded-xl" placeholder="https://..." />
                   </div>
                   <div className="flex items-center justify-between pt-2">
-                    <Label>Activo</Label>
+                    <Label>Activo al guardar</Label>
                     <Switch checked={bannerForm.isActive} onCheckedChange={c => setBannerForm({...bannerForm, isActive: c})} />
                   </div>
-                  <Button type="submit" disabled={createBannerMutation.isPending} className="w-full h-12 rounded-xl mt-4">
+                  <Button type="submit" disabled={createBannerMutation.isPending} className="w-full h-12 rounded-xl mt-2">
                     {createBannerMutation.isPending ? <Loader2 className="animate-spin" /> : "Guardar Banner"}
                   </Button>
                 </form>
-              </DialogContent>
-            </Dialog>
-          </div>
+              </CardContent>
+            </Card>
+          )}
 
           {isLoadingBanners ? (
             <div className="py-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
