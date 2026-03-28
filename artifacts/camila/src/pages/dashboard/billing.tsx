@@ -5,11 +5,12 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle2, Clock, XCircle, ShieldOff, Star, Loader2,
-  Zap, Calendar, CreditCard, TrendingUp,
+  Zap, Calendar, CreditCard, TrendingUp, Ticket,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -78,6 +79,26 @@ function useGetPlans() {
       return r.json();
     },
     staleTime: 1000 * 60 * 30,
+  });
+}
+
+function useRedeemCode() {
+  return useMutation<
+    { success: boolean; license: Record<string, unknown>; message: string },
+    Error,
+    { code: string }
+  >({
+    mutationFn: async ({ code }) => {
+      const r = await fetch("/api/payments/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ code }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Error al canjear el código");
+      return data;
+    },
   });
 }
 
@@ -186,6 +207,21 @@ export default function BillingPage() {
   }
 
   const isSuperAdmin = user?.role === "superadmin";
+  const redeemCode = useRedeemCode();
+  const [codeInput, setCodeInput] = useState("");
+
+  async function handleRedeemCode() {
+    const trimmed = codeInput.trim().toUpperCase();
+    if (!trimmed) return;
+    try {
+      const result = await redeemCode.mutateAsync({ code: trimmed });
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({ title: "¡Licencia activada!", description: result.message });
+      setCodeInput("");
+    } catch (err: any) {
+      toast({ title: "Error al canjear", description: err.message, variant: "destructive" });
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -320,6 +356,43 @@ export default function BillingPage() {
             </div>
           )}
         </div>
+
+        {/* ── Redeem Code ──────────────────────────────────────────────────── */}
+        {!isSuperAdmin && (
+          <Card className="border-border/50 shadow-sm rounded-2xl">
+            <CardHeader className="pb-3">
+              <CardTitle className="font-display flex items-center gap-2 text-base">
+                <Ticket className="w-4 h-4 text-primary" /> ¿Tienes un código?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Si recibiste un código de licencia, ingrésalo aquí para activar o extender tu plan.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="CAMILA-2026-XXXX"
+                  value={codeInput}
+                  onChange={e => setCodeInput(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === "Enter" && handleRedeemCode()}
+                  className="font-mono tracking-wider"
+                  disabled={redeemCode.isPending}
+                />
+                <Button
+                  onClick={handleRedeemCode}
+                  disabled={!codeInput.trim() || redeemCode.isPending}
+                  className="shrink-0"
+                >
+                  {redeemCode.isPending ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Canjeando…</>
+                  ) : (
+                    "Canjear"
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ── Notes ────────────────────────────────────────────────────────── */}
         <div className="text-xs text-muted-foreground space-y-1 pb-4">

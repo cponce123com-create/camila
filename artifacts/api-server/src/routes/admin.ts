@@ -10,6 +10,7 @@ import {
   announcementsTable,
   salesTable,
   saleItemsTable,
+  licenseCodesTable,
 } from "@workspace/db";
 import { eq, ilike, count, and, sql, desc, asc, or, gte, inArray } from "drizzle-orm";
 import { requireSuperAdmin, requireAuth } from "../middlewares/session";
@@ -729,6 +730,122 @@ router.get("/analytics", requireSuperAdmin, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Admin analytics error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── License Codes ────────────────────────────────────────────────────────────
+
+router.get("/license-codes", requireSuperAdmin, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
+    const offset = (page - 1) * limit;
+    const used = req.query.used as string | undefined;
+
+    const conditions: ReturnType<typeof and>[] = [];
+    if (used === "true")  conditions.push(sql`${licenseCodesTable.usedCount} >= ${licenseCodesTable.maxUses}`);
+    if (used === "false") conditions.push(sql`${licenseCodesTable.usedCount} < ${licenseCodesTable.maxUses}`);
+
+    const where = conditions.length ? and(...(conditions as [ReturnType<typeof and>])) : undefined;
+
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(licenseCodesTable)
+      .where(where);
+
+    const rows = await db
+      .select()
+      .from(licenseCodesTable)
+      .where(where)
+      .orderBy(desc(licenseCodesTable.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    res.json({ data: rows, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) });
+  } catch (err) {
+    req.log.error({ err }, "list license-codes error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.post("/license-codes", requireSuperAdmin, async (req, res) => {
+  const schema = z.object({
+    plan: z.enum(["trial", "monthly", "quarterly", "semi_annual", "annual", "free"]),
+    durationDays: z.number().int().min(1),
+    maxUses: z.number().int().min(1).default(1),
+    notes: z.string().optional(),
+    expiresAt: z.string().optional(),
+  });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Datos inválidos", details: parsed.error.flatten() });
+    return;
+  }
+
+  const { plan, durationDays, maxUses, notes, expiresAt } = parsed.data;
+
+  const year = new Date().getFullYear();
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const suffix = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const code = `CAMILA-${year}-${suffix}`;
+
+  const user = req.user!;
+
+  try {
+    const [created] = await db.insert(licenseCodesTable).values({
+      id: crypto.randomUUID(),
+      code,
+      plan,
+      durationDays,
+      maxUses,
+      notes: notes ?? null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      createdByAdminId: user.id,
+    }).returning();
+
+    try {
+      await db.insert(auditLogsTable).values({
+        actorId: user.id,
+        actorEmail: user.email,
+        actorRole: user.role,
+        action: "license_code_created",
+        targetType: "license_code",
+        targetId: created.id,
+        targetLabel: code,
+        details: { plan, durationDays, maxUses },
+        ipAddress: req.ip ?? null,
+      });
+    } catch (_) {}
+
+    res.status(201).json(created);
+  } catch (err: any) {
+    if (err?.code === "23505") {
+      res.status(409).json({ error: "Código duplicado, intenta de nuevo" });
+      return;
+    }
+    req.log.error({ err }, "create license-code error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.delete("/license-codes/:id", requireSuperAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [code] = await db.select().from(licenseCodesTable).where(eq(licenseCodesTable.id, id)).limit(1);
+    if (!code) {
+      res.status(404).json({ error: "Código no encontrado" });
+      return;
+    }
+    if (code.usedCount > 0) {
+      res.status(409).json({ error: "No se puede eliminar un código ya utilizado" });
+      return;
+    }
+    await db.delete(licenseCodesTable).where(eq(licenseCodesTable.id, id));
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "delete license-code error");
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

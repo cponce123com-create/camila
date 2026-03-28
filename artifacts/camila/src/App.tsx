@@ -23,6 +23,7 @@ import AdminAuditPage from "@/pages/admin/audit";
 import AdminSupportPage from "@/pages/admin/support";
 import AdminAnnouncementsPage from "@/pages/admin/announcements";
 import AdminAnalyticsPage from "@/pages/admin/analytics";
+import AdminLicenseCodesPage from "@/pages/admin/license-codes";
 import StoreAnalyticsPage from "@/pages/dashboard/analytics";
 import RestaurantAnalyticsPage from "@/pages/dashboard/analytics/restaurant";
 import TiendaPage from "@/pages/tienda";
@@ -84,6 +85,7 @@ function Router() {
       <Route path="/admin/support" component={AdminSupportPage} />
       <Route path="/admin/announcements" component={AdminAnnouncementsPage} />
       <Route path="/admin/analytics" component={AdminAnalyticsPage} />
+      <Route path="/admin/license-codes" component={AdminLicenseCodesPage} />
 
       <Route component={NotFound} />
     </Switch>

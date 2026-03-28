@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
   Users, Settings, LogOut, Menu, X, ShieldCheck, Palette,
   MessageSquare, UtensilsCrossed, ShoppingBag, BarChart2, ChevronRight,
-  ExternalLink, Share2, CreditCard,
+  ExternalLink, Share2, CreditCard, Ticket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,6 +58,9 @@ const RESTAURANT_GROUP = {
 
 const SUPERADMIN_MENU = [
   { icon: ShieldCheck, label: "Panel de Control", path: "/admin" },
+  { icon: Package, label: "Tiendas", path: "/admin/stores" },
+  { icon: Ticket, label: "Códigos de licencia", path: "/admin/license-codes" },
+  { icon: BarChart2, label: "Analytics", path: "/admin/analytics" },
 ];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {

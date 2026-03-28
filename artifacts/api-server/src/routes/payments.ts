@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db, licensesTable, licenseHistoryTable, auditLogsTable } from "@workspace/db";
+import { db, licensesTable, licenseHistoryTable, auditLogsTable, licenseCodesTable } from "@workspace/db";
 import { requireAuth, requireStoreAdmin } from "../middlewares/session";
 
 const router = Router();
@@ -147,6 +147,133 @@ router.post("/create-charge", requireAuth, requireStoreAdmin, async (req, res) =
     res.json({ success: true, license });
   } catch (err) {
     req.log.error({ err }, "Payment create-charge error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── POST /api/payments/redeem-code ──────────────────────────────────────────
+
+router.post("/redeem-code", requireAuth, requireStoreAdmin, async (req, res) => {
+  const schema = z.object({ code: z.string().min(1).toUpperCase() });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Datos inválidos" });
+    return;
+  }
+
+  const { code } = parsed.data;
+  const user = req.user!;
+  const storeId = user.storeId;
+
+  if (!storeId) {
+    res.status(400).json({ error: "Usuario sin tienda asociada" });
+    return;
+  }
+
+  try {
+    const [licenseCode] = await db
+      .select()
+      .from(licenseCodesTable)
+      .where(eq(licenseCodesTable.code, code))
+      .limit(1);
+
+    if (!licenseCode) {
+      res.status(404).json({ error: "Código inválido o no encontrado" });
+      return;
+    }
+
+    const now = new Date();
+
+    if (licenseCode.expiresAt && licenseCode.expiresAt < now) {
+      res.status(410).json({ error: "Este código ha vencido" });
+      return;
+    }
+
+    if (licenseCode.usedCount >= licenseCode.maxUses) {
+      res.status(410).json({ error: "Este código ya fue utilizado y no tiene más usos disponibles" });
+      return;
+    }
+
+    if (licenseCode.usedByStoreId === storeId) {
+      res.status(409).json({ error: "Tu tienda ya canjeó este código" });
+      return;
+    }
+
+    // ── Fetch current license ────────────────────────────────────────────────
+    const [existing] = await db
+      .select()
+      .from(licensesTable)
+      .where(eq(licensesTable.storeId, storeId))
+      .limit(1);
+
+    // Calculate new expiresAt: extend from current expiry if still active, otherwise from today
+    const baseDate = existing?.expiresAt && existing.expiresAt > now ? existing.expiresAt : now;
+    const newExpiresAt = new Date(baseDate);
+    newExpiresAt.setDate(newExpiresAt.getDate() + licenseCode.durationDays);
+
+    let license;
+
+    if (existing) {
+      await db.insert(licenseHistoryTable).values({
+        storeId,
+        licenseId: existing.id,
+        actorId: user.id,
+        actorEmail: user.email,
+        prevStatus: existing.status,
+        newStatus: "active",
+        prevPlan: existing.plan,
+        newPlan: licenseCode.plan,
+        prevExpiresAt: existing.expiresAt ?? null,
+        newExpiresAt,
+        notes: `Código canjeado: ${code}`,
+      });
+
+      const [updated] = await db
+        .update(licensesTable)
+        .set({ status: "active", plan: licenseCode.plan, expiresAt: newExpiresAt, updatedAt: now })
+        .where(eq(licensesTable.storeId, storeId))
+        .returning();
+      license = updated;
+    } else {
+      const [created] = await db
+        .insert(licensesTable)
+        .values({ storeId, status: "active", plan: licenseCode.plan, startsAt: now, expiresAt: newExpiresAt })
+        .returning();
+      license = created;
+    }
+
+    // ── Increment usedCount ──────────────────────────────────────────────────
+    await db
+      .update(licenseCodesTable)
+      .set({
+        usedCount: licenseCode.usedCount + 1,
+        usedByStoreId: storeId,
+        usedAt: now,
+      })
+      .where(eq(licenseCodesTable.id, licenseCode.id));
+
+    // ── Audit log ────────────────────────────────────────────────────────────
+    try {
+      await db.insert(auditLogsTable).values({
+        actorId: user.id,
+        actorEmail: user.email,
+        actorRole: user.role,
+        action: "code_redeemed",
+        targetType: "store",
+        targetId: storeId,
+        targetLabel: code,
+        details: { code, plan: licenseCode.plan, durationDays: licenseCode.durationDays },
+        ipAddress: req.ip ?? null,
+      });
+    } catch (_) {}
+
+    res.json({
+      success: true,
+      license,
+      message: `Licencia activada por ${licenseCode.durationDays} días`,
+    });
+  } catch (err) {
+    req.log.error({ err }, "redeem-code error");
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

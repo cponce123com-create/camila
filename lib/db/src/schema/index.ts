@@ -22,3 +22,4 @@ export * from "./license_history";
 export * from "./audit_logs";
 export * from "./support_tickets";
 export * from "./announcements";
+export * from "./license_codes";
