@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import {
   MapPin, Phone, MessageCircle, Instagram, Facebook, Star, ShoppingBag,
   X, ChevronLeft, ChevronRight, Send, CheckCircle2, Search, Menu,
-  Clock, Percent, Flame, Sparkles, ChevronDown, QrCode, Tag,
+  Clock, Percent, Flame, Sparkles, QrCode, Tag,
 } from "lucide-react";
 import { StarRating, InteractiveStarRating } from "@/components/ui/star-rating";
 import { Button } from "@/components/ui/button";
@@ -439,6 +439,119 @@ function ProductCard({ product, primaryColor, onReview, onView, whatsapp, storeN
   );
 }
 
+// ─── CategoryBar ─────────────────────────────────────────────────────────────
+
+function CategoryBar({ categories, primaryColor, activeCategoryId, onCategoryChange, totalProducts }: {
+  categories: Category[]; primaryColor: string;
+  activeCategoryId: string | null; onCategoryChange: (id: string | null) => void;
+  totalProducts: number;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", checkScroll); ro.disconnect(); };
+  }, [categories, checkScroll]);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [activeCategoryId]);
+
+  const scroll = (dir: "l" | "r") =>
+    scrollRef.current?.scrollBy({ left: dir === "l" ? -220 : 220, behavior: "smooth" });
+
+  if (!categories.length) return null;
+
+  return (
+    <div className="bg-white border-b border-gray-100 shadow-sm sticky top-[60px] z-40">
+      <div className="max-w-6xl mx-auto flex items-center">
+        {/* Left arrow */}
+        <button
+          onClick={() => scroll("l")}
+          className={cn(
+            "shrink-0 w-9 h-9 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-all",
+            !canLeft && "opacity-0 pointer-events-none"
+          )}>
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        {/* Scroll container */}
+        <div className="relative flex-1 overflow-hidden">
+          {canLeft && (
+            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          )}
+          {canRight && (
+            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          )}
+
+          <div ref={scrollRef} className="flex gap-1.5 overflow-x-auto scrollbar-none py-2.5 px-1">
+            <button
+              ref={!activeCategoryId ? (activeRef as any) : undefined}
+              onClick={() => onCategoryChange(null)}
+              className={cn(
+                "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-all whitespace-nowrap",
+                !activeCategoryId
+                  ? "text-white border-transparent shadow-sm"
+                  : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+              )}
+              style={!activeCategoryId ? { backgroundColor: primaryColor } : {}}>
+              Todos
+              <span className="ml-1 opacity-70 text-xs">({totalProducts})</span>
+            </button>
+
+            {categories.map((c) => {
+              const isActive = activeCategoryId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  ref={isActive ? (activeRef as any) : undefined}
+                  onClick={() => onCategoryChange(c.id)}
+                  className={cn(
+                    "shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-all whitespace-nowrap",
+                    isActive
+                      ? "text-white border-transparent shadow-sm"
+                      : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50"
+                  )}
+                  style={isActive ? { backgroundColor: primaryColor } : {}}>
+                  {c.name}
+                  {c.productCount > 0 && (
+                    <span className="ml-1 opacity-70 text-xs">({c.productCount})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right arrow */}
+        <button
+          onClick={() => scroll("r")}
+          className={cn(
+            "shrink-0 w-9 h-9 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-all",
+            !canRight && "opacity-0 pointer-events-none"
+          )}>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── HorizontalSection ───────────────────────────────────────────────────────
 
 function HorizontalSection({ title, icon, products, primaryColor, onReview, onView, whatsapp, storeName, accentColor }: {
@@ -491,7 +604,6 @@ function StoreNavbar({ store, categories, primaryColor, activeCategoryId, onCate
 }) {
   const [searchVal, setSearchVal] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [catOpen, setCatOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearch = (v: string) => {
@@ -532,32 +644,6 @@ function StoreNavbar({ store, categories, primaryColor, activeCategoryId, onCate
 
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-2 shrink-0">
-          {categories.length > 0 && (
-            <div className="relative">
-              <button onClick={() => setCatOpen(!catOpen)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 transition-colors">
-                Categorías <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", catOpen && "rotate-180")} />
-              </button>
-              {catOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
-                  <button onClick={() => { onCategoryChange(null); setCatOpen(false); }}
-                    className={cn("w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors font-medium",
-                      !activeCategoryId && "text-primary")} style={!activeCategoryId ? { color: primaryColor } : {}}>
-                    Todos los productos
-                  </button>
-                  {categories.map((c) => (
-                    <button key={c.id} onClick={() => { onCategoryChange(c.id); setCatOpen(false); }}
-                      className={cn("w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors",
-                        activeCategoryId === c.id && "font-semibold")}
-                      style={activeCategoryId === c.id ? { color: primaryColor } : {}}>
-                      {c.name}
-                      <span className="ml-1.5 text-gray-400 text-xs">({c.productCount})</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
           {store.whatsapp && config.showWhatsappButton && (
             <a href={`https://wa.me/${store.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-sm font-medium transition-colors">
@@ -591,27 +677,6 @@ function StoreNavbar({ store, categories, primaryColor, activeCategoryId, onCate
             style={{ backgroundColor: primaryColor }}>
             <Star className="w-4 h-4" /> Dejar reseña
           </button>
-          {categories.length > 0 && (
-            <div className="pt-1">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1 mb-2">Categorías</p>
-              <div className="flex flex-wrap gap-2">
-                <button onClick={() => { onCategoryChange(null); setMenuOpen(false); }}
-                  className={cn("px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
-                    !activeCategoryId ? "text-white border-transparent" : "border-gray-200 text-gray-700 bg-gray-50")}
-                  style={!activeCategoryId ? { backgroundColor: primaryColor, borderColor: primaryColor } : {}}>
-                  Todos
-                </button>
-                {categories.map((c) => (
-                  <button key={c.id} onClick={() => { onCategoryChange(c.id); setMenuOpen(false); }}
-                    className={cn("px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
-                      activeCategoryId === c.id ? "text-white border-transparent" : "border-gray-200 text-gray-700 bg-gray-50")}
-                    style={activeCategoryId === c.id ? { backgroundColor: primaryColor } : {}}>
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </header>
@@ -787,6 +852,15 @@ export default function TiendaPage() {
           </div>
         </div>
 
+        {/* Scrollable category bar */}
+        <CategoryBar
+          categories={categories}
+          primaryColor={primaryColor}
+          activeCategoryId={activeCategoryId}
+          onCategoryChange={handleCategoryChange}
+          totalProducts={totalProducts}
+        />
+
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
 
           {/* Featured section */}
@@ -807,27 +881,6 @@ export default function TiendaPage() {
               onReview={openReview} onView={setDetailProduct} whatsapp={store.whatsapp} storeName={store.businessName}
               accentColor="#ef4444"
             />
-          )}
-
-          {/* Category chip tabs (desktop) */}
-          {categories.length > 0 && (
-            <div className="hidden md:flex flex-wrap gap-2">
-              <button
-                onClick={() => handleCategoryChange(null)}
-                className={cn("px-4 py-2 rounded-full text-sm font-medium border transition-all",
-                  !activeCategoryId ? "text-white border-transparent shadow-md" : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50")}
-                style={!activeCategoryId ? { backgroundColor: primaryColor } : {}}>
-                Todos ({totalProducts})
-              </button>
-              {categories.map((c) => (
-                <button key={c.id} onClick={() => handleCategoryChange(c.id)}
-                  className={cn("px-4 py-2 rounded-full text-sm font-medium border transition-all",
-                    activeCategoryId === c.id ? "text-white border-transparent shadow-md" : "border-gray-200 text-gray-600 bg-white hover:bg-gray-50")}
-                  style={activeCategoryId === c.id ? { backgroundColor: primaryColor } : {}}>
-                  {c.name} ({c.productCount})
-                </button>
-              ))}
-            </div>
           )}
 
           {/* Catalog section header */}
