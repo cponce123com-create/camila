@@ -1,0 +1,94 @@
+Corrige y mejora estos puntos en el proyecto:
+
+─────────────────────────────────────────
+CRÍTICO 1 — Token expuesto en JSON
+─────────────────────────────────────────
+En `artifacts/api-server/src/routes/auth.ts`, en las rutas /register y /login, elimina el campo `token` del objeto que se pasa a res.json(). Solo deben quedar `user` y `store`. La cookie httpOnly ya maneja la sesión, el token no debe ir en el body.
+
+─────────────────────────────────────────
+CRÍTICO 2 — Race condition en canje de códigos
+─────────────────────────────────────────
+En `artifacts/api-server/src/routes/payments.ts`, en la ruta POST /redeem-code, envolver toda la lógica de validación + actualización en una transacción de Drizzle (db.transaction()). Dentro de la transacción, reemplazar el UPDATE de usedCount por un UPDATE condicional atómico que solo proceda si used_count < max_uses:
+
+await tx.update(licenseCodesTable)
+  .set({ usedCount: sql`used_count + 1`, usedByStoreId: storeId, usedAt: now })
+  .where(and(
+    eq(licenseCodesTable.id, licenseCode.id),
+    lt(licenseCodesTable.usedCount, licenseCodesTable.maxUses)
+  ))
+
+Si el update devuelve 0 filas afectadas, lanzar error "Código ya no disponible" con status 409. Esto previene el doble canje por requests simultáneos.
+
+─────────────────────────────────────────
+ADVERTENCIA 1 — Reseñas públicas sin rate limit
+─────────────────────────────────────────
+En `artifacts/api-server/src/app.ts`, crear un rate limiter específico para reseñas públicas:
+
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 5,
+  message: { error: "Demasiadas reseñas. Intenta más tarde." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+Aplicarlo antes del router general:
+app.use("/api/public/stores/:slug/reviews", reviewLimiter);
+
+─────────────────────────────────────────
+ADVERTENCIA 2 — Política de contraseña sin complejidad
+─────────────────────────────────────────
+En `artifacts/api-server/src/routes/auth.ts`, en el registerSchema y en el schema de reset-password, cambiar la validación de password a:
+
+password: z.string()
+  .min(8, "Mínimo 8 caracteres")
+  .regex(/[A-Z]/, "Debe contener al menos una mayúscula")
+  .regex(/[0-9]/, "Debe contener al menos un número")
+
+En el loginSchema dejar password: z.string().min(1) sin cambios (no validar complejidad en login).
+
+─────────────────────────────────────────
+ADVERTENCIA 3 — CORS vacío si ALLOWED_ORIGINS no está configurado
+─────────────────────────────────────────
+En `artifacts/api-server/src/app.ts`, en la configuración de CORS en producción, si ALLOWED_ORIGINS no está definido lanzar un error al inicio en lugar de dejar el array vacío:
+
+const allowedOrigins = process.env.NODE_ENV === "production"
+  ? (() => {
+      const origins = process.env.ALLOWED_ORIGINS?.split(",").map(o => o.trim()).filter(Boolean) ?? [];
+      if (origins.length === 0) throw new Error("ALLOWED_ORIGINS is required in production");
+      return origins;
+    })()
+  : true;
+
+─────────────────────────────────────────
+MEJORA 1 — Sentry para monitoreo de errores
+─────────────────────────────────────────
+Instalar @sentry/node en el api-server y @sentry/react en el frontend de camila.
+
+Backend (`artifacts/api-server/src/index.ts`):
+- Importar e inicializar Sentry antes de todo con dsn desde variable de entorno SENTRY_DSN
+- Solo inicializar si SENTRY_DSN está definido (no romper en dev sin la variable)
+- Agregar Sentry.setupExpressErrorHandler(app) en app.ts después de las rutas
+
+Frontend (`artifacts/camila/src/main.tsx`):
+- Inicializar Sentry con VITE_SENTRY_DSN antes de renderizar la app
+- Solo inicializar si la variable existe
+
+Agregar SENTRY_DSN y VITE_SENTRY_DSN al .env.example de ambos.
+
+─────────────────────────────────────────
+MEJORA 2 — Webhook de Culqi para confirmar pagos
+─────────────────────────────────────────
+En `artifacts/api-server/src/routes/payments.ts`, agregar endpoint POST /api/payments/webhook:
+- Sin requireAuth (es llamado por Culqi, no por el usuario)
+- Verificar la firma del webhook usando el header culqi-signature y el CULQI_SECRET_KEY para validar autenticidad (HMAC-SHA256)
+- Si el evento es type "charge.succeeded": buscar el charge_id en audit_logs o en una nueva columna external_charge_id en licenses, y confirmar el pago si aún no fue procesado
+- Si el evento es type "charge.failed": loguear el fallo con el storeId y el monto
+- Responder siempre 200 a Culqi (aunque falle internamente) para que no reintente indefinidamente
+- Agregar la ruta ANTES del middleware de rate limiting general en app.ts (los webhooks no deben ser limitados)
+
+Agregar en .env.example: CULQI_WEBHOOK_SECRET=
+
+─────────────────────────────────────────
+No cambiar ninguna otra lógica. Solo estos 7 puntos.
+─────────────────────────────────────────

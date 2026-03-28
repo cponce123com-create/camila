@@ -5,6 +5,7 @@ import pinoHttp from "pino-http";
 import helmet from "helmet";
 import compression from "compression";
 import { rateLimit } from "express-rate-limit";
+import * as Sentry from "@sentry/node";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { sessionMiddleware } from "./middlewares/session";
@@ -27,7 +28,11 @@ app.use(
 
 // ─── CORS ───────────────────────────────────────────────────────────────────
 const allowedOrigins = process.env.NODE_ENV === "production"
-  ? (process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()) ?? [])
+  ? (() => {
+      const origins = process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean) ?? [];
+      if (origins.length === 0) throw new Error("ALLOWED_ORIGINS is required in production");
+      return origins;
+    })()
   : true;
 
 app.use(
@@ -53,8 +58,21 @@ const apiLimiter = rateLimit({
   message: { error: "Límite de solicitudes alcanzado. Intenta más tarde." },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV !== "production",
+  skip: (req) =>
+    process.env.NODE_ENV !== "production" ||
+    req.originalUrl.includes("/payments/webhook"),
 });
+
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { error: "Demasiadas reseñas. Intenta más tarde." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ─── Raw body for Culqi webhook (must come before express.json) ───────────────
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 
 // ─── Body Parsing ────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "2mb" }));
@@ -85,11 +103,17 @@ app.use(
 // ─── Session ──────────────────────────────────────────────────────────────────
 app.use(sessionMiddleware);
 
+// ─── Reviews rate limiter ─────────────────────────────────────────────────────
+app.use("/api/public/stores/:slug/reviews", reviewLimiter);
+
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter);
 app.use("/api/auth/forgot-password", authLimiter);
 app.use("/api/auth/reset-password", authLimiter);
 app.use("/api", apiLimiter);
 app.use("/api", router);
+
+// ─── Sentry error handler (must come after routes) ───────────────────────────
+Sentry.setupExpressErrorHandler(app);
 
 export default app;

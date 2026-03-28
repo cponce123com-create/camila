@@ -1,3 +1,12 @@
+import * as Sentry from "@sentry/node";
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV ?? "development",
+  });
+}
+
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedDefaultData } from "./lib/seed";
