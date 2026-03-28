@@ -95,7 +95,6 @@ export const LoginUserResponse = zod.object({
       .optional(),
     createdAt: zod.date(),
   }),
-  token: zod.string(),
 });
 
 /**

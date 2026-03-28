@@ -105,7 +105,6 @@ export interface Store {
 export interface AuthResponse {
   user: User;
   store: Store;
-  token: string;
 }
 
 export interface CurrentUserResponse {

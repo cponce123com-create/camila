@@ -11,5 +11,4 @@ import type { User } from "./user";
 export interface AuthResponse {
   user: User;
   store: Store;
-  token: string;
 }

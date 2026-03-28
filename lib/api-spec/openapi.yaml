@@ -2458,12 +2458,9 @@ components:
           $ref: "#/components/schemas/User"
         store:
           $ref: "#/components/schemas/Store"
-        token:
-          type: string
       required:
         - user
         - store
-        - token
 
     CurrentUserResponse:
       type: object
