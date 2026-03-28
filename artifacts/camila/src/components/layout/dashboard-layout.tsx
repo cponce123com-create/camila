@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { 
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
   Users, Settings, LogOut, Menu, X, ShieldCheck, Palette,
@@ -332,6 +333,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Onboarding wizard — only for store_admin users with incomplete profile */}
+      {user.role === "store_admin" && store && (
+        <OnboardingWizard store={store} />
+      )}
     </div>
   );
 }
