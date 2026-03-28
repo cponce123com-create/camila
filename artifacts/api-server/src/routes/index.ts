@@ -34,6 +34,7 @@ router.use("/stores", storesRouter);
 router.use("/admin", adminRouter);
 router.use("/public", publicRouter);
 router.use("/active-announcements", activeAnnouncementsRouter);
+router.use("/announcements", activeAnnouncementsRouter);
 router.use("/support-tickets", supportTicketsRouter);
 router.use("/payments", paymentsRouter);
 

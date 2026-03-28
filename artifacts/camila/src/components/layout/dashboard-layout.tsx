@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
@@ -6,8 +6,9 @@ import {
   LayoutDashboard, Package, Tags, ArrowLeftRight, 
   Users, Settings, LogOut, Menu, X, ShieldCheck, Palette,
   MessageSquare, UtensilsCrossed, ShoppingBag, BarChart2, ChevronRight,
-  ExternalLink, Share2, CreditCard, Ticket,
+  ExternalLink, Share2, CreditCard, Ticket, Info, AlertTriangle, CheckCircle, Wrench,
 } from "lucide-react";
+import { useGetActiveAnnouncements } from "@/hooks/use-active-announcements";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { differenceInDays, parseISO, format } from "date-fns";
@@ -68,6 +69,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, store, license, logout, isLoading } = useAuth();
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const dismissAnnouncement = useCallback((id: string) => {
+    setDismissedIds((prev) => new Set(prev).add(id));
+  }, []);
+  const { data: announcements } = useGetActiveAnnouncements();
 
   if (isLoading) {
     return (
@@ -329,9 +335,42 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </div>
   );
 
+  const visibleAnnouncements = (announcements ?? []).filter(
+    (a) => !dismissedIds.has(a.id)
+  );
+
+  const announcementStyle: Record<string, { bg: string; text: string; border: string; icon: ReactNode }> = {
+    info:        { bg: "bg-blue-50",   text: "text-blue-900",   border: "border-blue-200",  icon: <Info        className="h-4 w-4 shrink-0 text-blue-600"   /> },
+    warning:     { bg: "bg-amber-50",  text: "text-amber-900",  border: "border-amber-200", icon: <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" /> },
+    success:     { bg: "bg-green-50",  text: "text-green-900",  border: "border-green-200", icon: <CheckCircle className="h-4 w-4 shrink-0 text-green-600"  /> },
+    maintenance: { bg: "bg-orange-50", text: "text-orange-900", border: "border-orange-200",icon: <Wrench      className="h-4 w-4 shrink-0 text-orange-600"  /> },
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {banner}
+      {visibleAnnouncements.map((ann) => {
+        const s = announcementStyle[ann.type] ?? announcementStyle.info;
+        return (
+          <div
+            key={ann.id}
+            className={`flex items-start gap-2.5 border-b px-4 py-2.5 text-sm ${s.bg} ${s.text} ${s.border}`}
+          >
+            <span className="mt-0.5">{s.icon}</span>
+            <span className="flex-1 leading-snug">
+              <strong className="font-semibold">{ann.title}</strong>
+              {ann.body ? <> — {ann.body}</> : null}
+            </span>
+            <button
+              onClick={() => dismissAnnouncement(ann.id)}
+              aria-label="Cerrar anuncio"
+              className={`shrink-0 ml-1 mt-0.5 rounded p-0.5 opacity-60 hover:opacity-100 transition-opacity focus:outline-none`}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        );
+      })}
       <div className="flex-1 flex overflow-hidden relative">
         {/* Desktop Sidebar */}
         <aside className="hidden md:flex w-64 flex-col flex-shrink-0 shadow-sidebar z-10" style={{ background: "hsl(var(--sidebar-bg))" }}>
