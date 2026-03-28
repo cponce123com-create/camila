@@ -14,6 +14,7 @@ import {
 import { eq, ilike, count, and, sql, desc, asc, or, gte, inArray } from "drizzle-orm";
 import { requireSuperAdmin, requireAuth } from "../middlewares/session";
 import { hashPassword } from "../lib/auth";
+import { sendLicenseExpiringEmail } from "../lib/email";
 import { z } from "zod";
 
 const router: IRouter = Router();
@@ -728,6 +729,45 @@ router.get("/analytics", requireSuperAdmin, async (req, res) => {
     });
   } catch (err) {
     req.log.error({ err }, "Admin analytics error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ─── Notify expiring licenses ─────────────────────────────────────────────────
+router.post("/notify-expiring", requireSuperAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    const expiring = await db
+      .select({
+        storeId: licensesTable.storeId,
+        expiresAt: licensesTable.expiresAt,
+        businessName: storesTable.businessName,
+        email: storesTable.email,
+      })
+      .from(licensesTable)
+      .innerJoin(storesTable, eq(storesTable.id, licensesTable.storeId))
+      .where(
+        and(
+          gte(licensesTable.expiresAt, now),
+          sql`${licensesTable.expiresAt} <= ${in3Days}`,
+          or(
+            eq(licensesTable.status, "trial"),
+            eq(licensesTable.status, "active"),
+          ),
+        ),
+      );
+
+    let sent = 0;
+    for (const row of expiring) {
+      await sendLicenseExpiringEmail(row.email, row.businessName, row.expiresAt);
+      sent++;
+    }
+
+    res.json({ success: true, notified: sent, stores: expiring.map((r) => r.businessName) });
+  } catch (err) {
+    req.log.error({ err }, "notify-expiring error");
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

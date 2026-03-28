@@ -11,6 +11,7 @@ import { hashPassword, verifyPassword, generateToken, generateResetToken } from 
 import { generateUniqueSlug } from "../lib/slug";
 import { seedDefaultCategories } from "../lib/seed";
 import { requireAuth, sessionMiddleware } from "../middlewares/session";
+import { sendWelcomeEmail, sendPasswordResetEmail } from "../lib/email";
 import { z } from "zod";
 
 const router: IRouter = Router();
@@ -125,6 +126,9 @@ router.post("/register", async (req, res) => {
 
     // Seed default categories for the new store (fire-and-forget, non-blocking)
     seedDefaultCategories(storeId, data.businessType).catch(() => {});
+
+    // Welcome email (fire-and-forget, non-blocking)
+    sendWelcomeEmail(data.email, data.ownerName, data.businessName).catch(() => {});
 
     res.cookie("camila_session", token, {
       httpOnly: true,
@@ -328,6 +332,9 @@ router.post("/forgot-password", async (req, res) => {
         .where(eq(usersTable.id, user.id));
 
       req.log.info({ email }, "Password reset token generated");
+
+      // Send reset email (fire-and-forget, non-blocking)
+      sendPasswordResetEmail(email, resetToken).catch(() => {});
     }
 
     res.json({ success: true, message: "Si el correo existe, recibirás instrucciones." });

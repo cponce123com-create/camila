@@ -27,3 +27,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+FRONTEND_URL = "https://3b8bd94a-2738-4f21-944f-5ac658b519cd-00-2m265qvm529g8.janeway.replit.dev"
