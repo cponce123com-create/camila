@@ -4,6 +4,7 @@ import { salesTable, saleItemsTable, usersTable, clientsTable } from "@workspace
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { requireAuth } from "../middlewares/session";
 import { z } from "zod";
+import { encodeCursor, decodeCursor, buildCursorCondition } from "../lib/cursor";
 
 const router: IRouter = Router();
 
@@ -65,9 +66,17 @@ router.get("/", requireAuth, async (req, res) => {
   const paymentMethod = req.query.paymentMethod as string | undefined;
   const status = req.query.status as string | undefined;
   const clientId = req.query.clientId as string | undefined;
+  // Cursor-based pagination support
+  const cursorStr = req.query.cursor as string | undefined;
+  let parsedCursor = cursorStr ? decodeCursor(cursorStr) : null;
+  if (cursorStr && !parsedCursor) {
+    res.status(400).json({ error: "Cursor inválido" });
+    return;
+  }
+
   const page = Math.max(1, parseInt(req.query.page as string || "1"));
   const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string || "20")));
-  const offset = (page - 1) * limit;
+  const offset = parsedCursor ? 0 : (page - 1) * limit;
 
   try {
     const conditions = [
@@ -78,14 +87,14 @@ router.get("/", requireAuth, async (req, res) => {
       paymentMethod ? eq(salesTable.paymentMethod, paymentMethod as any) : undefined,
       status ? eq(salesTable.status, status as any) : undefined,
       clientId ? eq(salesTable.clientId, clientId) : undefined,
+      parsedCursor
+        ? buildCursorCondition(parsedCursor, salesTable.createdAt, salesTable.id)
+        : undefined,
     ].filter(Boolean) as any[];
 
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(salesTable)
-      .where(and(...conditions));
+    const fetchLimit = parsedCursor ? limit + 1 : limit;
 
-    const data = await db
+    const rawData = await db
       .select({
         id: salesTable.id,
         storeId: salesTable.storeId,
@@ -110,9 +119,23 @@ router.get("/", requireAuth, async (req, res) => {
       .from(salesTable)
       .leftJoin(usersTable, eq(salesTable.staffUserId, usersTable.id))
       .where(and(...conditions))
-      .orderBy(desc(salesTable.soldAt))
-      .limit(limit)
+      .orderBy(desc(salesTable.createdAt), desc(salesTable.id))
+      .limit(fetchLimit)
       .offset(offset);
+
+    const hasMore = parsedCursor && rawData.length > limit;
+    const data = hasMore ? rawData.slice(0, limit) : rawData;
+
+    const nextCursor = hasMore && data.length > 0
+      ? encodeCursor({
+          createdAt: (data[data.length - 1].createdAt as Date).toISOString(),
+          id: data[data.length - 1].id,
+        })
+      : null;
+
+    const total = parsedCursor
+      ? null
+      : (await db.select({ count: sql<number>`count(*)::int` }).from(salesTable).where(and(...conditions)))[0].count;
 
     // Compute day totals
     const [todayStats] = await db
@@ -129,10 +152,9 @@ router.get("/", requireAuth, async (req, res) => {
 
     res.json({
       data,
-      total: count,
-      page,
-      limit,
-      totalPages: Math.ceil(count / limit),
+      ...(parsedCursor
+        ? { nextCursor, hasMore: Boolean(hasMore) }
+        : { total, page, limit, totalPages: Math.ceil((total ?? 0) / limit) }),
       todayTotal: todayStats.totalToday,
       todayCount: todayStats.countToday,
     });

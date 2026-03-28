@@ -1,5 +1,13 @@
 # Camila — SaaS para Emprendedores Locales
 
+## Performance & Security Improvements (Latest)
+- **Cursor pagination (M-01)**: Products, Sales, and Admin/Stores endpoints accept optional `?cursor=` (base64url JSON). Cursor mode returns `{ data, nextCursor, hasMore }` and skips the COUNT query. Offset-based pagination (`?page=`) still works as before.
+- **In-memory store cache (M-02)**: `GET /api/public/stores/:slug` is cached for 60 s in a Map-based TTL cache (`src/lib/store-cache.ts`). Expired entries are pruned every 5 minutes.
+- **Seed refactor (M-03)**: `seed.ts` now exports `seedProduction()`, `seedDevelopment()`, and the legacy `seedDefaultData()` (dispatches by NODE_ENV). The internal `_seedCore(isProduction)` function handles both paths.
+- **Swagger UI (M-04)**: Full OpenAPI 3.0.3 spec embedded in `app.ts`; accessible at `/api/docs` in all environments.
+- **Rolling sessions (M-05)**: `sessionMiddleware` reads `expiresAt` from DB. If less than 15 days remain on a 30-day session, it updates the DB expiry and reissues the Set-Cookie header automatically.
+- **React.lazy (M-06)**: All heavy dashboard/admin routes are lazily loaded via `React.lazy` + a single `<Suspense>` boundary in `App.tsx`.
+
 ## Phase 11 — Cloudinary Image Uploads (Complete)
 - **Upload signing endpoint**: `POST /api/uploads/sign` — generates a Cloudinary signed upload (timestamp + SHA-256 signature). Accepts folder: `logo | banner | product | banner-promo`. Requires auth.
 - **`ImageUpload` component** (`artifacts/camila/src/components/ui/image-upload.tsx`): Reusable single-image uploader with drag & drop, preview, and remove button. Supports `square`, `banner`, and `free` aspect ratios.

@@ -5,6 +5,7 @@ import { eq, and, ilike, count, lte, gte, sql, asc, desc, or, exists } from "dri
 import { productVariantsTable } from "@workspace/db";
 import { requireAuth, requireStoreAdmin } from "../middlewares/session";
 import { z } from "zod";
+import { encodeCursor, decodeCursor, buildCursorCondition } from "../lib/cursor";
 
 const router: IRouter = Router();
 
@@ -244,9 +245,17 @@ router.get("/", requireAuth, async (req, res) => {
     return;
   }
 
+  // Cursor-based pagination (preferred for large tables)
+  const cursorStr = req.query.cursor as string | undefined;
+  let parsedCursor = cursorStr ? decodeCursor(cursorStr) : null;
+  if (cursorStr && !parsedCursor) {
+    res.status(400).json({ error: "Cursor inválido" });
+    return;
+  }
+
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
-  const offset = (page - 1) * limit;
+  const offset = parsedCursor ? 0 : (page - 1) * limit;
   const categoryId = req.query.categoryId as string | undefined;
   const search = req.query.search as string | undefined;
   const lowStock = req.query.lowStock === "true";
@@ -311,6 +320,10 @@ router.get("/", requireAuth, async (req, res) => {
       precioMin !== undefined ? gte(productsTable.price, String(precioMin)) : undefined,
       precioMax !== undefined ? lte(productsTable.price, String(precioMax)) : undefined,
       hasVariantFilter,
+      // Cursor condition: only items before the cursor position
+      parsedCursor
+        ? buildCursorCondition(parsedCursor, productsTable.createdAt, productsTable.id)
+        : undefined,
     ].filter(Boolean) as Parameters<typeof and>[];
 
     const orderCol =
@@ -324,26 +337,41 @@ router.get("/", requireAuth, async (req, res) => {
 
     const orderFn = sortDir === "desc" ? desc : asc;
 
-    const products = await db
+    // Cursor mode: fetch limit+1 to detect hasMore; use createdAt DESC, id DESC
+    const fetchLimit = parsedCursor ? limit + 1 : limit;
+    const orderBy = parsedCursor
+      ? [desc(productsTable.createdAt), desc(productsTable.id)]
+      : [orderFn(orderCol)];
+
+    const rawProducts = await db
       .select(buildProductSelect())
       .from(productsTable)
       .leftJoin(categoriesTable, eq(categoriesTable.id, productsTable.categoryId))
       .where(and(...filters))
-      .limit(limit)
+      .limit(fetchLimit)
       .offset(offset)
-      .orderBy(orderFn(orderCol));
+      .orderBy(...orderBy);
 
-    const [{ total }] = await db
-      .select({ total: count() })
-      .from(productsTable)
-      .where(and(...filters));
+    const hasMore = parsedCursor && rawProducts.length > limit;
+    const products = hasMore ? rawProducts.slice(0, limit) : rawProducts;
+
+    const nextCursor = hasMore && products.length > 0
+      ? encodeCursor({
+          createdAt: (products[products.length - 1].createdAt as Date).toISOString(),
+          id: products[products.length - 1].id,
+        })
+      : null;
+
+    // Only run COUNT for offset-based pagination (cursor mode skips it)
+    const total = parsedCursor
+      ? null
+      : Number((await db.select({ total: count() }).from(productsTable).where(and(...filters)))[0].total);
 
     res.json({
       data: products,
-      total: Number(total),
-      page,
-      limit,
-      totalPages: Math.ceil(Number(total) / limit),
+      ...(parsedCursor
+        ? { nextCursor, hasMore: Boolean(hasMore) }
+        : { total, page, limit, totalPages: Math.ceil((total ?? 0) / limit) }),
     });
   } catch (err) {
     req.log.error({ err }, "Get products error");

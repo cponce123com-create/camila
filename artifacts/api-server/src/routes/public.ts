@@ -11,10 +11,26 @@ import {
 } from "@workspace/db";
 import { eq, and, avg, count, desc, asc, ilike, sql, isNotNull } from "drizzle-orm";
 import { z } from "zod";
+import { cacheGet, cacheSet, cachePrune } from "../lib/store-cache";
 
 const router: IRouter = Router();
 
-async function getStoreBySlug(slug: string) {
+// Prune expired cache entries every 5 minutes
+setInterval(cachePrune, 5 * 60 * 1000);
+
+type StorePublic = {
+  id: string; slug: string; businessName: string; businessType: string;
+  ownerName: string; district: string | null; address: string | null;
+  phone: string | null; description: string | null; logoUrl: string | null;
+  bannerUrl: string | null; primaryColor: string | null; whatsapp: string | null;
+  socialInstagram: string | null; socialFacebook: string | null;
+};
+
+async function getStoreBySlug(slug: string): Promise<StorePublic | null> {
+  const cacheKey = `store:${slug}`;
+  const cached = cacheGet<StorePublic>(cacheKey);
+  if (cached) return cached;
+
   const [store] = await db
     .select({
       id: storesTable.id,
@@ -36,7 +52,10 @@ async function getStoreBySlug(slug: string) {
     .from(storesTable)
     .where(and(eq(storesTable.slug, slug), eq(storesTable.isActive, true)))
     .limit(1);
-  return store ?? null;
+
+  const result = store ?? null;
+  if (result) cacheSet(cacheKey, result);
+  return result;
 }
 
 // ─── GET /api/public/stores/:slug ────────────────────────────────────────────

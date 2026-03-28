@@ -1,96 +1,115 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 
-// Pages
+// Eagerly loaded — part of critical path
 import LandingPage from "@/pages/landing";
 import LoginPage from "@/pages/auth/login";
 import RegisterPage from "@/pages/auth/register";
-import DashboardPage from "@/pages/dashboard";
-import ProductsPage from "@/pages/dashboard/products";
-import CategoriesPage from "@/pages/dashboard/categories";
-import InventoryPage from "@/pages/dashboard/inventory";
-import TeamPage from "@/pages/dashboard/team";
-import SettingsPage from "@/pages/dashboard/settings";
-import CustomizePage from "@/pages/dashboard/customize";
-import ReviewsPage from "@/pages/dashboard/reviews";
-import AdminPage from "@/pages/admin";
-import AdminStoresPage from "@/pages/admin/stores";
-import AdminStoreDetailPage from "@/pages/admin/store-detail";
-import AdminAuditPage from "@/pages/admin/audit";
-import AdminSupportPage from "@/pages/admin/support";
-import AdminAnnouncementsPage from "@/pages/admin/announcements";
-import AdminAnalyticsPage from "@/pages/admin/analytics";
-import AdminLicenseCodesPage from "@/pages/admin/license-codes";
-import StoreAnalyticsPage from "@/pages/dashboard/analytics";
-import RestaurantAnalyticsPage from "@/pages/dashboard/analytics/restaurant";
-import TiendaPage from "@/pages/tienda";
-import PricingPage from "@/pages/pricing";
 import NotFound from "@/pages/not-found";
 
-// Restaurant pages
-import RestaurantPage from "@/pages/dashboard/restaurant";
-import RestaurantSetupPage from "@/pages/dashboard/restaurant/setup";
-import RestaurantOrdersPage from "@/pages/dashboard/restaurant/orders";
-import DailyMenuPage from "@/pages/dashboard/restaurant/daily-menu";
-import TableOrderPage from "@/pages/dashboard/restaurant/table-order";
-import SalesPage from "@/pages/dashboard/sales";
-import NewSalePage from "@/pages/dashboard/sales/new";
-import SaleDetailPage from "@/pages/dashboard/sales/detail";
-import BillingPage from "@/pages/dashboard/billing";
+// Lazy loaded — dashboard, admin and heavy pages
+const DashboardPage = lazy(() => import("@/pages/dashboard"));
+const ProductsPage = lazy(() => import("@/pages/dashboard/products"));
+const CategoriesPage = lazy(() => import("@/pages/dashboard/categories"));
+const InventoryPage = lazy(() => import("@/pages/dashboard/inventory"));
+const TeamPage = lazy(() => import("@/pages/dashboard/team"));
+const SettingsPage = lazy(() => import("@/pages/dashboard/settings"));
+const CustomizePage = lazy(() => import("@/pages/dashboard/customize"));
+const ReviewsPage = lazy(() => import("@/pages/dashboard/reviews"));
+const SalesPage = lazy(() => import("@/pages/dashboard/sales"));
+const NewSalePage = lazy(() => import("@/pages/dashboard/sales/new"));
+const SaleDetailPage = lazy(() => import("@/pages/dashboard/sales/detail"));
+const BillingPage = lazy(() => import("@/pages/dashboard/billing"));
+
+// Analytics — heavy (Recharts), always lazy
+const StoreAnalyticsPage = lazy(() => import("@/pages/dashboard/analytics"));
+const RestaurantAnalyticsPage = lazy(() => import("@/pages/dashboard/analytics/restaurant"));
+
+// Restaurant module
+const RestaurantPage = lazy(() => import("@/pages/dashboard/restaurant"));
+const RestaurantSetupPage = lazy(() => import("@/pages/dashboard/restaurant/setup"));
+const RestaurantOrdersPage = lazy(() => import("@/pages/dashboard/restaurant/orders"));
+const DailyMenuPage = lazy(() => import("@/pages/dashboard/restaurant/daily-menu"));
+const TableOrderPage = lazy(() => import("@/pages/dashboard/restaurant/table-order"));
+
+// Admin module
+const AdminPage = lazy(() => import("@/pages/admin"));
+const AdminStoresPage = lazy(() => import("@/pages/admin/stores"));
+const AdminStoreDetailPage = lazy(() => import("@/pages/admin/store-detail"));
+const AdminAuditPage = lazy(() => import("@/pages/admin/audit"));
+const AdminSupportPage = lazy(() => import("@/pages/admin/support"));
+const AdminAnnouncementsPage = lazy(() => import("@/pages/admin/announcements"));
+const AdminAnalyticsPage = lazy(() => import("@/pages/admin/analytics"));
+const AdminLicenseCodesPage = lazy(() => import("@/pages/admin/license-codes"));
+
+// Public pages
+const TiendaPage = lazy(() => import("@/pages/tienda"));
+const PricingPage = lazy(() => import("@/pages/pricing"));
 
 const queryClient = new QueryClient();
 
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 function Router() {
   return (
-    <Switch>
-      {/* Public / Auth */}
-      <Route path="/" component={LandingPage} />
-      <Route path="/login" component={LoginPage} />
-      <Route path="/register" component={RegisterPage} />
-      <Route path="/tienda/:slug" component={TiendaPage} />
-      <Route path="/precios" component={PricingPage} />
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        {/* Public / Auth */}
+        <Route path="/" component={LandingPage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/register" component={RegisterPage} />
+        <Route path="/tienda/:slug" component={TiendaPage} />
+        <Route path="/precios" component={PricingPage} />
 
-      {/* Protected Dashboard */}
-      <Route path="/dashboard" component={DashboardPage} />
-      <Route path="/dashboard/products" component={ProductsPage} />
-      <Route path="/dashboard/categories" component={CategoriesPage} />
-      <Route path="/dashboard/inventory" component={InventoryPage} />
-      <Route path="/dashboard/team" component={TeamPage} />
-      <Route path="/dashboard/customize" component={CustomizePage} />
-      <Route path="/dashboard/reviews" component={ReviewsPage} />
-      <Route path="/dashboard/settings" component={SettingsPage} />
+        {/* Protected Dashboard */}
+        <Route path="/dashboard" component={DashboardPage} />
+        <Route path="/dashboard/products" component={ProductsPage} />
+        <Route path="/dashboard/categories" component={CategoriesPage} />
+        <Route path="/dashboard/inventory" component={InventoryPage} />
+        <Route path="/dashboard/team" component={TeamPage} />
+        <Route path="/dashboard/customize" component={CustomizePage} />
+        <Route path="/dashboard/reviews" component={ReviewsPage} />
+        <Route path="/dashboard/settings" component={SettingsPage} />
 
-      {/* Restaurant module */}
-      <Route path="/dashboard/restaurant" component={RestaurantPage} />
-      <Route path="/dashboard/restaurant/setup" component={RestaurantSetupPage} />
-      <Route path="/dashboard/restaurant/orders" component={RestaurantOrdersPage} />
-      <Route path="/dashboard/restaurant/daily-menu" component={DailyMenuPage} />
-      <Route path="/dashboard/restaurant/tables/:tableId" component={TableOrderPage} />
+        {/* Restaurant module */}
+        <Route path="/dashboard/restaurant" component={RestaurantPage} />
+        <Route path="/dashboard/restaurant/setup" component={RestaurantSetupPage} />
+        <Route path="/dashboard/restaurant/orders" component={RestaurantOrdersPage} />
+        <Route path="/dashboard/restaurant/daily-menu" component={DailyMenuPage} />
+        <Route path="/dashboard/restaurant/tables/:tableId" component={TableOrderPage} />
 
-      {/* Sales module */}
-      <Route path="/dashboard/sales" component={SalesPage} />
-      <Route path="/dashboard/sales/new" component={NewSalePage} />
-      <Route path="/dashboard/sales/:id" component={SaleDetailPage} />
-      <Route path="/dashboard/billing" component={BillingPage} />
+        {/* Sales module */}
+        <Route path="/dashboard/sales" component={SalesPage} />
+        <Route path="/dashboard/sales/new" component={NewSalePage} />
+        <Route path="/dashboard/sales/:id" component={SaleDetailPage} />
+        <Route path="/dashboard/billing" component={BillingPage} />
 
-      {/* Protected Superadmin */}
-      <Route path="/dashboard/analytics" component={StoreAnalyticsPage} />
-      <Route path="/dashboard/analytics/restaurant" component={RestaurantAnalyticsPage} />
+        {/* Protected Superadmin */}
+        <Route path="/dashboard/analytics" component={StoreAnalyticsPage} />
+        <Route path="/dashboard/analytics/restaurant" component={RestaurantAnalyticsPage} />
 
-      <Route path="/admin" component={AdminPage} />
-      <Route path="/admin/stores" component={AdminStoresPage} />
-      <Route path="/admin/stores/:id" component={AdminStoreDetailPage} />
-      <Route path="/admin/audit" component={AdminAuditPage} />
-      <Route path="/admin/support" component={AdminSupportPage} />
-      <Route path="/admin/announcements" component={AdminAnnouncementsPage} />
-      <Route path="/admin/analytics" component={AdminAnalyticsPage} />
-      <Route path="/admin/license-codes" component={AdminLicenseCodesPage} />
+        <Route path="/admin" component={AdminPage} />
+        <Route path="/admin/stores" component={AdminStoresPage} />
+        <Route path="/admin/stores/:id" component={AdminStoreDetailPage} />
+        <Route path="/admin/audit" component={AdminAuditPage} />
+        <Route path="/admin/support" component={AdminSupportPage} />
+        <Route path="/admin/announcements" component={AdminAnnouncementsPage} />
+        <Route path="/admin/analytics" component={AdminAnalyticsPage} />
+        <Route path="/admin/license-codes" component={AdminLicenseCodesPage} />
 
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 

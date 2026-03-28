@@ -441,11 +441,36 @@ export async function seedDefaultCategories(storeId: string, businessType: strin
   }
 }
 
-// ─── Main seed ────────────────────────────────────────────────────────────────
+// ─── Seed exports ─────────────────────────────────────────────────────────────
 
+/**
+ * seedProduction — only creates the superadmin user.
+ * Called automatically on startup in production.
+ */
+export async function seedProduction() {
+  return _seedCore(true);
+}
+
+/**
+ * seedDevelopment — creates superadmin + demo stores (when SEED_DEMO_STORES=true).
+ * Called automatically on startup in development/staging.
+ */
+export async function seedDevelopment() {
+  return _seedCore(false);
+}
+
+/**
+ * seedDefaultData — legacy export; dispatches by NODE_ENV.
+ * @deprecated Use seedProduction / seedDevelopment directly.
+ */
 export async function seedDefaultData() {
-  const isProduction = process.env.NODE_ENV === "production";
+  if (process.env.NODE_ENV === "production") {
+    return seedProduction();
+  }
+  return seedDevelopment();
+}
 
+async function _seedCore(isProduction: boolean) {
   try {
     // ── Superadmin ─────────────────────────────────────────────────────────
     const adminEmail = process.env.SUPERADMIN_EMAIL ?? "admin@camila.pe";

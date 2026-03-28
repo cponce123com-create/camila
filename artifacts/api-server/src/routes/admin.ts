@@ -13,6 +13,7 @@ import {
   licenseCodesTable,
 } from "@workspace/db";
 import { eq, ilike, count, and, sql, desc, asc, or, gte, inArray } from "drizzle-orm";
+import { encodeCursor, decodeCursor, buildCursorCondition } from "../lib/cursor";
 import { requireSuperAdmin, requireAuth } from "../middlewares/session";
 import { hashPassword } from "../lib/auth";
 import { sendLicenseExpiringEmail } from "../lib/email";
@@ -47,11 +48,18 @@ async function recordAudit(
 }
 
 router.get("/stores", requireSuperAdmin, async (req, res) => {
+  const cursorStr = req.query.cursor as string | undefined;
+  let parsedCursor = cursorStr ? decodeCursor(cursorStr) : null;
+  if (cursorStr && !parsedCursor) {
+    res.status(400).json({ error: "Cursor inválido" });
+    return;
+  }
+
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
   const status = req.query.status as string | undefined;
   const search = req.query.search as string | undefined;
-  const offset = (page - 1) * limit;
+  const offset = parsedCursor ? 0 : (page - 1) * limit;
 
   try {
     const whereClause = and(
@@ -64,27 +72,44 @@ router.get("/stores", requireSuperAdmin, async (req, res) => {
         : undefined,
       status
         ? eq(licensesTable.status, status as "trial" | "active" | "expired" | "suspended")
-        : undefined
+        : undefined,
+      parsedCursor
+        ? buildCursorCondition(parsedCursor, storesTable.createdAt, storesTable.id)
+        : undefined,
     );
 
-    const stores = await db
+    const fetchLimit = parsedCursor ? limit + 1 : limit;
+
+    const rawStores = await db
       .select({ store: storesTable, license: licensesTable })
       .from(storesTable)
       .leftJoin(licensesTable, eq(licensesTable.storeId, storesTable.id))
       .where(whereClause)
-      .limit(limit)
+      .limit(fetchLimit)
       .offset(offset)
       .orderBy(desc(storesTable.createdAt));
 
-    const [{ total }] = await db
-      .select({ total: count() })
-      .from(storesTable)
-      .leftJoin(licensesTable, eq(licensesTable.storeId, storesTable.id))
-      .where(whereClause);
-
+    const hasMore = parsedCursor && rawStores.length > limit;
+    const stores = hasMore ? rawStores.slice(0, limit) : rawStores;
     const data = stores.map(({ store, license }) => ({ ...store, license: license ?? null }));
 
-    res.json({ data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) });
+    const nextCursor = hasMore && data.length > 0
+      ? encodeCursor({
+          createdAt: (data[data.length - 1].createdAt as Date).toISOString(),
+          id: data[data.length - 1].id,
+        })
+      : null;
+
+    if (parsedCursor) {
+      res.json({ data, nextCursor, hasMore: Boolean(hasMore) });
+    } else {
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(storesTable)
+        .leftJoin(licensesTable, eq(licensesTable.storeId, storesTable.id))
+        .where(whereClause);
+      res.json({ data, total: Number(total), page, limit, totalPages: Math.ceil(Number(total) / limit) });
+    }
   } catch (err) {
     req.log.error({ err }, "Admin get all stores error");
     res.status(500).json({ error: "Error interno del servidor" });

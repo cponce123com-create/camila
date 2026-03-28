@@ -3,6 +3,10 @@ import { db } from "@workspace/db";
 import { sessionsTable, usersTable, storesTable, licensesTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
 
+// Rolling session: renew if less than half lifetime remains
+const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const RENEW_THRESHOLD_MS = SESSION_DURATION_MS / 2;     // 15 days
+
 const SESSION_COOKIE = process.env.NODE_ENV === "production"
   ? "__Host-camila_session"
   : "camila_session";
@@ -39,7 +43,12 @@ export async function sessionMiddleware(
 
   try {
     const [session] = await db
-      .select({ id: sessionsTable.id, userId: sessionsTable.userId, userAgent: sessionsTable.userAgent })
+      .select({
+        id: sessionsTable.id,
+        userId: sessionsTable.userId,
+        userAgent: sessionsTable.userAgent,
+        expiresAt: sessionsTable.expiresAt,
+      })
       .from(sessionsTable)
       .where(
         and(
@@ -84,6 +93,27 @@ export async function sessionMiddleware(
 
     req.user = user as AuthUser;
     req.storeId = user.storeId ?? undefined;
+
+    // ── Rolling session: extend expiry if less than half lifetime remains ──
+    const now = Date.now();
+    const remaining = session.expiresAt.getTime() - now;
+    if (remaining < RENEW_THRESHOLD_MS) {
+      const newExpiry = new Date(now + SESSION_DURATION_MS);
+      db.update(sessionsTable)
+        .set({ expiresAt: newExpiry })
+        .where(eq(sessionsTable.id, session.id))
+        .catch((err: unknown) => req.log?.warn({ err }, "Rolling session update failed"));
+
+      const isProd = process.env.NODE_ENV === "production";
+      res.cookie(SESSION_COOKIE, token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "strict",
+        path: "/",
+        maxAge: SESSION_DURATION_MS,
+      });
+    }
+
     next();
   } catch (err) {
     req.log?.error({ err }, "Session middleware error");
