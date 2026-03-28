@@ -22,7 +22,20 @@ app.use(compression());
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://cdn.culqi.com"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://picsum.photos"],
+        fontSrc: ["'self'"],
+        connectSrc: ["'self'", "https://api.culqi.com", "https://*.sentry.io"],
+        frameSrc: ["'self'", "https://cdn.culqi.com"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
   })
 );
 

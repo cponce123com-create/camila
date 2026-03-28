@@ -444,30 +444,55 @@ export async function seedDefaultCategories(storeId: string, businessType: strin
 // ─── Main seed ────────────────────────────────────────────────────────────────
 
 export async function seedDefaultData() {
+  const isProduction = process.env.NODE_ENV === "production";
+
   try {
     // ── Superadmin ─────────────────────────────────────────────────────────
-    const [existingAdmin] = await db
-      .select({ id: usersTable.id })
-      .from(usersTable)
-      .where(eq(usersTable.email, "admin@camila.pe"))
-      .limit(1);
+    const adminEmail = process.env.SUPERADMIN_EMAIL ?? "admin@camila.pe";
+    const adminPassword = process.env.SUPERADMIN_PASSWORD;
 
-    if (!existingAdmin) {
-      await db.insert(usersTable).values({
-        id: crypto.randomUUID(),
-        email: "admin@camila.pe",
-        passwordHash: hashPassword("Camila2025!"),
-        name: "Administrador Camila",
-        role: "superadmin",
-        isActive: true,
-      });
-      logger.info("Seed: superadmin created (admin@camila.pe)");
+    if (!adminPassword) {
+      if (isProduction) {
+        logger.error("Seed: SUPERADMIN_PASSWORD env var is required in production — skipping superadmin seed");
+      } else {
+        logger.warn("Seed: SUPERADMIN_PASSWORD not set — skipping superadmin seed (set it in .env)");
+      }
+    } else {
+      const [existingAdmin] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.email, adminEmail))
+        .limit(1);
+
+      if (!existingAdmin) {
+        await db.insert(usersTable).values({
+          id: crypto.randomUUID(),
+          email: adminEmail,
+          passwordHash: hashPassword(adminPassword),
+          name: "Administrador Camila",
+          role: "superadmin",
+          isActive: true,
+        });
+        logger.info({ email: adminEmail }, "Seed: superadmin created");
+      }
+    }
+
+    // ── Demo stores — development/staging only ────────────────────────────
+    if (isProduction) {
+      logger.info("Seed: skipping demo stores in production");
+      return;
+    }
+
+    if (process.env.SEED_DEMO_STORES !== "true") {
+      logger.info("Seed: demo stores skipped (set SEED_DEMO_STORES=true to enable)");
+      return;
     }
 
     // ── Test store ─────────────────────────────────────────────────────────
+    const demoPassword = process.env.SEED_DEMO_PASSWORD ?? "Demo1234!";
     await createStore({
       email: "tienda@test.pe",
-      password: "Test1234!",
+      password: demoPassword,
       ownerName: "Demo Emprendedor",
       businessName: "Tienda Demo Camila",
       businessType: "general_catalog",
@@ -499,7 +524,7 @@ export async function seedDefaultData() {
     // ── 1. Panadería El Trigal ─────────────────────────────────────────────
     await createStore({
       email: "panaderia@eltrigal.pe",
-      password: "Trigal2025!",
+      password: demoPassword,
       ownerName: "Ana María Quispe Lazo",
       businessName: "Panadería El Trigal",
       businessType: "bakery",
@@ -549,7 +574,7 @@ export async function seedDefaultData() {
     // ── 2. Boutique Selva Moda ─────────────────────────────────────────────
     await createStore({
       email: "boutique@selvamoda.pe",
-      password: "Selva2025!",
+      password: demoPassword,
       ownerName: "Rosa Elena Flores Torres",
       businessName: "Boutique Selva Moda",
       businessType: "clothing",
@@ -599,7 +624,7 @@ export async function seedDefaultData() {
     // ── 3. Restaurante Sabores de la Selva ────────────────────────────────
     await createStore({
       email: "sabores@laselva.pe",
-      password: "Sabores2025!",
+      password: demoPassword,
       ownerName: "Carlos Alberto Huamán Poma",
       businessName: "Sabores de la Selva",
       businessType: "restaurant",
@@ -649,7 +674,7 @@ export async function seedDefaultData() {
     // ── 4. Artesanías Chanchamayo ─────────────────────────────────────────
     await createStore({
       email: "artesanias@chanchamayo.pe",
-      password: "Arte2025!",
+      password: demoPassword,
       ownerName: "María Luz Condori Apaza",
       businessName: "Artesanías Chanchamayo",
       businessType: "fair_booth",
@@ -698,7 +723,7 @@ export async function seedDefaultData() {
     // ── 5. Minimarket Don Pepe ────────────────────────────────────────────
     await createStore({
       email: "minimarket@donpepe.pe",
-      password: "DonPepe2025!",
+      password: demoPassword,
       ownerName: "José Luis Ramírez Cárdenas",
       businessName: "Minimarket Don Pepe",
       businessType: "general_catalog",
