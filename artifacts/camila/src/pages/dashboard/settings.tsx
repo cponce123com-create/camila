@@ -25,7 +25,6 @@ export default function SettingsPage() {
     socialInstagram: "",
     socialFacebook: "",
     logoUrl: "",
-    bannerUrl: "",
   });
 
   useEffect(() => {
@@ -38,7 +37,6 @@ export default function SettingsPage() {
         socialInstagram: store.socialInstagram || "",
         socialFacebook: store.socialFacebook || "",
         logoUrl: (store as any).logoUrl || "",
-        bannerUrl: (store as any).bannerUrl || "",
       });
     }
   }, [store]);
@@ -68,7 +66,7 @@ export default function SettingsPage() {
             <CardTitle className="font-display">Imágenes del Negocio</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="max-w-xs">
               <ImageUpload
                 label="Logo del negocio"
                 hint="Recomendado: 400×400px. PNG o JPG."
@@ -76,14 +74,6 @@ export default function SettingsPage() {
                 aspectRatio="square"
                 value={formData.logoUrl}
                 onChange={(url) => setFormData({ ...formData, logoUrl: url })}
-              />
-              <ImageUpload
-                label="Banner principal"
-                hint="Recomendado: 1200×400px. JPG."
-                folder="banner"
-                aspectRatio="banner"
-                value={formData.bannerUrl}
-                onChange={(url) => setFormData({ ...formData, bannerUrl: url })}
               />
             </div>
             <p className="text-xs text-muted-foreground">
