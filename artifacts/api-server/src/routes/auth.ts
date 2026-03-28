@@ -13,24 +13,10 @@ import { generateUniqueSlug } from "../lib/slug";
 import { seedDefaultCategories } from "../lib/seed";
 import { requireAuth, sessionMiddleware } from "../middlewares/session";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "../lib/email";
+import { SESSION_COOKIE, SESSION_DURATION_MS, buildCookieOpts } from "../lib/cookie";
 import { z } from "zod";
 
-// Use __Host- prefix in production: enforces Secure + Path=/ + no Domain
-const SESSION_COOKIE = process.env.NODE_ENV === "production"
-  ? "__Host-camila_session"
-  : "camila_session";
-
-const COOKIE_OPTS = (expiresAt: Date) => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-  expires: expiresAt,
-});
-
 const router: IRouter = Router();
-
-const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const registerSchema = z.object({
   businessName: z.string().min(2),
@@ -146,7 +132,7 @@ router.post("/register", async (req, res) => {
     // Welcome email (fire-and-forget, non-blocking)
     sendWelcomeEmail(data.email, data.ownerName, data.businessName).catch(() => {});
 
-    res.cookie(SESSION_COOKIE, token, COOKIE_OPTS(expiresAt));
+    res.cookie(SESSION_COOKIE, token, buildCookieOpts(expiresAt));
 
     res.status(201).json({
       user: {
@@ -234,7 +220,7 @@ router.post("/login", async (req, res) => {
       userAgent: (req.headers["user-agent"] as string) || null,
     });
 
-    res.cookie(SESSION_COOKIE, token, COOKIE_OPTS(expiresAt));
+    res.cookie(SESSION_COOKIE, token, buildCookieOpts(expiresAt));
 
     res.json({
       user: {

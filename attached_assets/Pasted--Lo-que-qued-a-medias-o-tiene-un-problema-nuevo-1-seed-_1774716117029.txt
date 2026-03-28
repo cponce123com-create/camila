@@ -1,0 +1,60 @@
+🟠 Lo que quedó a medias o tiene un problema nuevo
+1. seed-superadmin.ts — Contraseña hardcodeada de nuevo
+El script en scripts/src/seed-superadmin.ts que es el script manual de arranque en producción sigue teniendo esto:
+typescriptconst password = "Camila2025!";
+// ...
+console.log("  Contraseña:", password); // la imprime en consola
+Resolviste el seed automático, pero dejaste el script manual con la contraseña en texto claro dentro del código. Este script es el que probablemente se corra el día del deploy. Hay que leerla de process.env.SUPERADMIN_PASSWORD exactamente igual que en seed.ts.
+
+2. sameSite inconsistente entre auth.ts y session.ts
+En auth.ts (donde se setea la cookie en login/register) está:
+typescriptsameSite: "lax" as const,
+En session.ts (rolling session) está:
+typescriptsameSite: "strict",
+```
+
+El mismo token recibe dos configuraciones distintas dependiendo de si es el login inicial o una renovación. En producción con `__Host-` el atributo debería ser `strict` en ambos lados. Hay que centralizar `COOKIE_OPTS` en un solo lugar y usarlo siempre, desde ambos archivos.
+
+---
+
+### 3. `@types/swagger-ui-express` está en `dependencies`, no en `devDependencies`
+```
+DEPS: ['@types/swagger-ui-express', 'swagger-ui-express', ...]
+Los paquetes @types/* son solo para TypeScript en desarrollo y no deben incluirse en el bundle de producción. Mueve @types/swagger-ui-express a devDependencies.
+
+4. Swagger hardcodeado en app.ts — problema de escala y mantenibilidad
+El documento OpenAPI está escrito a mano como un objeto JS gigante dentro de app.ts (casi 200 líneas). Esto tiene tres problemas:
+
+Se desincronizará del código real en cuestión de semanas
+Ensucia app.ts que es el punto de entrada
+No aprovecha que ya tienes Zod en todos los endpoints
+
+Recomendación: Mover el documento a lib/api-spec/openapi.yaml (que ya existe en el repo pero parece vacío/separado), o mejor aún: usar zod-to-openapi para generar el spec desde los schemas que ya tienes. Al menos extraer el objeto a src/lib/swagger.ts.
+
+5. Las imágenes .png originales siguen en public/images/
+Generaste correctamente los WebP, pero los .png originales siguen ahí (camila-logo.png 620 KB, hero-bg.png 1.1 MB, login-side.png 1.7 MB). El build de Vite los incluirá todos en dist/. Hay que verificar que el frontend esté usando los WebP con fallback, y si es así, eliminar o mover los PNG al proceso de build (no al public/ que se sirve estáticamente).
+
+6. bcrypt fue eliminado del código pero no del package.json
+En la versión anterior la dependencia bcrypt estaba declarada pero no usada. En esta versión revisé y bcrypt ya no aparece en las importaciones del código, pero no lo vi explícitamente quitado del package.json — hay que confirmarlo y si sigue listado, eliminarlo junto con @types/bcrypt.
+
+7. Swagger expuesto sin restricción en producción
+/api/docs está disponible en todos los entornos incluyendo producción. Esto expone la superficie de tu API, estructura de endpoints y tipos de datos a cualquiera que acceda a camila.pe/api/docs. Para un SaaS con datos de negocios locales, es preferible restringirlo:
+typescriptif (process.env.NODE_ENV !== "production") {
+  app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+}
+O protegerlo con requireSuperAdmin.
+
+🟡 Pendientes de la auditoría anterior que siguen sin resolver
+V-03 — Confirmar eliminación de bcrypt
+Verificar que no quede en package.json (mencionado arriba).
+V-13 — Sin CI/CD ni Dockerfile
+Sigue sin existir ningún pipeline. Para producción real necesitas al menos:
+
+Dockerfile con multi-stage build (build → runtime slim)
+GitHub Actions básico: typecheck → test → build
+
+V-15 — pnpm-lock.yaml en el ZIP de distribución
+No es un problema de seguridad grave pero sigue sumando peso innecesario a los artefactos de distribución.
+
+🔵 Observación nueva — store-cache.ts en memoria
+El cache de tiendas es una buena adición, pero tiene una limitación importante para producción: es en memoria por proceso. Si escalas a más de una instancia (o Replit reinicia el proceso), el cache se vacía y todas las peticiones van directo a la BD hasta que se reconstruya. Para el volumen actual probablemente no importa, pero hay que documentarlo como limitación conocida. Si en algún momento usas más de un worker, necesitarás Redis o un cache compartido.

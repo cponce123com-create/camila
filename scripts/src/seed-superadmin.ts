@@ -11,8 +11,14 @@ function hashPassword(password: string): string {
   return `${salt}:${hash}`;
 }
 
-const email = "admin@camila.pe";
-const password = "Camila2025!";
+const email = process.env.SUPERADMIN_EMAIL ?? "admin@camila.pe";
+const password = process.env.SUPERADMIN_PASSWORD;
+
+if (!password) {
+  console.error("❌ SUPERADMIN_PASSWORD env var is required.");
+  console.error("   Usage: SUPERADMIN_PASSWORD=<secret> pnpm run seed:superadmin");
+  process.exit(1);
+}
 
 const existing = await db
   .select({ id: usersTable.id })
@@ -37,6 +43,5 @@ const [user] = await db.insert(usersTable).values({
 
 console.log("✅ Superadmin creado exitosamente!");
 console.log("  Email:", user.email);
-console.log("  Contraseña:", password);
 console.log("  ID:", user.id);
 process.exit(0);

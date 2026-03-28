@@ -2,14 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { db } from "@workspace/db";
 import { sessionsTable, usersTable, storesTable, licensesTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
+import { SESSION_COOKIE, SESSION_DURATION_MS, buildRollingCookieOpts } from "../lib/cookie";
 
 // Rolling session: renew if less than half lifetime remains
-const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const RENEW_THRESHOLD_MS = SESSION_DURATION_MS / 2;     // 15 days
-
-const SESSION_COOKIE = process.env.NODE_ENV === "production"
-  ? "__Host-camila_session"
-  : "camila_session";
+const RENEW_THRESHOLD_MS = SESSION_DURATION_MS / 2; // 15 days
 
 export interface AuthUser {
   id: string;
@@ -104,14 +100,7 @@ export async function sessionMiddleware(
         .where(eq(sessionsTable.id, session.id))
         .catch((err: unknown) => req.log?.warn({ err }, "Rolling session update failed"));
 
-      const isProd = process.env.NODE_ENV === "production";
-      res.cookie(SESSION_COOKIE, token, {
-        httpOnly: true,
-        secure: isProd,
-        sameSite: "strict",
-        path: "/",
-        maxAge: SESSION_DURATION_MS,
-      });
+      res.cookie(SESSION_COOKIE, token, buildRollingCookieOpts());
     }
 
     next();
