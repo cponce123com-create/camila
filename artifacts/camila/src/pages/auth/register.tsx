@@ -66,7 +66,7 @@ export default function RegisterPage() {
             <div className="absolute top-0 right-0 -mr-8 -mt-8 opacity-10">
               <Store className="w-48 h-48" />
             </div>
-            <img src={`${import.meta.env.BASE_URL}images/camila-logo.png`} alt="Logo" className="h-12 w-12 mx-auto mb-4 brightness-0 invert" />
+            <img src={`${import.meta.env.BASE_URL}images/camila-logo.webp`} alt="Logo" className="h-12 w-12 mx-auto mb-4 brightness-0 invert" />
             <CardTitle className="text-3xl font-display font-bold mb-2 relative z-10">Crea tu Tienda</CardTitle>
             <CardDescription className="text-primary-foreground/80 text-lg relative z-10">
               Únete a la revolución del comercio local en Chanchamayo

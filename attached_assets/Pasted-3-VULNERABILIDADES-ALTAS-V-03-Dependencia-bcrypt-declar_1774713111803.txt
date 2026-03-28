@@ -1,0 +1,35 @@
+3. VULNERABILIDADES ALTAS
+V-03 — Dependencia bcrypt declarada pero no usada
+ALTO
+El package.json del API server declara bcrypt ^6.0.0 y sus tipos, pero el código de producción utiliza
+crypto.pbkdf2Sync. Tener una dependencia no usada aumenta la superficie de ataque de cadena de
+suministro y puede generar confusión sobre qué algoritmo se usa realmente.
+Remediación: Eliminar bcrypt y @types/bcrypt de package.json.
+V-04 — Registro de tienda sin transacción atómica
+ALTO
+El endpoint POST /api/auth/register realiza múltiples inserts (store, license, user, session) sin envolver en
+db.transaction(). Si ocurre un error entre inserts, la base de datos queda en estado inconsistente: por
+ejemplo, una tienda creada sin usuario ni licencia.
+# Solución mínima — routes/auth.ts const result = await db.transaction(async (tx) => {
+const [store] = await tx.insert(storesTable).values({...}).returning(); const [license] =
+await tx.insert(licensesTable).values({...}).returning(); const [user] = await
+tx.insert(usersTable).values({...}).returning(); return { store, license, user }; });
+V-05 — authLimiter no cubre /api/auth/register
+ALTO
+En app.ts se aplica authLimiter a /api/auth, /api/auth/forgot-password y /api/auth/reset-password. Sin
+embargo, el limiter se define antes del router y Express aplica el middleware en orden de declaración. La
+ruta /api/auth/register cae bajo el limiter global de API (300 req/min) en vez del limiter de auth (20
+req/15min), permitiendo fuerza bruta de registros masivos y abuso del período trial.
+# Agregar en app.ts app.use("/api/auth/register", authLimiter);
+V-06 — Imágenes estáticas sin comprimir (3.4 MB en public/)
+ALTO
+Informe de Auditoría de Seguridad — Proyecto Camila | Confidencial Pág. 6
+hero-bg.png pesa 1.1 MB y login-side.png pesa 1.7 MB. En redes móviles peruanas (4G promedio ~10
+Mbps) esto supone ~1.5 segundos de carga solo para la landing. El LCP (Largest Contentful Paint) será
+inaceptable y perjudicará el SEO y la conversión, crítico para el público objetivo de emprendedores
+locales.
+Remediación:
+• Convertir todas las imágenes a WebP con calidad 80-85.
+• Usar srcset con imágenes responsive (375px, 768px, 1200px).
+• Objetivo: hero-bg < 80 KB, login-side < 120 KB.
+• Herramienta recomendada: squoosh CLI o sharp en el build.

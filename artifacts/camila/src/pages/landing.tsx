@@ -140,7 +140,7 @@ export default function LandingPage() {
               style={{ background: "hsl(var(--sidebar-accent))" }}
             >
               <img
-                src={`${BASE}images/camila-logo.png`}
+                src={`${BASE}images/camila-logo.webp`}
                 alt="Camila Logo"
                 className="h-4.5 w-4.5 brightness-0 invert"
                 style={{ height: "1.1rem", width: "1.1rem" }}
@@ -177,13 +177,20 @@ export default function LandingPage() {
         <section className="relative overflow-hidden pt-20 pb-32 lg:pt-32 lg:pb-44">
           {/* Background layers */}
           <div className="absolute inset-0 -z-10">
-            <img
-              src={`${BASE}images/hero-bg.png`}
-              alt="Selva peruana"
-              fetchPriority="high"
-              decoding="async"
-              className="w-full h-full object-cover opacity-10"
-            />
+            <picture>
+              <source
+                srcSet={`${BASE}images/hero-bg-sm.webp 375w, ${BASE}images/hero-bg-md.webp 768w, ${BASE}images/hero-bg.webp 1200w`}
+                sizes="100vw"
+                type="image/webp"
+              />
+              <img
+                src={`${BASE}images/hero-bg.webp`}
+                alt="Selva peruana"
+                fetchPriority="high"
+                decoding="async"
+                className="w-full h-full object-cover opacity-10"
+              />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/75 to-background" />
             <div
               className="absolute inset-0 opacity-30"
@@ -587,7 +594,7 @@ export default function LandingPage() {
                   style={{ background: "hsl(var(--primary))" }}
                 >
                   <img
-                    src={`${BASE}images/camila-logo.png`}
+                    src={`${BASE}images/camila-logo.webp`}
                     alt="Logo"
                     className="h-4 w-4 brightness-0 invert"
                   />

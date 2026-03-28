@@ -45,7 +45,7 @@ export default function LoginPage() {
             <Card className="border-border/50 shadow-xl shadow-black/5 rounded-2xl overflow-hidden">
               <CardHeader className="space-y-2 pb-6">
                 <div className="flex justify-center mb-2">
-                  <img src={`${import.meta.env.BASE_URL}images/camila-logo.png`} alt="Logo" className="h-12 w-12" />
+                  <img src={`${import.meta.env.BASE_URL}images/camila-logo.webp`} alt="Logo" className="h-12 w-12" />
                 </div>
                 <CardTitle className="text-2xl font-display text-center font-bold">Bienvenido de vuelta</CardTitle>
                 <CardDescription className="text-center text-base">
@@ -100,7 +100,7 @@ export default function LoginPage() {
       <div className="hidden lg:block relative w-0 flex-1 bg-secondary">
         <img
           className="absolute inset-0 h-full w-full object-cover opacity-90 mix-blend-multiply"
-          src={`${import.meta.env.BASE_URL}images/login-side.png`}
+          src={`${import.meta.env.BASE_URL}images/login-side.webp`}
           alt="Entrepreneur in store"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent" />

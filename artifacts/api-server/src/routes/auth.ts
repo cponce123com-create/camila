@@ -74,54 +74,55 @@ router.post("/register", async (req, res) => {
     const storeId = crypto.randomUUID();
     const userId = crypto.randomUUID();
     const licenseId = crypto.randomUUID();
-
     const slug = await generateUniqueSlug(data.businessName);
-
-    const [store] = await db.insert(storesTable).values({
-      id: storeId,
-      slug,
-      businessName: data.businessName,
-      businessType: data.businessType,
-      documentType: data.documentType,
-      documentNumber: data.documentNumber,
-      ownerName: data.ownerName,
-      phone: data.phone,
-      email: data.email,
-      address: data.address,
-      district: data.district,
-      logoUrl: data.logoUrl,
-    }).returning();
-
+    const passwordHash = hashPassword(data.password);
+    const token = generateToken();
+    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
     const trialExpiry = new Date();
     trialExpiry.setDate(trialExpiry.getDate() + 30);
 
-    const [license] = await db.insert(licensesTable).values({
-      id: licenseId,
-      storeId: storeId,
-      status: "trial",
-      startsAt: new Date(),
-      expiresAt: trialExpiry,
-      notes: "Período de prueba de 30 días",
-    }).returning();
+    const { store, license, user } = await db.transaction(async (tx) => {
+      const [store] = await tx.insert(storesTable).values({
+        id: storeId,
+        slug,
+        businessName: data.businessName,
+        businessType: data.businessType,
+        documentType: data.documentType,
+        documentNumber: data.documentNumber,
+        ownerName: data.ownerName,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+        district: data.district,
+        logoUrl: data.logoUrl,
+      }).returning();
 
-    const passwordHash = hashPassword(data.password);
-    const [user] = await db.insert(usersTable).values({
-      id: userId,
-      storeId: storeId,
-      name: data.ownerName,
-      email: data.email,
-      passwordHash,
-      role: "store_admin",
-    }).returning();
+      const [license] = await tx.insert(licensesTable).values({
+        id: licenseId,
+        storeId: storeId,
+        status: "trial",
+        startsAt: new Date(),
+        expiresAt: trialExpiry,
+        notes: "Período de prueba de 30 días",
+      }).returning();
 
-    const token = generateToken();
-    const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
+      const [user] = await tx.insert(usersTable).values({
+        id: userId,
+        storeId: storeId,
+        name: data.ownerName,
+        email: data.email,
+        passwordHash,
+        role: "store_admin",
+      }).returning();
 
-    await db.insert(sessionsTable).values({
-      userId: user.id,
-      token,
-      expiresAt,
-      userAgent: (req.headers["user-agent"] as string) || null,
+      await tx.insert(sessionsTable).values({
+        userId: user.id,
+        token,
+        expiresAt,
+        userAgent: (req.headers["user-agent"] as string) || null,
+      });
+
+      return { store, license, user };
     });
 
     // Seed default categories for the new store (fire-and-forget, non-blocking)

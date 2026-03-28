@@ -184,7 +184,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             style={{ background: "hsl(var(--sidebar-accent))" }}
           >
             <img
-              src={`${import.meta.env.BASE_URL}images/camila-logo.png`}
+              src={`${import.meta.env.BASE_URL}images/camila-logo.webp`}
               alt="Camila"
               className="h-5 w-5 object-contain brightness-0 invert"
             />
@@ -391,7 +391,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               style={{ background: "hsl(var(--sidebar-accent))" }}
             >
               <img
-                src={`${import.meta.env.BASE_URL}images/camila-logo.png`}
+                src={`${import.meta.env.BASE_URL}images/camila-logo.webp`}
                 alt="Camila"
                 className="h-4 w-4 object-contain brightness-0 invert"
               />
