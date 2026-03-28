@@ -27,6 +27,7 @@ import AdminLicenseCodesPage from "@/pages/admin/license-codes";
 import StoreAnalyticsPage from "@/pages/dashboard/analytics";
 import RestaurantAnalyticsPage from "@/pages/dashboard/analytics/restaurant";
 import TiendaPage from "@/pages/tienda";
+import PricingPage from "@/pages/pricing";
 import NotFound from "@/pages/not-found";
 
 // Restaurant pages
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/tienda/:slug" component={TiendaPage} />
+      <Route path="/precios" component={PricingPage} />
 
       {/* Protected Dashboard */}
       <Route path="/dashboard" component={DashboardPage} />
