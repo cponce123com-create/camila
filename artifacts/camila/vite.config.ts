@@ -1,8 +1,37 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+
+// Injects a build hash into public/sw.js so stale caches are busted on deploy
+function swBuildHashPlugin(): Plugin {
+  const buildHash = Date.now().toString(36);
+  return {
+    name: "sw-build-hash",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === "/sw.js" || req.url?.startsWith("/sw.js?")) {
+          const swPath = path.resolve(import.meta.dirname, "public/sw.js");
+          const content = readFileSync(swPath, "utf-8").replace("__BUILD_HASH__", buildHash);
+          res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache");
+          res.end(content);
+          return;
+        }
+        next();
+      });
+    },
+    closeBundle() {
+      const swOut = path.resolve(import.meta.dirname, "dist/public/sw.js");
+      if (existsSync(swOut)) {
+        const content = readFileSync(swOut, "utf-8");
+        writeFileSync(swOut, content.replace("__BUILD_HASH__", buildHash));
+      }
+    },
+  };
+}
 
 const rawPort = process.env.PORT;
 
@@ -32,6 +61,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+    swBuildHashPlugin(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [

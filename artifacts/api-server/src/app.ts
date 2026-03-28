@@ -12,8 +12,8 @@ import { sessionMiddleware } from "./middlewares/session";
 
 const app: Express = express();
 
-// Trust the first proxy (Replit / reverse proxy layers)
-app.set("trust proxy", 1);
+// Trust the first proxy only in production (avoids X-Forwarded-For spoofing in dev)
+app.set("trust proxy", process.env.NODE_ENV === "production" ? 1 : false);
 
 // ─── Compression ────────────────────────────────────────────────────────────
 app.use(compression());
@@ -84,6 +84,16 @@ const reviewLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: "Demasiadas subidas. Intenta más tarde." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV !== "production",
+  keyGenerator: (req) => (req as any).user?.id ?? "unauthenticated",
+});
+
 // ─── Raw body for Culqi webhook (must come before express.json) ───────────────
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 
@@ -96,6 +106,10 @@ app.use(cookieParser());
 app.use(
   pinoHttp({
     logger,
+    redact: {
+      paths: ["req.headers.authorization", "req.headers.cookie", "req.body.password", "req.body.token"],
+      censor: "[REDACTED]",
+    },
     serializers: {
       req(req) {
         return {
@@ -116,8 +130,9 @@ app.use(
 // ─── Session ──────────────────────────────────────────────────────────────────
 app.use(sessionMiddleware);
 
-// ─── Reviews rate limiter ─────────────────────────────────────────────────────
+// ─── Targeted rate limiters ───────────────────────────────────────────────────
 app.use("/api/public/stores/:slug/reviews", reviewLimiter);
+app.use("/api/uploads", uploadLimiter);
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth/register", authLimiter);

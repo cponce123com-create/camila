@@ -3,6 +3,10 @@ import { db } from "@workspace/db";
 import { sessionsTable, usersTable, storesTable, licensesTable } from "@workspace/db";
 import { eq, and, gt } from "drizzle-orm";
 
+const SESSION_COOKIE = process.env.NODE_ENV === "production"
+  ? "__Host-camila_session"
+  : "camila_session";
+
 export interface AuthUser {
   id: string;
   storeId: string | null;
@@ -26,7 +30,7 @@ export async function sessionMiddleware(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const token = req.cookies?.camila_session;
+  const token = req.cookies?.[SESSION_COOKIE];
 
   if (!token) {
     next();
@@ -46,7 +50,7 @@ export async function sessionMiddleware(
       .limit(1);
 
     if (!session) {
-      res.clearCookie("camila_session");
+      res.clearCookie(SESSION_COOKIE, { path: "/" });
       next();
       return;
     }
@@ -54,7 +58,7 @@ export async function sessionMiddleware(
     const requestUA = req.headers["user-agent"] || null;
     if (session.userAgent && requestUA !== session.userAgent) {
       await db.delete(sessionsTable).where(eq(sessionsTable.id, session.id));
-      res.clearCookie("camila_session");
+      res.clearCookie(SESSION_COOKIE, { path: "/" });
       next();
       return;
     }
@@ -73,7 +77,7 @@ export async function sessionMiddleware(
       .limit(1);
 
     if (!user || !user.isActive) {
-      res.clearCookie("camila_session");
+      res.clearCookie(SESSION_COOKIE, { path: "/" });
       next();
       return;
     }

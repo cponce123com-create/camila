@@ -1,0 +1,66 @@
+4. VULNERABILIDADES MEDIAS
+V-07 — trust proxy = 1 sin validación de entorno
+MEDIO
+En app.ts se establece trust proxy: 1 incondicionalmente. En desarrollo sin proxy esto hace que
+X-Forwarded-For sea manipulable, permitiendo bypass del rate-limiter si el cliente envía ese header.
+Condicionar a NODE_ENV === 'production'.
+app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+V-08 — Cookie de sesión sin prefijo __HostMEDIO
+Las cookies camila_session usan sameSite: lax, httpOnly y secure en producción, lo cual es correcto. Sin
+embargo, no usan el prefijo __Host- que garantizaría que solo se envíen a la ruta / del host exacto,
+bloqueando ataques de subdominio.
+Renombrar a '__Host-camila_session' y añadir path: '/' en las opciones.
+V-09 — Sin rate-limit específico en /api/uploads/sign
+MEDIO
+El endpoint POST /api/uploads/sign cae únicamente bajo el limiter global (300/min). Genera firmas
+Cloudinary válidas por lotes, lo que podría derivar en abuso de almacenamiento. Aplicar un limiter de ~10
+req/min por usuario.
+Definir uploadLimiter y aplicarlo: app.use('/api/uploads', uploadLimiter);
+V-10 — Service Worker con cache-name estático 'camila-shell-v1'
+MEDIO
+El nombre del cache está hardcodeado. Cuando se actualice el frontend, los usuarios con el SW anterior
+continuarán sirviendo activos obsoletos hasta que el navegador lo actualice (proceso no determinístico).
+Incluir un hash de build.
+const CACHE_NAME = `camila-shell-${__BUILD_HASH__}`; // inyectado por Vite
+Informe de Auditoría de Seguridad — Proyecto Camila | Confidencial Pág. 8
+V-11 — Token de reset de contraseña en texto plano en BD
+MEDIO
+El campo resetToken se almacena sin hash en la tabla users. Si la BD se ve comprometida, los tokens
+activos permiten reset de cuentas directamente.
+Almacenar SHA-256(token) en BD; enviar el token raw al email. Al verificar: comparar
+SHA-256(token_recibido) === stored_hash.
+V-12 — Sin límite de tamaño en importación CSV de productos
+MEDIO
+El endpoint POST /api/products/import no limita el tamaño del payload más allá del límite general de 2
+MB. Un archivo CSV con 50.000 filas podría causar OOM o bloquear el event loop durante el parse.
+Añadir validación: if (rows.length > 1000) return 400; y procesar en batches.
+Informe de Auditoría de Seguridad — Proyecto Camila | Confidencial Pág. 9
+5. HALLAZGOS BAJOS / INFORMATIVOS
+V-13 — Ausencia de CI/CD y Dockerfile
+BAJO
+No existe ninguna pipeline de CI (GitHub Actions, GitLab CI, etc.) ni Dockerfile. El despliegue actual
+depende de Replit, lo que limita la portabilidad y la reproducibilidad del entorno de producción.
+Crear Dockerfile multi-stage + docker-compose.yml. Configurar pipeline con: typecheck →
+test → build → push imagen → deploy.
+V-14 — Health check no verifica la BD
+BAJO
+GET /api/health devuelve 200 sin verificar la conectividad con PostgreSQL. Los load balancers y k8s
+liveness probes necesitan un check real.
+await db.execute(sql`SELECT 1`); en el handler de health.
+V-15 — pnpm-lock.yaml innecesariamente incluido (peso ZIP)
+BAJO
+El lockfile suma 280 KB al ZIP de distribución. Aunque es necesario en el repo, debería quedar fuera de
+artefactos de distribución.
+Sin impacto de seguridad; añadir a .replitignore si no es necesario para Replit.
+V-16 — Política de contraseña inconsistente en reset
+BAJO
+La validación de contraseña en /forgot-password acepta mínimo 8 caracteres + mayúscula + número,
+pero no incluye símbolo especial. El registro tampoco exige símbolo. Homogeneizar y documentar la
+política.
+Añadir .regex(/[^A-Za-z0-9]/, 'Requiere símbolo') a ambos schemas.
+V-17 — Logs de Pino sin redacción de PII
+Informe de Auditoría de Seguridad — Proyecto Camila | Confidencial Pág. 10
+BAJO
+Los serializers de pinoHttp no redactan cabeceras de autorización ni campos sensibles del body. En
+producción, los logs podrían capturar emails o tokens.
+Añadir redact: ['req.headers.authorization', 'req.body.password'] en pinoHttp config.

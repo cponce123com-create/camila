@@ -1,9 +1,9 @@
-const CACHE_NAME = "camila-shell-v1";
+const CACHE_NAME = `camila-shell-${__BUILD_HASH__}`;
 
 const SHELL_ASSETS = [
   "/",
   "/manifest.json",
-  "/images/camila-logo.png",
+  "/images/camila-logo.webp",
 ];
 
 // Install: cache the app shell

@@ -146,6 +146,12 @@ router.post("/import", requireAuth, requireStoreAdmin, async (req, res) => {
   }
 
   const { products, updateExisting } = result.data;
+
+  if (products.length > 1000) {
+    res.status(400).json({ error: "Máximo 1000 productos por importación. Divide el archivo en lotes más pequeños." });
+    return;
+  }
+
   let created = 0;
   let updated = 0;
   let skipped = 0;

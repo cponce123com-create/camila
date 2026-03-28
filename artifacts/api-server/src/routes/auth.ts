@@ -1,4 +1,5 @@
 import { Router, type IRouter } from "express";
+import { createHash } from "node:crypto";
 import { db } from "@workspace/db";
 import {
   storesTable,
@@ -14,6 +15,19 @@ import { requireAuth, sessionMiddleware } from "../middlewares/session";
 import { sendWelcomeEmail, sendPasswordResetEmail } from "../lib/email";
 import { z } from "zod";
 
+// Use __Host- prefix in production: enforces Secure + Path=/ + no Domain
+const SESSION_COOKIE = process.env.NODE_ENV === "production"
+  ? "__Host-camila_session"
+  : "camila_session";
+
+const COOKIE_OPTS = (expiresAt: Date) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  expires: expiresAt,
+});
+
 const router: IRouter = Router();
 
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -28,7 +42,8 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8)
     .regex(/[A-Z]/, "Debe tener al menos una mayúscula")
-    .regex(/[0-9]/, "Debe tener al menos un número"),
+    .regex(/[0-9]/, "Debe tener al menos un número")
+    .regex(/[^A-Za-z0-9]/, "Debe tener al menos un símbolo"),
   address: z.string().optional(),
   district: z.string().min(2),
   logoUrl: z.string().url().optional(),
@@ -131,12 +146,7 @@ router.post("/register", async (req, res) => {
     // Welcome email (fire-and-forget, non-blocking)
     sendWelcomeEmail(data.email, data.ownerName, data.businessName).catch(() => {});
 
-    res.cookie("camila_session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: expiresAt,
-    });
+    res.cookie(SESSION_COOKIE, token, COOKIE_OPTS(expiresAt));
 
     res.status(201).json({
       user: {
@@ -224,12 +234,7 @@ router.post("/login", async (req, res) => {
       userAgent: (req.headers["user-agent"] as string) || null,
     });
 
-    res.cookie("camila_session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: expiresAt,
-    });
+    res.cookie(SESSION_COOKIE, token, COOKIE_OPTS(expiresAt));
 
     res.json({
       user: {
@@ -252,11 +257,11 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/logout", requireAuth, async (req, res) => {
-  const token = req.cookies?.camila_session;
+  const token = req.cookies?.[SESSION_COOKIE];
   if (token) {
     await db.delete(sessionsTable).where(eq(sessionsTable.token, token));
   }
-  res.clearCookie("camila_session");
+  res.clearCookie(SESSION_COOKIE, { path: "/" });
   res.json({ success: true, message: "Sesión cerrada" });
 });
 
@@ -320,13 +325,14 @@ router.post("/forgot-password", async (req, res) => {
       .limit(1);
 
     if (user) {
-      const resetToken = generateResetToken();
+      const resetToken = generateResetToken(); // raw token sent to user via email
+      const resetTokenHash = createHash("sha256").update(resetToken).digest("hex"); // stored in DB
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await db
         .update(usersTable)
         .set({
-          resetToken,
+          resetToken: resetTokenHash,
           resetTokenExpiresAt: expiresAt,
           updatedAt: new Date(),
         })
@@ -334,7 +340,7 @@ router.post("/forgot-password", async (req, res) => {
 
       req.log.info({ email }, "Password reset token generated");
 
-      // Send reset email (fire-and-forget, non-blocking)
+      // Send raw token to user (fire-and-forget, non-blocking)
       sendPasswordResetEmail(email, resetToken).catch(() => {});
     }
 
@@ -350,7 +356,8 @@ router.post("/reset-password", async (req, res) => {
     token: z.string(),
     password: z.string().min(8)
       .regex(/[A-Z]/, "Debe tener al menos una mayúscula")
-      .regex(/[0-9]/, "Debe tener al menos un número"),
+      .regex(/[0-9]/, "Debe tener al menos un número")
+      .regex(/[^A-Za-z0-9]/, "Debe tener al menos un símbolo"),
   });
   const result = schema.safeParse(req.body);
   if (!result.success) {
@@ -359,12 +366,14 @@ router.post("/reset-password", async (req, res) => {
   }
 
   const { token, password } = result.data;
+  // Hash the received raw token to compare against the stored hash
+  const tokenHash = createHash("sha256").update(token).digest("hex");
 
   try {
     const [user] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.resetToken, token))
+      .where(eq(usersTable.resetToken, tokenHash))
       .limit(1);
 
     if (!user || !user.resetTokenExpiresAt || user.resetTokenExpiresAt < new Date()) {

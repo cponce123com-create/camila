@@ -140,8 +140,9 @@ export default function RegisterPage() {
                   <Input id="email" type="email" required value={formData.email} onChange={handleChange} className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña (Mín. 8 caracteres)</Label>
+                  <Label htmlFor="password">Contraseña</Label>
                   <Input id="password" type="password" required minLength={8} value={formData.password} onChange={handleChange} className="h-12 rounded-xl" />
+                  <p className="text-xs text-muted-foreground">Mín. 8 caracteres, mayúscula, número y símbolo (ej. !@#$)</p>
                 </div>
               </div>
 
