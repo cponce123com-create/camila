@@ -136,9 +136,9 @@ router.post("/banners", requireAuth, requireStoreAdmin, async (req, res) => {
 
   const schema = z.object({
     imageUrl: z.string().url("La URL de imagen no es válida"),
-    title: z.string().max(100).optional(),
-    subtitle: z.string().max(200).optional(),
-    linkUrl: z.string().url().optional(),
+    title: z.preprocess(v => v === "" ? undefined : v, z.string().max(100).optional()),
+    subtitle: z.preprocess(v => v === "" ? undefined : v, z.string().max(200).optional()),
+    linkUrl: z.preprocess(v => v === "" ? undefined : v, z.string().url("El enlace no es una URL válida").optional()),
     sortOrder: z.number().int().min(0).optional(),
     isActive: z.boolean().optional(),
   });
