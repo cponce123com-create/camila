@@ -1500,6 +1500,7 @@ export const GetStoreSettingsResponse = zod.object({
   showYapeQr: zod.boolean(),
   yapeQrUrl: zod.string().optional(),
   businessHours: zod.string().optional(),
+  thankYouMessage: zod.string().optional(),
   updatedAt: zod.date(),
 });
 
@@ -1524,6 +1525,7 @@ export const UpdateStoreSettingsBody = zod.object({
   showYapeQr: zod.boolean().optional(),
   yapeQrUrl: zod.string().optional(),
   businessHours: zod.string().optional(),
+  thankYouMessage: zod.string().optional(),
 });
 
 export const UpdateStoreSettingsResponse = zod.object({
@@ -1555,6 +1557,7 @@ export const UpdateStoreSettingsResponse = zod.object({
   showYapeQr: zod.boolean(),
   yapeQrUrl: zod.string().optional(),
   businessHours: zod.string().optional(),
+  thankYouMessage: zod.string().optional(),
   updatedAt: zod.date(),
 });
 

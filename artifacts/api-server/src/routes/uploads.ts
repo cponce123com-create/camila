@@ -29,7 +29,7 @@ function generateSignature(
 // ─── POST /api/uploads/sign ───────────────────────────────────────────────────
 // Returns a signed upload preset so the frontend can upload directly to Cloudinary
 const signSchema = z.object({
-  folder: z.enum(["logo", "banner", "product", "banner-promo", "qr"]),
+  folder: z.enum(["logo", "banner", "product", "banner-promo", "qr", "category"]),
 });
 
 router.post("/sign", requireAuth, requireStoreAdmin, (req, res) => {

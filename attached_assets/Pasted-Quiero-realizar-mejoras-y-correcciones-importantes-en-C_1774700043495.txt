@@ -1,0 +1,120 @@
+Quiero realizar mejoras y correcciones importantes en Camila. Por favor implementa lo siguiente de forma ordenada y profesional:
+
+## 1. Módulo restaurante (condicional)
+
+* El módulo de restaurante **solo debe estar visible** si el tipo de negocio es “Restaurante”.
+* El **menú del día** también debe aparecer únicamente para restaurantes.
+* Si el negocio es otro tipo (ropa, feria, panadería, etc.), ese módulo no debe existir ni mostrarse.
+
+---
+
+## 2. Categorías (corrección crítica)
+
+Actualmente hay un problema: al crear un producto se piden categorías, pero no existen por defecto.
+
+Corrige esto así:
+
+* Debe existir un módulo de **Categorías antes del módulo de Productos**.
+* Al crear una tienda, el sistema debe cargar automáticamente **mínimo 20 categorías base según el tipo de negocio**.
+
+Ejemplos:
+
+* Restaurante: entradas, platos fuertes, bebidas, postres, combos, etc.
+* Ropa: polos, pantalones, vestidos, casacas, accesorios, etc.
+* General: hogar, tecnología, alimentos, limpieza, etc.
+
+Además:
+
+* El usuario debe poder **crear, editar y eliminar sus propias categorías**.
+* Las categorías deben permitir:
+
+  * nombre
+  * descripción opcional
+  * imagen
+* Actualmente solo permite URL → cambiar para permitir **subir imagen directamente**.
+
+---
+
+## 3. Inventario en tiempo real
+
+* Cuando se registran movimientos de inventario (entradas/salidas/ajustes), los cambios deben reflejarse **en tiempo real sin recargar la página**.
+* Implementar:
+
+  * actualización automática del stock
+  * refresco de tabla dinámico
+* Evitar que el usuario tenga que hacer refresh manual.
+
+---
+
+## 4. Mejora del recibo digital (muy importante)
+
+El recibo actual es muy simple. Quiero un diseño moderno y profesional.
+
+Debe incluir:
+
+* nombre de la tienda (actualmente no aparece → corregir)
+* logo de la tienda
+* frase corta editable por la tienda (ej: “Gracias por su compra”)
+* diseño limpio y elegante
+* mejor tipografía
+* separación visual clara de secciones
+* detalle de productos más ordenado
+* total resaltado
+
+Extras:
+
+* agregar elementos visuales según tipo de negocio (ej: sutiles íconos o siluetas)
+* mantener diseño adaptable para PDF y móvil
+
+---
+
+## 5. Vista de producto (detalle completo)
+
+* Todos los productos deben poder abrirse en una vista individual.
+* Esta vista debe mostrar:
+
+  * nombre
+  * descripción completa
+  * hasta 5 fotos (tipo galería)
+  * precio normal
+  * precio oferta
+  * etiquetas (oferta, nuevo, etc.)
+
+Debe sentirse como una página de producto real tipo ecommerce.
+
+---
+
+## 6. Banner principal (mejora visual)
+
+* El logo actualmente está muy pequeño → aumentar tamaño proporcional.
+* El banner principal debe ser más atractivo y moderno.
+* Debajo del logo debe haber:
+
+  * una breve presentación del negocio
+  * texto editable por la tienda
+* Mejorar jerarquía visual (más impacto comercial).
+
+---
+
+## 7. Footer (pie de página)
+
+* Simplificar el footer general:
+
+  * Mostrar: “Tienda en línea con Camila”
+
+* En la página principal, agregar además:
+
+  * “Desarrollado por Industrias Ponce - Producido por Camila”
+
+---
+
+## 8. Calidad general
+
+Asegúrate de:
+
+* no hardcodear datos
+* mantener todo dinámico por tienda
+* diseño moderno y responsive
+* consistencia visual en todo el sistema
+
+Estas mejoras son obligatorias para elevar la calidad del SaaS a nivel comercial real.

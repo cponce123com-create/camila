@@ -9,6 +9,7 @@ import {
 import { eq } from "drizzle-orm";
 import { hashPassword, verifyPassword, generateToken, generateResetToken } from "../lib/auth";
 import { generateUniqueSlug } from "../lib/slug";
+import { seedDefaultCategories } from "../lib/seed";
 import { requireAuth, sessionMiddleware } from "../middlewares/session";
 import { z } from "zod";
 
@@ -118,6 +119,9 @@ router.post("/register", async (req, res) => {
       token,
       expiresAt,
     });
+
+    // Seed default categories for the new store (fire-and-forget, non-blocking)
+    seedDefaultCategories(storeId, data.businessType).catch(() => {});
 
     res.cookie("camila_session", token, {
       httpOnly: true,

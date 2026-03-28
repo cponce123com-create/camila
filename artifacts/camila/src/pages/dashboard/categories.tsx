@@ -19,6 +19,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ImageUpload } from "@/components/ui/image-upload";
 
 const EMPTY_FORM = { name: "", description: "", parentId: "" as string | undefined, imageUrl: "" };
 
@@ -298,13 +299,12 @@ export default function CategoriesPage() {
             )}
 
             <div className="space-y-2">
-              <Label>URL de imagen (opcional)</Label>
-              <Input
-                type="url"
+              <ImageUpload
+                label="Imagen de categoría (opcional)"
+                hint="JPG o PNG · máx. 2MB"
+                folder="category"
                 value={formData.imageUrl}
-                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                className="rounded-xl"
-                placeholder="https://..."
+                onChange={(url) => setFormData({ ...formData, imageUrl: url })}
               />
             </div>
 

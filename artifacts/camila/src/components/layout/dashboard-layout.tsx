@@ -15,7 +15,7 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
-const MENU_GROUPS = [
+const BASE_MENU_GROUPS = [
   {
     label: null,
     items: [
@@ -39,12 +39,6 @@ const MENU_GROUPS = [
     ],
   },
   {
-    label: "Módulos",
-    items: [
-      { icon: UtensilsCrossed, label: "Restaurante", path: "/dashboard/restaurant" },
-    ],
-  },
-  {
     label: "Ajustes",
     items: [
       { icon: Palette, label: "Personalización", path: "/dashboard/customize" },
@@ -53,6 +47,13 @@ const MENU_GROUPS = [
     ],
   },
 ];
+
+const RESTAURANT_GROUP = {
+  label: "Módulos",
+  items: [
+    { icon: UtensilsCrossed, label: "Restaurante", path: "/dashboard/restaurant" },
+  ],
+};
 
 const SUPERADMIN_MENU = [
   { icon: ShieldCheck, label: "Panel de Control", path: "/admin" },
@@ -78,6 +79,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!user) return null;
 
   const isSuperAdmin = user.role === "superadmin";
+  const isRestaurant = (store as any)?.businessType === "restaurant";
+  const MENU_GROUPS = isRestaurant
+    ? [...BASE_MENU_GROUPS.slice(0, 3), RESTAURANT_GROUP, BASE_MENU_GROUPS[3]]
+    : BASE_MENU_GROUPS;
 
   const isActive = (path: string) =>
     path === "/dashboard" ? location === path : location.startsWith(path);

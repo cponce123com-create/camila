@@ -51,6 +51,7 @@ export const storeSettingsTable = pgTable("store_settings", {
   showYapeQr: boolean("show_yape_qr").default(false).notNull(),
   yapeQrUrl: text("yape_qr_url"),
   businessHours: text("business_hours"),
+  thankYouMessage: text("thank_you_message").default("¡Gracias por su compra!"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

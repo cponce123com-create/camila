@@ -62,9 +62,9 @@ export default function InventoryPage() {
     dateTo: dateTo || undefined,
     page,
     limit: 20,
-  });
+  }, { query: { refetchInterval: 20000 } });
 
-  const lowStockQuery = useGetLowStockProducts();
+  const lowStockQuery = useGetLowStockProducts({ query: { refetchInterval: 20000 } });
   const { data: productsData } = useGetProducts({ limit: 200 });
   const adjustMutation = useAdjustInventory();
 

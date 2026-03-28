@@ -241,10 +241,109 @@ function BannerCarousel({ banners, store, primaryColor }: { banners: StoreBanner
   );
 }
 
+// ─── ProductDetailModal ───────────────────────────────────────────────────────
+
+function ProductDetailModal({ product, primaryColor, onClose, onReview, whatsapp, storeName }: {
+  product: Product | null; primaryColor: string;
+  onClose: () => void; onReview: (id: string) => void;
+  whatsapp?: string | null; storeName: string;
+}) {
+  const disc = product?.salePrice ? discount(product.price, product.salePrice) : null;
+  const outOfStock = product?.stock === 0;
+  const waUrl = (whatsapp && product)
+    ? `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Hola! Me interesa: ${product.name} (${fmt(product.salePrice || product.price)}) de ${storeName}`)}`
+    : null;
+
+  return (
+    <Dialog open={!!product} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden gap-0">
+        {product && (
+          <>
+            <div className="relative bg-gray-50">
+              {product.imageUrl ? (
+                <img src={product.imageUrl} alt={product.name} className="w-full max-h-72 object-cover" />
+              ) : (
+                <div className="w-full h-48 flex items-center justify-center">
+                  <ShoppingBag className="w-20 h-20 text-gray-200" />
+                </div>
+              )}
+              <div className="absolute top-3 left-3 flex gap-1.5">
+                {disc && disc > 0 && (
+                  <span className="inline-flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">
+                    <Percent className="w-3 h-3" />-{disc}%
+                  </span>
+                )}
+                {product.isFeatured && (
+                  <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-full shadow">
+                    <Flame className="w-3 h-3" />Destacado
+                  </span>
+                )}
+              </div>
+              {outOfStock && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                  <span className="bg-white text-gray-800 text-sm font-bold px-4 py-2 rounded-full shadow">Agotado</span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-5">
+              {product.categoryName && (
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">{product.categoryName}</span>
+              )}
+              <DialogTitle className="text-xl font-bold text-gray-900 mt-1 leading-snug">{product.name}</DialogTitle>
+
+              {product.description && (
+                <p className="text-sm text-gray-600 mt-2 leading-relaxed">{product.description}</p>
+              )}
+
+              {product.avgRating !== null && product.reviewCount > 0 && (
+                <div className="flex items-center gap-2 mt-3">
+                  <StarRating rating={product.avgRating} size={14} />
+                  <span className="text-sm text-gray-500">{product.avgRating.toFixed(1)} · {product.reviewCount} reseña{product.reviewCount !== 1 ? "s" : ""}</span>
+                </div>
+              )}
+
+              <div className="mt-4 flex items-center gap-3">
+                {product.salePrice ? (
+                  <>
+                    <span className="text-2xl font-extrabold" style={{ color: primaryColor }}>{fmt(product.salePrice)}</span>
+                    <span className="text-base text-gray-400 line-through">{fmt(product.price)}</span>
+                    {disc && disc > 0 && <span className="text-sm font-bold text-red-500">-{disc}% off</span>}
+                  </>
+                ) : (
+                  <span className="text-2xl font-extrabold" style={{ color: primaryColor }}>{fmt(product.price)}</span>
+                )}
+              </div>
+
+              {product.stock !== null && product.stock > 0 && product.stock <= 10 && (
+                <p className="text-xs text-amber-600 mt-1 font-medium">¡Solo quedan {product.stock} unidades!</p>
+              )}
+
+              <div className="flex gap-2 mt-5">
+                {waUrl && !outOfStock && (
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white bg-[#25D366] hover:bg-[#20bd5a] transition-colors">
+                    <span className="w-4 h-4">{WHATSAPP_SVG}</span> Pedir por WhatsApp
+                  </a>
+                )}
+                <button onClick={() => { onClose(); setTimeout(() => onReview(product.id), 100); }}
+                  className="flex-1 rounded-xl py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+                  Dejar Reseña
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── ProductCard ─────────────────────────────────────────────────────────────
 
-function ProductCard({ product, primaryColor, onReview, whatsapp, storeName, size = "normal" }: {
+function ProductCard({ product, primaryColor, onReview, onView, whatsapp, storeName, size = "normal" }: {
   product: Product; primaryColor: string; onReview: (id: string) => void;
+  onView: (p: Product) => void;
   whatsapp?: string | null; storeName: string; size?: "normal" | "large";
 }) {
   const waUrl = whatsapp
@@ -255,9 +354,9 @@ function ProductCard({ product, primaryColor, onReview, whatsapp, storeName, siz
 
   return (
     <div className={cn(
-      "group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col",
+      "group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer",
       size === "large" && "md:flex-row"
-    )}>
+    )} onClick={() => onView(product)}>
       <div className={cn(
         "relative bg-gray-50 overflow-hidden",
         size === "large" ? "aspect-square md:w-64 md:aspect-auto md:shrink-0" : "aspect-square"
@@ -323,7 +422,7 @@ function ProductCard({ product, primaryColor, onReview, whatsapp, storeName, siz
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={e => e.stopPropagation()}>
           {waUrl && !outOfStock && (
             <a href={waUrl} target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold text-white bg-[#25D366] hover:bg-[#20bd5a] transition-colors">
@@ -342,10 +441,10 @@ function ProductCard({ product, primaryColor, onReview, whatsapp, storeName, siz
 
 // ─── HorizontalSection ───────────────────────────────────────────────────────
 
-function HorizontalSection({ title, icon, products, primaryColor, onReview, whatsapp, storeName, accentColor }: {
+function HorizontalSection({ title, icon, products, primaryColor, onReview, onView, whatsapp, storeName, accentColor }: {
   title: string; icon: React.ReactNode; products: Product[];
-  primaryColor: string; onReview: (id: string) => void; whatsapp?: string | null;
-  storeName: string; accentColor?: string;
+  primaryColor: string; onReview: (id: string) => void; onView: (p: Product) => void;
+  whatsapp?: string | null; storeName: string; accentColor?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: "l" | "r") => {
@@ -375,7 +474,7 @@ function HorizontalSection({ title, icon, products, primaryColor, onReview, what
       <div ref={scrollRef} className="flex gap-4 overflow-x-auto scrollbar-none pb-2 snap-x snap-mandatory">
         {products.map((p) => (
           <div key={p.id} className="shrink-0 w-44 md:w-52 snap-start">
-            <ProductCard product={p} primaryColor={primaryColor} onReview={onReview} whatsapp={whatsapp} storeName={storeName} />
+            <ProductCard product={p} primaryColor={primaryColor} onReview={onReview} onView={onView} whatsapp={whatsapp} storeName={storeName} />
           </div>
         ))}
       </div>
@@ -544,6 +643,7 @@ export default function TiendaPage() {
   const [reviewModal, setReviewModal] = useState(false);
   const [reviewProductId, setReviewProductId] = useState<string | undefined>(undefined);
   const [yapeOpen, setYapeOpen] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
 
   const primaryColor = store?.primaryColor || "#1a5c2e";
 
@@ -694,7 +794,7 @@ export default function TiendaPage() {
             <HorizontalSection
               title="Destacados" icon={<Flame className="w-5 h-5 text-amber-500" />}
               products={featuredProducts} primaryColor={primaryColor}
-              onReview={openReview} whatsapp={store.whatsapp} storeName={store.businessName}
+              onReview={openReview} onView={setDetailProduct} whatsapp={store.whatsapp} storeName={store.businessName}
               accentColor="#f59e0b"
             />
           )}
@@ -704,7 +804,7 @@ export default function TiendaPage() {
             <HorizontalSection
               title="Ofertas del día" icon={<Tag className="w-5 h-5 text-red-500" />}
               products={offerProducts} primaryColor={primaryColor}
-              onReview={openReview} whatsapp={store.whatsapp} storeName={store.businessName}
+              onReview={openReview} onView={setDetailProduct} whatsapp={store.whatsapp} storeName={store.businessName}
               accentColor="#ef4444"
             />
           )}
@@ -756,7 +856,7 @@ export default function TiendaPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products.map((p) => (
                   <ProductCard key={p.id} product={p} primaryColor={primaryColor}
-                    onReview={openReview} whatsapp={store.whatsapp} storeName={store.businessName} />
+                    onReview={openReview} onView={setDetailProduct} whatsapp={store.whatsapp} storeName={store.businessName} />
                 ))}
               </div>
             )}
@@ -810,13 +910,18 @@ export default function TiendaPage() {
           )}
 
           {/* Store footer */}
-          <footer className="border-t border-gray-200 pt-8 pb-4 text-center text-xs text-gray-400">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              {store.logoUrl && <img src={store.logoUrl} alt={store.businessName} className="w-6 h-6 rounded-lg object-cover" />}
-              <span className="font-semibold text-gray-600">{store.businessName}</span>
+          <footer className="border-t border-gray-200 mt-4 pt-8 pb-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              {store.logoUrl && <img src={store.logoUrl} alt={store.businessName} className="w-7 h-7 rounded-xl object-cover shadow-sm" />}
+              <span className="font-bold text-gray-700 text-sm">{store.businessName}</span>
             </div>
-            <p>{store.district}{store.address ? `, ${store.address}` : ""}</p>
-            <p className="mt-3">Tienda en línea con <span className="font-semibold text-gray-600">Camila</span> · San Ramón, Chanchamayo</p>
+            {(store.district || store.address) && (
+              <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                <MapPin className="w-3 h-3" />
+                {store.district}{store.address ? `, ${store.address}` : ""}
+              </p>
+            )}
+            <p className="text-xs text-gray-300 mt-4">Tienda con <span className="font-medium text-gray-400">Camila</span></p>
           </footer>
         </div>
 
@@ -843,6 +948,15 @@ export default function TiendaPage() {
           </Dialog>
         )}
       </div>
+
+      <ProductDetailModal
+        product={detailProduct}
+        primaryColor={primaryColor}
+        onClose={() => setDetailProduct(null)}
+        onReview={(id) => { setDetailProduct(null); openReview(id); }}
+        whatsapp={store.whatsapp}
+        storeName={store.businessName}
+      />
 
       <ReviewModal open={reviewModal} onClose={() => setReviewModal(false)}
         storeSlug={slug!} products={products} preselectedProductId={reviewProductId} />

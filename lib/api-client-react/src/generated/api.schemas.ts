@@ -617,6 +617,7 @@ export interface StoreSettings {
   showYapeQr: boolean;
   yapeQrUrl?: string;
   businessHours?: string;
+  thankYouMessage?: string;
   updatedAt: string;
 }
 
@@ -666,6 +667,7 @@ export interface UpdateStoreSettingsRequest {
   showYapeQr?: boolean;
   yapeQrUrl?: string;
   businessHours?: string;
+  thankYouMessage?: string;
 }
 
 export interface StoreBanner {

@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type UploadFolder = "logo" | "banner" | "product" | "banner-promo" | "qr";
+type UploadFolder = "logo" | "banner" | "product" | "banner-promo" | "qr" | "category";
 
 interface SignResponse {
   cloudName: string;

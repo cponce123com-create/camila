@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { useGetSale, useUpdateSale, useDeleteSale } from "@workspace/api-client-react";
+import { useGetSale, useUpdateSale, useDeleteSale, useGetStoreSettings } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,6 +37,7 @@ export default function SaleDetailPage() {
   const { store } = useAuth();
 
   const { data: sale, isLoading } = useGetSale(id);
+  const { data: settings } = useGetStoreSettings();
   const updateSale = useUpdateSale();
   const deleteSale = useDeleteSale();
 
@@ -100,6 +101,7 @@ export default function SaleDetailPage() {
       paymentMethod: sale.paymentMethod,
       notes: sale.notes,
       soldAt: sale.soldAt,
+      thankYouMessage: (settings as any)?.thankYouMessage ?? null,
     });
     doc.save(`Recibo-${sale.receiptCode}.pdf`);
     toast({ title: "PDF descargado" });
@@ -111,7 +113,8 @@ export default function SaleDetailPage() {
       .map((i) => `• ${i.productName} x${i.quantity} — S/ ${parseFloat(String(i.subtotal)).toFixed(2)}`)
       .join("\n");
     const date = format(parseISO(sale.soldAt), "d 'de' MMMM yyyy, HH:mm", { locale: es });
-    const text = `🧾 *RECIBO ${sale.receiptCode}*\n*${store?.name ?? "Mi Tienda"}*\n\n📅 ${date}\n\n${itemLines}\n\n─────────────\nSubtotal: S/ ${subtotal.toFixed(2)}${discount > 0 ? `\nDescuento: -S/ ${discount.toFixed(2)}` : ""}\n*TOTAL: S/ ${total.toFixed(2)}*\n\nPago: ${PAYMENT_LABELS[sale.paymentMethod] ?? sale.paymentMethod}\n\n¡Gracias por tu compra! 🌿`;
+    const tyMsg = ((settings as any)?.thankYouMessage?.trim()) || "¡Gracias por tu compra!";
+    const text = `🧾 *RECIBO ${sale.receiptCode}*\n*${store?.name ?? "Mi Tienda"}*\n\n📅 ${date}\n\n${itemLines}\n\n─────────────\nSubtotal: S/ ${subtotal.toFixed(2)}${discount > 0 ? `\nDescuento: -S/ ${discount.toFixed(2)}` : ""}\n*TOTAL: S/ ${total.toFixed(2)}*\n\nPago: ${PAYMENT_LABELS[sale.paymentMethod] ?? sale.paymentMethod}\n\n${tyMsg} 🌿`;
     const number = sale.clientPhone?.replace(/\D/g, "") ?? "";
     const url = `https://wa.me/${number ? `51${number}` : ""}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
@@ -307,8 +310,11 @@ export default function SaleDetailPage() {
               )}
 
               {/* Footer */}
-              <div className="mt-6 text-center text-xs text-muted-foreground/60 border-t border-dashed border-border/40 pt-4">
-                ¡Gracias por tu compra! • Powered by Camila
+              <div className="mt-6 text-center border-t border-dashed border-border/40 pt-4 space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  {(settings as any)?.thankYouMessage?.trim() || "¡Gracias por tu compra! Vuelve pronto."}
+                </p>
+                <p className="text-xs text-muted-foreground/40">Generado con Camila · camila.pe</p>
               </div>
             </div>
           </div>

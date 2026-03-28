@@ -53,9 +53,9 @@ router.post("/", requireAuth, requireStoreAdmin, async (req, res) => {
 
   const schema = z.object({
     name: z.string().min(1),
-    description: z.string().optional(),
-    parentId: z.string().optional(),
-    imageUrl: z.string().url().optional(),
+    description: z.preprocess(v => v === "" ? undefined : v, z.string().optional()),
+    parentId: z.preprocess(v => v === "" ? undefined : v, z.string().optional()),
+    imageUrl: z.preprocess(v => v === "" ? undefined : v, z.string().url().optional()),
     sortOrder: z.number().int().optional(),
   });
 

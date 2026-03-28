@@ -109,13 +109,20 @@ export default function CustomizePage() {
   };
 
   const [businessHours, setBusinessHours] = useState("");
+  const [thankYouMessage, setThankYouMessage] = useState("");
   
-  // Pre-fill business hours
+  // Pre-fill business hours and thank you message
   useEffect(() => {
     if (settings?.businessHours) {
       setBusinessHours(settings.businessHours);
     }
   }, [settings?.businessHours]);
+
+  useEffect(() => {
+    if (settings?.thankYouMessage !== undefined) {
+      setThankYouMessage(settings.thankYouMessage ?? "");
+    }
+  }, [settings?.thankYouMessage]);
 
   if (isLoadingSettings) {
     return (
@@ -427,6 +434,34 @@ export default function CustomizePage() {
               >
                 {updateSettingsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Guardar Horarios
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="rounded-2xl border-border/50 shadow-sm p-6">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold font-display">Mensaje de Agradecimiento</h3>
+              <p className="text-muted-foreground mt-1">Este mensaje aparecerá al pie de cada recibo de venta. Personalízalo para transmitir la identidad de tu negocio.</p>
+            </div>
+            
+            <input
+              type="text"
+              value={thankYouMessage}
+              onChange={e => setThankYouMessage(e.target.value)}
+              placeholder="¡Gracias por tu compra! Vuelve pronto."
+              maxLength={200}
+              className="w-full h-12 rounded-xl border border-input bg-background px-4 text-base focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-xs text-muted-foreground mt-2">{thankYouMessage.length}/200 caracteres. Déjalo vacío para usar el mensaje por defecto.</p>
+            
+            <div className="mt-6 flex justify-end">
+              <Button 
+                onClick={() => handleUpdateSettings({ thankYouMessage })}
+                className="h-12 px-8 rounded-xl shadow-md"
+                disabled={updateSettingsMutation.isPending}
+              >
+                {updateSettingsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar Mensaje
               </Button>
             </div>
           </Card>

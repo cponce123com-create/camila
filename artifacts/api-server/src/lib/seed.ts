@@ -300,6 +300,147 @@ async function enrichDemoStores() {
   }
 }
 
+// ─── Default categories per business type ────────────────────────────────────
+
+const DEFAULT_CATEGORIES: Record<string, { name: string; description?: string }[]> = {
+  restaurant: [
+    { name: "Entradas", description: "Aperitivos y entradas de la carta" },
+    { name: "Sopas y Caldos", description: "Sopas calientes y caldos reconfortantes" },
+    { name: "Platos de Fondo", description: "Platos principales de la carta" },
+    { name: "Arroz y Pastas", description: "Arroces, tallarines y pasta" },
+    { name: "Pollos y Aves", description: "Platos a base de pollo y aves" },
+    { name: "Carnes y Parrilla", description: "Res, cerdo y parrilladas" },
+    { name: "Pescados y Mariscos", description: "Ceviches, pescados y mariscos frescos" },
+    { name: "Opciones Vegetarianas", description: "Platos sin carne" },
+    { name: "Desayunos", description: "Menú matutino y desayunos especiales" },
+    { name: "Almuerzos", description: "Menú del almuerzo" },
+    { name: "Cenas", description: "Platos especiales para la cena" },
+    { name: "Guarniciones", description: "Acompañamientos y extras" },
+    { name: "Postres", description: "Dulces y postres caseros" },
+    { name: "Bebidas Calientes", description: "Café, té e infusiones" },
+    { name: "Jugos y Refrescos", description: "Jugos naturales y refrescos" },
+    { name: "Bebidas Frías", description: "Gaseosas, aguas y bebidas frías" },
+    { name: "Bebidas Alcohólicas", description: "Cervezas, vinos y cocktails" },
+    { name: "Combos y Menús", description: "Combos especiales y menús del día" },
+    { name: "Snacks y Bocaditos", description: "Piqueos y aperitivos rápidos" },
+    { name: "Pedidos Especiales", description: "Pedidos para eventos y grupos" },
+  ],
+  clothing: [
+    { name: "Polos y Camisetas", description: "Polos casuales, sport y formales" },
+    { name: "Camisas y Blusas", description: "Camisas para caballero y blusas para dama" },
+    { name: "Pantalones", description: "Pantalones de vestir, jean y sport" },
+    { name: "Shorts y Bermudas", description: "Shorts casuales y bermudas" },
+    { name: "Vestidos y Enterizos", description: "Vestidos casuales y para ocasiones" },
+    { name: "Faldas", description: "Faldas cortas, largas y midi" },
+    { name: "Casacas y Chaquetas", description: "Casacas de cuero, tela y deportivas" },
+    { name: "Abrigos y Parkas", description: "Ropa de abrigo para temporada fría" },
+    { name: "Ropa Interior", description: "Ropa interior para dama y caballero" },
+    { name: "Medias y Calcetines", description: "Medias largas, cortas y calcetines" },
+    { name: "Calzado", description: "Zapatos, zapatillas y sandalias" },
+    { name: "Accesorios", description: "Joyería, relojes y accesorios de moda" },
+    { name: "Gorras y Sombreros", description: "Gorras, sombreros y boinas" },
+    { name: "Cinturones y Carteras", description: "Cinturones, carteras y billeteras" },
+    { name: "Ropa Deportiva", description: "Ropa para el deporte y gimnasio" },
+    { name: "Ropa de Niños", description: "Ropa para niños y niñas" },
+    { name: "Ropa de Bebés", description: "Ropa y accesorios para bebés" },
+    { name: "Uniformes y Trabajo", description: "Uniformes escolares y de trabajo" },
+    { name: "Trajes de Baño", description: "Ropa para playa y piscina" },
+    { name: "Liquidación y Ofertas", description: "Prendas con descuento y liquidación" },
+  ],
+  bakery: [
+    { name: "Panes Artesanales", description: "Panes elaborados a mano con recetas tradicionales" },
+    { name: "Panes de Molde", description: "Pan de molde blanco, integral y especiales" },
+    { name: "Pan Integral y Light", description: "Opciones saludables con granos integrales" },
+    { name: "Panes para Hamburguesas", description: "Buns y panes especiales para hamburguesas" },
+    { name: "Bollería y Croissants", description: "Croissants, medialunas y bollería fina" },
+    { name: "Empanadas y Salados", description: "Empanadas horneadas y bocaditos salados" },
+    { name: "Pasteles y Tortas", description: "Tortas para cumpleaños y ocasiones" },
+    { name: "Cupcakes y Muffins", description: "Cupcakes decorados y muffins variados" },
+    { name: "Alfajores y Galletas", description: "Alfajores, galletas y bocaditos dulces" },
+    { name: "Tartas y Cheesecakes", description: "Tartas de frutas y cheesecakes cremosos" },
+    { name: "Roscas y Brioches", description: "Roscas dulces, brioches y panes brioche" },
+    { name: "Waffles y Crepes", description: "Waffles y crepes dulces y salados" },
+    { name: "Postres Fríos", description: "Mousse, flan, panna cotta y gelatinas" },
+    { name: "Donuts y Berlines", description: "Donuts glasados y berlines rellenos" },
+    { name: "Panetones y Budines", description: "Panetón navideño, budines y bizcochos" },
+    { name: "Bebidas Calientes", description: "Café, capuchino, chocolate caliente y té" },
+    { name: "Jugos y Limonadas", description: "Jugos naturales y limonadas frescas" },
+    { name: "Desayunos y Combos", description: "Combos de desayuno con pan y bebida" },
+    { name: "Pedidos Especiales", description: "Tortas y pasteles por encargo" },
+    { name: "Ofertas del Día", description: "Productos del día con precio especial" },
+  ],
+  fair_booth: [
+    { name: "Frutas Frescas", description: "Frutas de temporada y del día" },
+    { name: "Verduras y Hortalizas", description: "Verduras frescas y hortalizas de campo" },
+    { name: "Tubérculos y Raíces", description: "Papas, yuca, camote y tubérculos" },
+    { name: "Frutas Tropicales", description: "Mangos, papayas, maracuyá y tropicales" },
+    { name: "Frutas de Selva", description: "Camu camu, aguaje, cocona y más" },
+    { name: "Plátanos y Bananas", description: "Plátano de freír, bellaco y de seda" },
+    { name: "Ajíes y Picantes", description: "Ajíes frescos, secos y pastas de ají" },
+    { name: "Cebollas y Ajos", description: "Cebollas, ajos y puerros" },
+    { name: "Limones y Cítricos", description: "Limones, naranjas y mandarinas" },
+    { name: "Maíz y Cereales", description: "Maíz choclo, maíz morado y cereales" },
+    { name: "Granos y Legumbres", description: "Frijoles, lentejas, arvejas y garbanzos" },
+    { name: "Hierbas Aromáticas", description: "Culantro, hierbabuena, albahaca y más" },
+    { name: "Verduras de Hoja", description: "Espinaca, lechuga, col y acelga" },
+    { name: "Tomates y Pimientos", description: "Tomates, pimientos y rocoto" },
+    { name: "Productos Orgánicos", description: "Frutas y verduras sin pesticidas" },
+    { name: "Huevos y Derivados", description: "Huevos de campo y criollos" },
+    { name: "Productos Procesados", description: "Mermeladas, encurtidos y preparados" },
+    { name: "Jugos y Pulpas", description: "Pulpas de frutas y jugos preparados" },
+    { name: "Cosechas del Día", description: "Productos cosechados frescos del día" },
+    { name: "Canastas y Packs", description: "Canastas armadas de frutas y verduras" },
+  ],
+  general_catalog: [
+    { name: "Electrónica", description: "Dispositivos electrónicos y gadgets" },
+    { name: "Hogar y Decoración", description: "Artículos para el hogar y decoración" },
+    { name: "Cocina y Mesa", description: "Utensilios y artículos de cocina" },
+    { name: "Limpieza del Hogar", description: "Productos de limpieza y desinfección" },
+    { name: "Alimentos y Abarrotes", description: "Productos de despensa y abarrotes" },
+    { name: "Bebidas", description: "Bebidas, jugos y refrescos" },
+    { name: "Snacks y Golosinas", description: "Snacks, galletas y dulces" },
+    { name: "Higiene Personal", description: "Cuidado personal e higiene" },
+    { name: "Salud y Bienestar", description: "Vitaminas, suplementos y salud" },
+    { name: "Juguetes y Juegos", description: "Juguetes para niños y juegos" },
+    { name: "Papelería y Oficina", description: "Útiles escolares y de oficina" },
+    { name: "Herramientas y Ferretería", description: "Herramientas y artículos de ferretería" },
+    { name: "Jardín y Plantas", description: "Plantas, macetas y artículos de jardín" },
+    { name: "Mascotas", description: "Alimentos y accesorios para mascotas" },
+    { name: "Deporte y Fitness", description: "Artículos deportivos y de ejercicio" },
+    { name: "Moda y Accesorios", description: "Ropa, calzado y accesorios" },
+    { name: "Arte y Manualidades", description: "Materiales de arte y manualidades" },
+    { name: "Libros y Educación", description: "Libros, revistas y material educativo" },
+    { name: "Tecnología", description: "Computadoras, celulares y accesorios" },
+    { name: "Ofertas Especiales", description: "Productos con descuento y promociones" },
+  ],
+};
+
+export async function seedDefaultCategories(storeId: string, businessType: string): Promise<void> {
+  try {
+    const existing = await db
+      .select({ id: categoriesTable.id })
+      .from(categoriesTable)
+      .where(eq(categoriesTable.storeId, storeId))
+      .limit(1);
+
+    if (existing.length > 0) return; // Already has categories
+
+    const cats = DEFAULT_CATEGORIES[businessType] ?? DEFAULT_CATEGORIES.general_catalog;
+    for (let i = 0; i < cats.length; i++) {
+      await db.insert(categoriesTable).values({
+        id: crypto.randomUUID(),
+        storeId,
+        name: cats[i].name,
+        description: cats[i].description,
+        sortOrder: i,
+      });
+    }
+    logger.info({ storeId, businessType, count: cats.length }, "Seed: default categories created");
+  } catch (err) {
+    logger.error({ err }, "Seed: failed to create default categories");
+  }
+}
+
 // ─── Main seed ────────────────────────────────────────────────────────────────
 
 export async function seedDefaultData() {

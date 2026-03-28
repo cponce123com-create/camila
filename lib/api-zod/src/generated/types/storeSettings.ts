@@ -25,5 +25,6 @@ export interface StoreSettings {
   showYapeQr: boolean;
   yapeQrUrl?: string;
   businessHours?: string;
+  thankYouMessage?: string;
   updatedAt: Date;
 }

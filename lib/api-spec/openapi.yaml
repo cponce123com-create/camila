@@ -3382,6 +3382,8 @@ components:
           type: string
         businessHours:
           type: string
+        thankYouMessage:
+          type: string
         updatedAt:
           type: string
           format: date-time
@@ -3431,6 +3433,8 @@ components:
         yapeQrUrl:
           type: string
         businessHours:
+          type: string
+        thankYouMessage:
           type: string
 
     StoreBanner:

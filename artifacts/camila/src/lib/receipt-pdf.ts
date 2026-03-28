@@ -32,6 +32,7 @@ interface ReceiptData {
   paymentMethod: string;
   notes?: string | null;
   soldAt: string;
+  thankYouMessage?: string | null;
 }
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -205,10 +206,13 @@ export function generateReceiptPDF(data: ReceiptData): jsPDF {
   y += 4;
   doc.setFont("helvetica", "italic");
   doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
-  doc.text("¡Gracias por tu compra!", pageW / 2, y, { align: "center" });
-  y += 4;
-  doc.text("Powered by Camila", pageW / 2, y, { align: "center" });
+  doc.setTextColor(100, 100, 100);
+  const footerMsg = data.thankYouMessage?.trim() || "¡Gracias por tu compra! Vuelve pronto.";
+  doc.text(footerMsg, pageW / 2, y, { align: "center", maxWidth: contentW });
+  y += 5;
+  doc.setTextColor(180, 180, 180);
+  doc.setFontSize(6);
+  doc.text("Generado con Camila · camila.pe", pageW / 2, y, { align: "center" });
 
   return doc;
 }

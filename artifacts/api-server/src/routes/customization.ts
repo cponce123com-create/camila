@@ -64,6 +64,7 @@ router.patch("/settings", requireAuth, requireStoreAdmin, async (req, res) => {
     showYapeQr: z.boolean().optional(),
     yapeQrUrl: z.string().url().optional().nullable(),
     businessHours: z.string().optional(),
+    thankYouMessage: z.preprocess(v => v === "" ? undefined : v, z.string().max(200).optional()),
   });
 
   const result = schema.safeParse(req.body);
